@@ -1,20 +1,20 @@
 import {
+	ChangeDetectionStrategy,
 	Component,
 	CUSTOM_ELEMENTS_SCHEMA,
-	OnDestroy,
-	ChangeDetectionStrategy,
 	HostListener,
+	OnDestroy,
 } from "@angular/core";
 import { Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../../login/services/auth.service";
+import { getCloudflareImage } from "../../utils/images";
 import {
 	AlertaItem,
 	NotificationService,
 } from "../services/notification.service";
 import { ThemeService } from "../services/theme.service";
-import { getCloudflareImage } from "../../utils/images";
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,7 +86,7 @@ export class HeaderComponent implements OnDestroy {
 
 		return (
 			getCloudflareImage(fotoUrl, { width: 50 }) ||
-			"https://gestor-assets.mgdc.site/img-perfil.jpg"
+			"https://assets.mgdc.site/nemi/img-perfil.jpg"
 		);
 	}
 

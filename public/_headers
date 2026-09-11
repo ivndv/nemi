@@ -23,10 +23,10 @@
   # - Scripts: self, unsafe-inline, cloudflareinsights, challenges (Cloudflare Web Analytics)
   # - Estilos: self, unsafe-inline, fonts.googleapis.com
   # - Fuentes: self, fonts.gstatic.com, data:
-  # - Imágenes: self, data:, https://gestor-assets.mgdc.site (R2)
+  # - Imágenes: self, data:, https://assets.mgdc.site (R2)
   # - Conexiones: self, localhost, cloudflareinsights, challenges
   # - Frames: challenges (Cloudflare Turnstile)
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://code.iconify.design; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://gestor-assets.mgdc.site https://nemi-api.fluxdv.icu; connect-src 'self' http://localhost:* https://cloudflareinsights.com https://challenges.cloudflare.com https://nemi-api.fluxdv.icu https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none';
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://code.iconify.design; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://assets.mgdc.site https://nemi-api.fluxdv.icu; connect-src 'self' http://localhost:* https://cloudflareinsights.com https://challenges.cloudflare.com https://nemi-api.fluxdv.icu https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none';
 
 # Cache Headers para Assets Estáticos (JS, CSS)
 # Edge: 30 días | Browser: 1 año (immutable porque tienen hash en el nombre)

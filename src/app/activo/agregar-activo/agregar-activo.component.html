@@ -30,7 +30,7 @@
         <div class="form-card image-upload-card">
           <h2>Imagen del Activo</h2>
           <div class="image-preview-container">
-            <img [src]="previewUrl() || (imagenActual ? 'http://localhost:3000' + imagenActual : 'https://gestor-assets.mgdc.site/placeholder-image.png')" alt="Vista previa" />
+            <img [src]="previewUrl() || (imagenActual ? 'http://localhost:3000' + imagenActual : 'https://assets.mgdc.site/nemi/placeholder-image.png')" alt="Vista previa" />
             <input *ngIf="!previewUrl()" type="file" id="imagen" (change)="onFileSelected($event)" accept="image/*" />
           </div>
           <button type="button" class="btn-upload" *ngIf="previewUrl() || imagenActual" (click)="removeImage()">Quitar Imagen</button>

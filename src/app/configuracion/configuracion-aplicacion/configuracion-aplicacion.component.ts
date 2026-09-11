@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, signal } from "@angular/core";
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	OnDestroy,
+	OnInit,
+	signal,
+} from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
@@ -144,10 +151,11 @@ export class ConfiguracionAplicacionComponent implements OnInit, OnDestroy {
 
 					this.imagenActual = foto || "";
 
-				// Usar la lógica global robusta (150px para el perfil de configuración)
-				this.previewUrl.set(
-					getCloudflareImage(this.imagenActual, { width: 150 }) ||
-					"https://gestor-assets.mgdc.site/img-perfil.jpg");
+					// Usar la lógica global robusta (150px para el perfil de configuración)
+					this.previewUrl.set(
+						getCloudflareImage(this.imagenActual, { width: 150 }) ||
+							"https://assets.mgdc.site/nemi/img-perfil.jpg",
+					);
 
 					const perfilData = {
 						nombre: nombre,
@@ -192,7 +200,8 @@ export class ConfiguracionAplicacionComponent implements OnInit, OnDestroy {
 
 				// Guardar en localStorage (clave única para evitar conflictos)
 				const imageKey = `activo_img_${Date.now()}`;
-				if (this.previewUrl()) localStorage.setItem(imageKey, this.previewUrl()!);
+				if (this.previewUrl())
+					localStorage.setItem(imageKey, this.previewUrl()!);
 				this.imagenLocalStorageKey = imageKey; // Guardar la clave para usarla después
 			};
 			reader.readAsDataURL(file);
@@ -242,7 +251,11 @@ export class ConfiguracionAplicacionComponent implements OnInit, OnDestroy {
 	guardarConfiguracion(): void {
 		// 1. Primero verificar si el formulario es válido
 		if (!this.perfilForm.valid) {
-			Swal.fire({ icon: "warning", text: "Por favor completa correctamente todos los campos requeridos", confirmButtonColor: "#1e293b" });
+			Swal.fire({
+				icon: "warning",
+				text: "Por favor completa correctamente todos los campos requeridos",
+				confirmButtonColor: "#1e293b",
+			});
 			this.perfilForm.markAllAsTouched(); // Marcar campos como tocados para mostrar errores
 			return; // Detener la ejecución si el formulario no es válido
 		}

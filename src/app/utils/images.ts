@@ -28,7 +28,7 @@ export function getCloudflareImage(
 		return `http://localhost:3000${url}`;
 	}
 
-	const myDomain = "gestor-assets.mgdc.site";
+	const myDomain = "assets.mgdc.site";
 
 	// Si es una URL externa pero no de nuestro dominio, la devolvemos tal cual
 	if (!url.includes(myDomain)) {
