@@ -27,7 +27,7 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: url("/login-bg.png") no-repeat center / cover;
+	background: url("https://assets.mgdc.site/nemi/login-bg.png") no-repeat center / cover;
 	opacity: 0.75;
 	z-index: 1;
 }
