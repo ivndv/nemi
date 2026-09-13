@@ -1,51 +1,64 @@
-# Security Headers - Aplicados a todas las rutas
+# ==============================================================================
+# Security Headers - Aplicados globalmente a todas las rutas
+# ==============================================================================
 /*
-  # Previene clickjacking
+  # Previene clickjacking embebiendo el sitio en iframes
   X-Frame-Options: DENY
   
-  # Previene MIME-sniffing
+  # Previene que el navegador infiera tipos MIME distintos al declarado
   X-Content-Type-Options: nosniff
   
   # Protección XSS para navegadores legacy
   X-XSS-Protection: 1; mode=block
   
-  # Control de referrer
+  # Política de Referrer segura para navegación cross-origin
   Referrer-Policy: strict-origin-when-cross-origin
   
-  # Deshabilita APIs no necesarias
+  # Deshabilita APIs y sensores del dispositivo innecesarios
   Permissions-Policy: camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
   
-  # Fuerza HTTPS por 1 año
+  # Fuerza HTTPS en el navegador por 1 año con subdominios incluidos
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   
   # Content Security Policy
-  # Permite: 
-  # - Scripts: self, unsafe-inline, cloudflareinsights, challenges (Cloudflare Web Analytics)
-  # - Estilos: self, unsafe-inline, fonts.googleapis.com
-  # - Fuentes: self, fonts.gstatic.com, data:
-  # - Imágenes: self, data:, https://assets.mgdc.site (R2)
-  # - Conexiones: self, localhost, cloudflareinsights, challenges
-  # - Frames: challenges (Cloudflare Turnstile)
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://code.iconify.design; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://assets.mgdc.site https://nemi-api.fluxdv.icu; connect-src 'self' http://localhost:* https://cloudflareinsights.com https://challenges.cloudflare.com https://nemi-api.fluxdv.icu https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none';
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://code.iconify.design; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://challenges.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: https://assets.mgdc.site https://nemi-api.fluxdv.icu; connect-src 'self' http://localhost:* https://cloudflareinsights.com https://challenges.cloudflare.com https://nemi-api.fluxdv.icu https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; frame-src 'self' https://challenges.cloudflare.com; media-src 'self' https: https://assets.mgdc.site; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests;
 
-# Cache Headers para Assets Estáticos (JS, CSS)
-# Edge: 30 días | Browser: 1 año (immutable porque tienen hash en el nombre)
+# ==============================================================================
+# Cache Headers para Chunks y Assets con Hash Inmutable (Angular /assets/*)
+# Edge: 30 días | Browser: 1 año (inmutable porque el hash cambia con cada build)
+# ==============================================================================
+/assets/*.js
+  Cache-Control: public, max-age=31536000, s-maxage=2592000, immutable
+
 /*.js
+  Cache-Control: public, max-age=31536000, s-maxage=2592000, immutable
+
+/assets/*.css
   Cache-Control: public, max-age=31536000, s-maxage=2592000, immutable
 
 /*.css
   Cache-Control: public, max-age=31536000, s-maxage=2592000, immutable
 
+# ==============================================================================
 # Fuentes Web
 # Edge: 30 días | Browser: 1 año
+# ==============================================================================
+/assets/*.woff2
+  Cache-Control: public, max-age=31536000, s-maxage=2592000, immutable
+
 /*.woff2
+  Cache-Control: public, max-age=31536000, s-maxage=2592000, immutable
+
+/assets/*.woff
   Cache-Control: public, max-age=31536000, s-maxage=2592000, immutable
 
 /*.woff
   Cache-Control: public, max-age=31536000, s-maxage=2592000, immutable
 
-# Imágenes
+# ==============================================================================
+# Imágenes y Favicon
 # Edge: 7 días | Browser: 1 año
+# ==============================================================================
 /*.png
   Cache-Control: public, max-age=31536000, s-maxage=604800
 
@@ -67,14 +80,30 @@
 /*.ico
   Cache-Control: public, max-age=31536000, s-maxage=604800
 
-# HTML - Cache corto en edge, revalidación en browser
-# Edge: 1 hora | Browser: revalidar siempre
+# ==============================================================================
+# HTML (SPA Entrypoint)
+# Edge: 1 hora | Browser: revalidar siempre para recibir nuevos hashes
+# ==============================================================================
 /*.html
   Cache-Control: public, max-age=0, s-maxage=3600, must-revalidate
 
-# Manifest y Service Worker - Sin cache
+/index.html
+  Cache-Control: public, max-age=0, s-maxage=3600, must-revalidate
+
+# ==============================================================================
+# Manifest, Service Worker y Archivos de Indexación (SEO / AI)
+# ==============================================================================
 /manifest.json
   Cache-Control: public, max-age=0, must-revalidate
 
 /sw.js
   Cache-Control: public, max-age=0, must-revalidate
+
+/robots.txt
+  Cache-Control: public, max-age=86400, s-maxage=86400
+
+/sitemap.xml
+  Cache-Control: public, max-age=86400, s-maxage=86400
+
+/llms.txt
+  Cache-Control: public, max-age=86400, s-maxage=86400
