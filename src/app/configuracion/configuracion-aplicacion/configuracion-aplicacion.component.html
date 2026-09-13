@@ -1,7 +1,7 @@
 <main>
   <div class="container">
     <div class="config-grid">
-      
+
       <!-- Panel Izquierdo: Ajustes Generales -->
       <section class="config-card">
         <header class="card-header">
@@ -79,10 +79,14 @@
           <div class="avatar-section">
             <div class="avatar-wrapper">
               <div class="avatar-container" (click)="fileInput.click()">
-                <img *ngIf="previewUrl()" [src]="previewUrl()" alt="Avatar">
-                <div *ngIf="!previewUrl()" class="avatar-placeholder">
-                  <iconify-icon icon="lucide:user" style="font-size: 48px; color: #cbd5e0;"></iconify-icon>
-                </div>
+                @if (previewUrl()) {
+                  <img [src]="previewUrl()" alt="Avatar">
+                }
+                @if (!previewUrl()) {
+                  <div class="avatar-placeholder">
+                    <iconify-icon icon="lucide:user" style="font-size: 48px; color: #cbd5e0;"></iconify-icon>
+                  </div>
+                }
                 <div class="avatar-overlay">
                   <iconify-icon icon="lucide:camera" style="font-size: 24px;"></iconify-icon>
                   <span>Cambiar</span>
@@ -100,7 +104,7 @@
               style="display: none;"
               accept="image/*"
               (change)="onFileSelected($event)"
-            />
+              />
           </div>
 
           <div class="form-grid">

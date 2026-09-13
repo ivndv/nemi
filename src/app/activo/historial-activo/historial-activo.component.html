@@ -1,7 +1,7 @@
 <main>
   <div class="container">
     <div class="history-card">
-      
+
       <!-- Encabezado con título -->
       <header class="card-header">
         <h2>Historial del Activo</h2>
@@ -18,7 +18,7 @@
               type="text"
               placeholder="Filtra por acción, detalles o responsable..."
               (input)="onSearchInput($event)"
-            />
+              />
           </div>
         </div>
 
@@ -69,64 +69,72 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let registro of historial; trackBy: trackById">
-              <td style="color: #a0aec0; font-weight: 600;">#{{ registro.id }}</td>
-              <td>
-                <span [class]="'action-badge ' + getBadgeClass(registro.accion)">
-                  <iconify-icon [icon]="getBadgeIcon(registro.accion)"></iconify-icon>
-                  <span *ngFor="let parte of dividirTexto(registro.accion)">
-                    <span [class.highlight]="esParteResaltada(parte)">{{ parte }}</span>
+            @for (registro of historial; track trackById($index, registro)) {
+              <tr>
+                <td style="color: #a0aec0; font-weight: 600;">#{{ registro.id }}</td>
+                <td>
+                  <span [class]="'action-badge ' + getBadgeClass(registro.accion)">
+                    <iconify-icon [icon]="getBadgeIcon(registro.accion)"></iconify-icon>
+                    @for (parte of dividirTexto(registro.accion); track parte) {
+                      <span>
+                        <span [class.highlight]="esParteResaltada(parte)">{{ parte }}</span>
+                      </span>
+                    }
                   </span>
-                </span>
-              </td>
-              <td style="line-height: 1.4;">{{ registro.detalles }}</td>
-              <td style="font-weight: 600;">
-                <iconify-icon icon="lucide:calendar" style="margin-right: 5px; vertical-align: middle;"></iconify-icon>
-                {{ registro.fecha | date:'dd MMM, yyyy' }}
-                <div class="hora-texto">
-                   {{ registro.fecha | date:'HH:mm:ss' }}
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div class="user-avatar">
-                    {{ registro.usuario_responsable.substring(0,2) | uppercase }}
+                </td>
+                <td style="line-height: 1.4;">{{ registro.detalles }}</td>
+                <td style="font-weight: 600;">
+                  <iconify-icon icon="lucide:calendar" style="margin-right: 5px; vertical-align: middle;"></iconify-icon>
+                  {{ registro.fecha | date:'dd MMM, yyyy' }}
+                  <div class="hora-texto">
+                    {{ registro.fecha | date:'HH:mm:ss' }}
                   </div>
-                  <span class="user-name">{{ registro.usuario_responsable }}</span>
-                </div>
-              </td>
-            </tr>
+                </td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="user-avatar">
+                      {{ registro.usuario_responsable.substring(0,2) | uppercase }}
+                    </div>
+                    <span class="user-name">{{ registro.usuario_responsable }}</span>
+                  </div>
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
 
       <!-- Footer con Paginación -->
       <footer class="pagination-footer">
-        <div class="pagination-info" *ngIf="pagination.total > 0">
-          <p>Mostrando <b>{{ primerActivoMostrado }}</b> al <b>{{ ultimoActivoMostrado }}</b> de <b>{{ pagination.total }}</b> registros</p>
-        </div>
+        @if (pagination.total > 0) {
+          <div class="pagination-info">
+            <p>Mostrando <b>{{ primerActivoMostrado }}</b> al <b>{{ ultimoActivoMostrado }}</b> de <b>{{ pagination.total }}</b> registros</p>
+          </div>
+        }
 
-        <div class="pagination-controls" *ngIf="pagination.totalPages > 1">
-          <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" title="Primera página">
-            <iconify-icon icon="lucide:chevrons-left"></iconify-icon>
-          </button>
-          <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
-            <iconify-icon icon="lucide:chevron-left"></iconify-icon>
-          </button>
-
-          <span *ngFor="let pagina of paginasVisibles; trackBy: trackByIndex">
-            <button (click)="cambiarPagina(pagina)" [class.active]="pagina === paginaActual">
-              {{ pagina }}
+        @if (pagination.totalPages > 1) {
+          <div class="pagination-controls">
+            <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" title="Primera página">
+              <iconify-icon icon="lucide:chevrons-left"></iconify-icon>
             </button>
-          </span>
-
-          <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === pagination.totalPages">
-            <iconify-icon icon="lucide:chevron-right"></iconify-icon>
-          </button>
-          <button (click)="cambiarPagina(pagination.totalPages)" [disabled]="paginaActual === pagination.totalPages">
-            <iconify-icon icon="lucide:chevrons-right"></iconify-icon>
-          </button>
-        </div>
+            <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+              <iconify-icon icon="lucide:chevron-left"></iconify-icon>
+            </button>
+            @for (pagina of paginasVisibles; track $index) {
+              <span>
+                <button (click)="cambiarPagina(pagina)" [class.active]="pagina === paginaActual">
+                  {{ pagina }}
+                </button>
+              </span>
+            }
+            <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === pagination.totalPages">
+              <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+            </button>
+            <button (click)="cambiarPagina(pagination.totalPages)" [disabled]="paginaActual === pagination.totalPages">
+              <iconify-icon icon="lucide:chevrons-right"></iconify-icon>
+            </button>
+          </div>
+        }
 
         <div class="page-limit">
           <label style="margin: 0;">Ver:</label>

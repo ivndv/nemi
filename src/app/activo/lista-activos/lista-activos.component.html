@@ -8,7 +8,7 @@
           type="text"
           placeholder="Buscar activo por nombre..."
           (input)="onSearchInput($event)"
-        />
+          />
       </div>
 
       <!-- Filtros -->
@@ -38,10 +38,12 @@
           Limpiar
         </button>
 
-        <button class="btn-primary" routerLink="agregar" *ngIf="isAdmin()">
-          <img src="https://assets.mgdc.site/nemi/icono-agregar.png" alt="" />
-          Nuevo Activo
-        </button>
+        @if (isAdmin()) {
+          <button class="btn-primary" routerLink="agregar">
+            <img src="https://assets.mgdc.site/nemi/icono-agregar.png" alt="" />
+            Nuevo Activo
+          </button>
+        }
       </div>
     </div>
   </section>
@@ -62,120 +64,132 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngIf="!activos || activos.length === 0">
-          <td colspan="8" style="text-align: center; padding: 40px;">
-            <p>No hay activos para mostrar</p>
-          </td>
-        </tr>
-        <tr *ngFor="let activo of activos; trackBy: trackById">
-          <!-- Itera sobre la lista de activos -->
-          <td>{{ activo.id }}</td>
-          <td>
-            <!-- Si hay foto_url, muestra la imagen -->
-            <img
-              *ngIf="activo.foto_url"
-              [src]="getAssetPhoto(activo.foto_url)"
-              alt="Imagen del activo"
-              class="imagen-circular"
-            />
-
-            <!-- Si NO hay foto_url, muestra "N/A" -->
-            <div *ngIf="!activo.foto_url" class="texto-na">
-              N/A
-            </div>
-          </td>
-          <td>
-            <span *ngFor="let parte of dividirTexto(activo.nombre)">
-              <!-- Divide el texto para resaltar coincidencias -->
-              <span [class.highlight]="esParteResaltada(parte)">{{
-                parte
-              }}</span>
-              <!-- Aplica clase 'highlight' si coincide -->
-            </span>
-          </td>
-          <td>{{ activo.tipo }}</td>
-          <td>
-            <span
-              class="status-badge"
+        @if (!activos || activos.length === 0) {
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px;">
+              <p>No hay activos para mostrar</p>
+            </td>
+          </tr>
+        }
+        @for (activo of activos; track trackById($index, activo)) {
+          <tr>
+            <!-- Itera sobre la lista de activos -->
+            <td>{{ activo.id }}</td>
+            <td>
+              <!-- Si hay foto_url, muestra la imagen -->
+              @if (activo.foto_url) {
+                <img
+                  [src]="getAssetPhoto(activo.foto_url)"
+                  alt="Imagen del activo"
+                  class="imagen-circular"
+                  />
+              }
+              <!-- Si NO hay foto_url, muestra "N/A" -->
+              @if (!activo.foto_url) {
+                <div class="texto-na">
+                  N/A
+                </div>
+              }
+            </td>
+            <td>
+              @for (parte of dividirTexto(activo.nombre); track parte) {
+                <span>
+                  <!-- Divide el texto para resaltar coincidencias -->
+                  <span [class.highlight]="esParteResaltada(parte)">{{
+                    parte
+                  }}</span>
+                  <!-- Aplica clase 'highlight' si coincide -->
+                </span>
+              }
+            </td>
+            <td>{{ activo.tipo }}</td>
+            <td>
+              <span
+                class="status-badge"
               [ngClass]="{
                 'status-disponible': activo.estado === 'Disponible',
                 'status-asignado': activo.estado === 'Asignado',
                 'status-mantenimiento': activo.estado === 'En mantenimiento',
                 'status-baja': activo.estado === 'Dado de baja'
               }"
-            >
-              {{ activo.estado }}
-            </span>
-          </td>
-          <td>{{ activo.ubicacion }}</td>
-          <td>{{ activo.usuario_asignado }}</td>
-          <td>
-            <button class="btn-ver-detalles" (click)="verDetalles(activo.id)">
-              Ver Detalles
-            </button>
-          </td>
-        </tr>
+                >
+                {{ activo.estado }}
+              </span>
+            </td>
+            <td>{{ activo.ubicacion }}</td>
+            <td>{{ activo.usuario_asignado }}</td>
+            <td>
+              <button class="btn-ver-detalles" (click)="verDetalles(activo.id)">
+                Ver Detalles
+              </button>
+            </td>
+          </tr>
+        }
       </tbody>
     </table>
   </section>
 
   <!-- Sección de paginación -->
   <section class="container-paginacion">
-    <section class="pagination-info" *ngIf="pagination.total > 0">
-      <p>
-        Mostrando {{ primerActivoMostrado }}-{{ ultimoActivoMostrado }} de
-        {{ pagination.total }} activos
-        <!-- Muestra información de la paginación -->
-      </p>
-    </section>
+    @if (pagination.total > 0) {
+      <section class="pagination-info">
+        <p>
+          Mostrando {{ primerActivoMostrado }}-{{ ultimoActivoMostrado }} de
+          {{ pagination.total }} activos
+          <!-- Muestra información de la paginación -->
+        </p>
+      </section>
+    }
 
     <!-- Paginación avanzada -->
-    <section class="pagination" *ngIf="pagination.totalPages > 1">
-      <!-- Botones Primera página / Anterior -->
-      <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" aria-label="Ir a la primera página">
-        « Primera |
-      </button>
-      <!-- Va a la primera página -->
-      <button
-        (click)="cambiarPagina(paginaActual - 1)"
-        [disabled]="paginaActual === 1"
-        aria-label="Ir a la página anterior"
-      >
-        « Anterior |
-      </button>
-      <!-- Va a la página anterior -->
-
-      <!-- Números de página -->
-      <span *ngFor="let pagina of paginasVisibles; trackBy: trackByIndex">
-        <button
-          (click)="cambiarPagina(pagina)"
-          [class.active]="pagina === paginaActual"
-          [attr.aria-label]="'Ir a la página ' + pagina"
-          [attr.aria-current]="pagina === paginaActual ? 'page' : null"
-        >
-          <!-- Resalta la página actual -->
-          {{ pagina }}
+    @if (pagination.totalPages > 1) {
+      <section class="pagination">
+        <!-- Botones Primera página / Anterior -->
+        <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" aria-label="Ir a la primera página">
+          « Primera |
         </button>
-      </span>
-
-      <!-- Botones Siguiente / Última página -->
-      <button
-        (click)="cambiarPagina(paginaActual + 1)"
-        [disabled]="paginaActual === pagination.totalPages"
-        aria-label="Ir a la página siguiente"
-      >
-        <!-- Deshabilita si estás en la última página -->
-        | Siguiente »
-      </button>
-      <button
-        (click)="cambiarPagina(pagination.totalPages)"
-        [disabled]="paginaActual === pagination.totalPages"
-        aria-label="Ir a la última página"
-      >
-        <!-- Deshabilita si estás en la última página -->
-        | Última »
-      </button>
-    </section>
+        <!-- Va a la primera página -->
+        <button
+          (click)="cambiarPagina(paginaActual - 1)"
+          [disabled]="paginaActual === 1"
+          aria-label="Ir a la página anterior"
+          >
+          « Anterior |
+        </button>
+        <!-- Va a la página anterior -->
+        <!-- Números de página -->
+        @for (pagina of paginasVisibles; track $index) {
+          <span>
+            <button
+              (click)="cambiarPagina(pagina)"
+              [class.active]="pagina === paginaActual"
+              [attr.aria-label]="'Ir a la página ' + pagina"
+              [attr.aria-current]="pagina === paginaActual ? 'page' : null"
+              >
+              <!-- Resalta la página actual -->
+              {{ pagina }}
+            </button>
+          </span>
+        }
+        <!-- Botones Siguiente / Última página -->
+        <button
+          (click)="cambiarPagina(paginaActual + 1)"
+          [disabled]="paginaActual === pagination.totalPages"
+          aria-label="Ir a la página siguiente"
+          >
+          <!-- Deshabilita si estás en la última página -->
+          | Siguiente »
+        </button>
+        <button
+          (click)="cambiarPagina(pagination.totalPages)"
+          [disabled]="paginaActual === pagination.totalPages"
+          aria-label="Ir a la última página"
+          >
+          <!-- Deshabilita si estás en la última página -->
+          | Última »
+        </button>
+      </section>
+    }
 
     <!-- Selector de límite por página -->
     <section class="limite-pagina">

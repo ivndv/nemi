@@ -26,22 +26,24 @@
     ></app-caja-nav>
 
     <!-- Enlace a los reportes -->
-    <app-caja-nav
-      *ngIf="isAdmin()"
-      label="Reportes"
-      route="/reportes"
-      icon="https://assets.mgdc.site/nemi/icono-reportes.png"
-      routerLinkActive="active"
-    ></app-caja-nav>
+    @if (isAdmin()) {
+      <app-caja-nav
+        label="Reportes"
+        route="/reportes"
+        icon="https://assets.mgdc.site/nemi/icono-reportes.png"
+        routerLinkActive="active"
+      ></app-caja-nav>
+    }
 
     <!-- Enlace a la configuración -->
-    <app-caja-nav
-      *ngIf="isAdmin()"
-      label="Configuración"
-      route="/configuracion"
-      icon="https://assets.mgdc.site/nemi/icono-configuracion.png"
-      routerLinkActive="active"
-    ></app-caja-nav>
+    @if (isAdmin()) {
+      <app-caja-nav
+        label="Configuración"
+        route="/configuracion"
+        icon="https://assets.mgdc.site/nemi/icono-configuracion.png"
+        routerLinkActive="active"
+      ></app-caja-nav>
+    }
   </div>
   <!-- Botón de Cerrar Sesión -->
   <div class="logout-button-container">

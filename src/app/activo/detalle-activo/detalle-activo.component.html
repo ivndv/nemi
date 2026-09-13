@@ -1,168 +1,171 @@
 <main>
-  <div class="container" *ngIf="activo">
-    
-    <!-- Hero Section: Impacto Visual Inmediato -->
-    <header class="asset-hero">
-      <div class="hero-image-container">
-        <img *ngIf="activo.foto_url" [src]="getAssetPhoto(activo.foto_url)" alt="Foto del Activo" />
-        <div *ngIf="!activo.foto_url" class="no-image-placeholder">
-          <iconify-icon icon="lucide:image-off" class="placeholder-icon"></iconify-icon>
-          <span>N/A</span>
-        </div>
-      </div>
-      
-      <div class="hero-content">
-        <span class="asset-type">{{ activo.tipo.nombre || 'Activo General' }}</span>
-        <h1>{{ activo.nombre }}</h1>
-        
-        <div class="hero-badges">
-          <span class="badge badge-status">{{ activo.estado }}</span>
-          <span class="badge badge-id">ID: #{{ activo.id }}</span>
-        </div>
-
-        <div class="hero-actions">
-          <button class="btn-action btn-edit" (click)="editarActivo()" *ngIf="isAdmin()">
-            <iconify-icon icon="lucide:edit-3" style="font-size: 18px;"></iconify-icon>
-            Editar Activo
-          </button>
-          <button class="btn-action" (click)="verHistorial()">
-            <iconify-icon icon="lucide:history" style="font-size: 18px;"></iconify-icon>
-            Historial
-          </button>
-          <button class="btn-action" (click)="darDeBaja()" *ngIf="isAdmin()">
-            <iconify-icon icon="lucide:trash-2" style="font-size: 18px;"></iconify-icon>
-            Dar de Baja
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <div class="details-grid">
-      
-      <!-- Card: Especificaciones Técnicas -->
-      <div class="detail-card">
-        <div class="card-header">
-          <iconify-icon icon="lucide:cpu" class="card-header-icon"></iconify-icon>
-          <h3>Especificaciones Técnicas</h3>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Modelo</span>
-          <span class="info-value">{{ activo.modelo }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Etiqueta / Serial</span>
-          <span class="info-value">{{ activo.etiqueta_serial }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Recursos Asignados</span>
-          <span class="info-value">{{ activo.recursos_asignados }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Software / Versión</span>
-          <span class="info-value">{{ activo.version_software }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Tipo de Licencia</span>
-          <span class="info-value">{{ activo.tipo_licencia }}</span>
-        </div>
-        <div class="info-row" *ngIf="activo.fecha_vencimiento_licencia">
-          <span class="info-label">Vence Licencia</span>
-          <span class="info-value">{{ activo.fecha_vencimiento_licencia | date : 'dd/MM/yyyy' }}</span>
-        </div>
-      </div>
-
-      <!-- Card: Gestión y Ubicación -->
-      <div class="detail-card">
-        <div class="card-header">
-          <iconify-icon icon="lucide:map-pin" class="card-header-icon"></iconify-icon>
-          <h3>Gestión y Ubicación</h3>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Dueño / Responsable</span>
-          <span class="info-value">{{ activo.dueno.nombre || 'No asignado' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Ubicación Actual</span>
-          <span class="info-value">{{ activo.ubicacion.nombre }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Proveedor</span>
-          <span class="info-value">{{ activo.proveedor.nombre }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Fecha Adquisición</span>
-          <span class="info-value">{{ activo.fecha_adquisicion | date : 'dd/MM/yyyy' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Condición Física</span>
-          <span class="info-value">{{ activo.condicion_fisica }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Descripción</span>
-          <div class="description-box">{{ activo.descripcion }}</div>
-        </div>
-      </div>
-
-      <!-- Card: Finanzas -->
-      <div class="detail-card">
-        <div class="card-header">
-          <iconify-icon icon="lucide:banknote" class="card-header-icon"></iconify-icon>
-          <h3>Información Financiera</h3>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Valor de Compra</span>
-          <span class="info-value">${{ activo.valor_compra | number:'1.2-2' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Costo Mensual</span>
-          <span class="info-value">${{ activo.costo_mensual | number:'1.2-2' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Fecha de Registro</span>
-          <span class="info-value">{{ activo.fecha_registro | date : 'dd/MM/yyyy' }}</span>
-        </div>
-      </div>
-
-      <!-- Card: Garantía (Dinámica) -->
-      <div class="detail-card" [class.warranty-active]="activo.garantia.length > 0">
-        <div class="card-header">
-          <iconify-icon icon="lucide:shield-check" class="card-header-icon"></iconify-icon>
-          <h3 [class.warranty-header]="activo.garantia.length > 0">Información de Garantía</h3>
-        </div>
-        
-        <div *ngIf="activo.garantia && activo.garantia.length > 0; else noGarantia">
-          <div *ngFor="let g of activo.garantia; trackBy: trackById">
-            <div class="info-row">
-              <span class="info-label">Póliza</span>
-              <span class="info-value">{{ g.nombre_garantia }}</span>
+  @if (activo) {
+    <div class="container">
+      <!-- Hero Section: Impacto Visual Inmediato -->
+      <header class="asset-hero">
+        <div class="hero-image-container">
+          @if (activo.foto_url) {
+            <img [src]="getAssetPhoto(activo.foto_url)" alt="Foto del Activo" />
+          }
+          @if (!activo.foto_url) {
+            <div class="no-image-placeholder">
+              <iconify-icon icon="lucide:image-off" class="placeholder-icon"></iconify-icon>
+              <span>N/A</span>
             </div>
-            <div class="info-row">
-              <span class="info-label">Proveedor</span>
-              <span class="info-value">{{ g.proveedor?.nombre }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Vigencia</span>
-              <span class="info-value">{{ g.fecha_inicio | date:'dd/MM/yy' }} - {{ g.fecha_fin | date:'dd/MM/yy' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Estado</span>
-              <span class="info-value">{{ g.estado }}</span>
-            </div>
-            <div class="description-box">
-              <strong>Condiciones:</strong><br>
-              {{ g.condiciones }}
-            </div>
+          }
+        </div>
+        <div class="hero-content">
+          <span class="asset-type">{{ activo.tipo.nombre || 'Activo General' }}</span>
+          <h1>{{ activo.nombre }}</h1>
+          <div class="hero-badges">
+            <span class="badge badge-status">{{ activo.estado }}</span>
+            <span class="badge badge-id">ID: #{{ activo.id }}</span>
+          </div>
+          <div class="hero-actions">
+            @if (isAdmin()) {
+              <button class="btn-action btn-edit" (click)="editarActivo()">
+                <iconify-icon icon="lucide:edit-3" style="font-size: 18px;"></iconify-icon>
+                Editar Activo
+              </button>
+            }
+            <button class="btn-action" (click)="verHistorial()">
+              <iconify-icon icon="lucide:history" style="font-size: 18px;"></iconify-icon>
+              Historial
+            </button>
+            @if (isAdmin()) {
+              <button class="btn-action" (click)="darDeBaja()">
+                <iconify-icon icon="lucide:trash-2" style="font-size: 18px;"></iconify-icon>
+                Dar de Baja
+              </button>
+            }
           </div>
         </div>
-        
-        <ng-template #noGarantia>
-          <div class="description-box" style="text-align: center; padding: 30px;">
-            <iconify-icon icon="lucide:shield-off" class="placeholder-icon"></iconify-icon>
-            <p>No hay garantías registradas para este activo.</p>
+      </header>
+      <div class="details-grid">
+        <!-- Card: Especificaciones Técnicas -->
+        <div class="detail-card">
+          <div class="card-header">
+            <iconify-icon icon="lucide:cpu" class="card-header-icon"></iconify-icon>
+            <h3>Especificaciones Técnicas</h3>
           </div>
-        </ng-template>
+          <div class="info-row">
+            <span class="info-label">Modelo</span>
+            <span class="info-value">{{ activo.modelo }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Etiqueta / Serial</span>
+            <span class="info-value">{{ activo.etiqueta_serial }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Recursos Asignados</span>
+            <span class="info-value">{{ activo.recursos_asignados }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Software / Versión</span>
+            <span class="info-value">{{ activo.version_software }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Tipo de Licencia</span>
+            <span class="info-value">{{ activo.tipo_licencia }}</span>
+          </div>
+          @if (activo.fecha_vencimiento_licencia) {
+            <div class="info-row">
+              <span class="info-label">Vence Licencia</span>
+              <span class="info-value">{{ activo.fecha_vencimiento_licencia | date : 'dd/MM/yyyy' }}</span>
+            </div>
+          }
+        </div>
+        <!-- Card: Gestión y Ubicación -->
+        <div class="detail-card">
+          <div class="card-header">
+            <iconify-icon icon="lucide:map-pin" class="card-header-icon"></iconify-icon>
+            <h3>Gestión y Ubicación</h3>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Dueño / Responsable</span>
+            <span class="info-value">{{ activo.dueno.nombre || 'No asignado' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Ubicación Actual</span>
+            <span class="info-value">{{ activo.ubicacion.nombre }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Proveedor</span>
+            <span class="info-value">{{ activo.proveedor.nombre }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Fecha Adquisición</span>
+            <span class="info-value">{{ activo.fecha_adquisicion | date : 'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Condición Física</span>
+            <span class="info-value">{{ activo.condicion_fisica }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Descripción</span>
+            <div class="description-box">{{ activo.descripcion }}</div>
+          </div>
+        </div>
+        <!-- Card: Finanzas -->
+        <div class="detail-card">
+          <div class="card-header">
+            <iconify-icon icon="lucide:banknote" class="card-header-icon"></iconify-icon>
+            <h3>Información Financiera</h3>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Valor de Compra</span>
+            <span class="info-value">${{ activo.valor_compra | number:'1.2-2' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Costo Mensual</span>
+            <span class="info-value">${{ activo.costo_mensual | number:'1.2-2' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Fecha de Registro</span>
+            <span class="info-value">{{ activo.fecha_registro | date : 'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+        <!-- Card: Garantía (Dinámica) -->
+        <div class="detail-card" [class.warranty-active]="activo.garantia.length > 0">
+          <div class="card-header">
+            <iconify-icon icon="lucide:shield-check" class="card-header-icon"></iconify-icon>
+            <h3 [class.warranty-header]="activo.garantia.length > 0">Información de Garantía</h3>
+          </div>
+          @if (activo.garantia && activo.garantia.length > 0) {
+            <div>
+              @for (g of activo.garantia; track trackById($index, g)) {
+                <div>
+                  <div class="info-row">
+                    <span class="info-label">Póliza</span>
+                    <span class="info-value">{{ g.nombre_garantia }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Proveedor</span>
+                    <span class="info-value">{{ g.proveedor?.nombre }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Vigencia</span>
+                    <span class="info-value">{{ g.fecha_inicio | date:'dd/MM/yy' }} - {{ g.fecha_fin | date:'dd/MM/yy' }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Estado</span>
+                    <span class="info-value">{{ g.estado }}</span>
+                  </div>
+                  <div class="description-box">
+                    <strong>Condiciones:</strong><br>
+                    {{ g.condiciones }}
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="description-box" style="text-align: center; padding: 30px;">
+              <iconify-icon icon="lucide:shield-off" class="placeholder-icon"></iconify-icon>
+              <p>No hay garantías registradas para este activo.</p>
+            </div>
+          }
+        </div>
       </div>
-
     </div>
-  </div>
+  }
 </main>

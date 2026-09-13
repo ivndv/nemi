@@ -1,15 +1,15 @@
 <main>
   <div class="container">
     <div class="form-card">
-      
+
       <!-- Hero de Edición: Contexto Inmediato -->
       <header class="edit-hero">
         <div style="display: flex; align-items: center; gap: 30px; flex: 1;">
           <div class="hero-image-wrapper">
-            <img 
-              [src]="getAssetPhoto(previewUrl() || imagenActual) || 'https://assets.mgdc.site/nemi/gestionar-activos.png'" 
-              alt="Vista Previa" 
-            />
+            <img
+              [src]="getAssetPhoto(previewUrl() || imagenActual) || 'https://assets.mgdc.site/nemi/gestionar-activos.png'"
+              alt="Vista Previa"
+              />
           </div>
           <div class="hero-text">
             <span>Editando Propiedades del Activo</span>
@@ -26,59 +26,77 @@
           </label>
           <div class="image-actions-row">
             <!-- Eliminar: Solo si hay imagen y no la hemos cambiado aún -->
-            <button type="button" class="btn-danger-light" *ngIf="!haCambiadoImagen && imagenActual" (click)="removeImage()">
-              Eliminar Foto
-            </button>
-            
+            @if (!haCambiadoImagen && imagenActual) {
+              <button type="button" class="btn-danger-light" (click)="removeImage()">
+                Eliminar Foto
+              </button>
+            }
+
             <!-- Restaurar: Solo si ya hubo un cambio (subida o borrado) -->
-            <button type="button" class="btn-restore" *ngIf="haCambiadoImagen" (click)="restoreOriginalImage()">
-              Restaurar Original
-            </button>
+            @if (haCambiadoImagen) {
+              <button type="button" class="btn-restore" (click)="restoreOriginalImage()">
+                Restaurar Original
+              </button>
+            }
           </div>
         </div>
       </header>
 
       <form [formGroup]="editarActivoForm" (ngSubmit)="onSubmit()">
-        
+
         <!-- Grid Principal: Datos del Activo -->
         <div class="form-grid">
-          
+
           <!-- Columna 1 -->
           <div class="form-group">
             <label for="nombre">Nombre del Activo *</label>
             <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: MacBook Pro 16" />
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('nombre')?.touched && editarActivoForm.get('nombre')?.hasError('required')">Campo obligatorio</small>
+            @if (editarActivoForm.get('nombre')?.touched && editarActivoForm.get('nombre')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
 
           <div class="form-group">
             <label for="dueno_id">Dueño / Responsable *</label>
             <ng-select id="dueno_id" formControlName="dueno_id" [items]="duenos" bindLabel="nombre" bindValue="id" placeholder="Seleccionar dueño..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('dueno_id')?.touched && editarActivoForm.get('dueno_id')?.hasError('required')">Campo obligatorio</small>
+            @if (editarActivoForm.get('dueno_id')?.touched && editarActivoForm.get('dueno_id')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
 
           <div class="form-group">
             <label for="tipo_id">Tipo de Activo *</label>
             <ng-select id="tipo_id" formControlName="tipo_id" [items]="tiposActivos" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar tipo..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('tipo_id')?.touched && editarActivoForm.get('tipo_id')?.hasError('required')">Campo obligatorio</small>
+            @if (editarActivoForm.get('tipo_id')?.touched && editarActivoForm.get('tipo_id')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
 
           <div class="form-group">
             <label for="fecha_adquisicion">Fecha de Adquisición *</label>
             <input type="date" id="fecha_adquisicion" formControlName="fecha_adquisicion" />
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('fecha_adquisicion')?.touched && editarActivoForm.get('fecha_adquisicion')?.hasError('required')">Campo obligatorio</small>
+            @if (editarActivoForm.get('fecha_adquisicion')?.touched && editarActivoForm.get('fecha_adquisicion')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
 
           <div class="form-group">
             <label for="valor_compra">Valor de Compra ($) *</label>
             <input type="number" id="valor_compra" formControlName="valor_compra" placeholder="0.00" />
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('valor_compra')?.touched && editarActivoForm.get('valor_compra')?.hasError('required')">Campo obligatorio</small>
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('valor_compra')?.touched && editarActivoForm.get('valor_compra')?.hasError('min')">Debe ser un número positivo</small>
+            @if (editarActivoForm.get('valor_compra')?.touched && editarActivoForm.get('valor_compra')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
+            @if (editarActivoForm.get('valor_compra')?.touched && editarActivoForm.get('valor_compra')?.hasError('min')) {
+              <small class="error-text" role="alert">Debe ser un número positivo</small>
+            }
           </div>
 
           <div class="form-group">
             <label for="proveedor_id">Proveedor *</label>
             <ng-select id="proveedor_id" formControlName="proveedor_id" [items]="proveedores" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar proveedor..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('proveedor_id')?.touched && editarActivoForm.get('proveedor_id')?.hasError('required')">Campo obligatorio</small>
+            @if (editarActivoForm.get('proveedor_id')?.touched && editarActivoForm.get('proveedor_id')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
 
           <div class="form-group">
@@ -94,13 +112,17 @@
           <div class="form-group">
             <label for="estado">Estado del Activo *</label>
             <ng-select id="estado" formControlName="estado" [items]="estados" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar estado..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('estado')?.touched && editarActivoForm.get('estado')?.hasError('required')">Campo obligatorio</small>
+            @if (editarActivoForm.get('estado')?.touched && editarActivoForm.get('estado')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
 
           <div class="form-group">
             <label for="ubicacion_id">Ubicación Actual *</label>
             <ng-select id="ubicacion_id" formControlName="ubicacion_id" [items]="ubicaciones" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar ubicación..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('ubicacion_id')?.touched && editarActivoForm.get('ubicacion_id')?.hasError('required')">Campo obligatorio</small>
+            @if (editarActivoForm.get('ubicacion_id')?.touched && editarActivoForm.get('ubicacion_id')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
 
           <!-- Campos de Ancho Completo -->
@@ -137,7 +159,9 @@
           <div class="form-group">
             <label for="condicion_fisica">Condición Física</label>
             <ng-select id="condicion_fisica" formControlName="condicion_fisica" [items]="condicionesFisicas" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Ej: Excelente, Bueno..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="editarActivoForm.get('condicion_fisica')?.errors?.['condicionInvalida']">Condición no válida.</small>
+            @if (editarActivoForm.get('condicion_fisica')?.errors?.['condicionInvalida']) {
+              <small class="error-text" role="alert">Condición no válida.</small>
+            }
           </div>
 
         </div>
@@ -148,7 +172,7 @@
             <iconify-icon icon="lucide:shield-check"></iconify-icon>
             Información de Garantía (Opcional)
           </h2>
-          
+
           <div class="form-grid">
             <div class="form-group">
               <label for="nombre_garantia">Nombre de la Póliza</label>
@@ -202,9 +226,11 @@
           </button>
         </footer>
 
-        <small class="error-text" role="alert" style="text-align:center;display:block;margin-top:8px;" *ngIf="!editarActivoForm.valid && editarActivoForm.touched">
-          Completa todos los campos obligatorios marcados con *
-        </small>
+        @if (!editarActivoForm.valid && editarActivoForm.touched) {
+          <small class="error-text" role="alert" style="text-align:center;display:block;margin-top:8px;">
+            Completa todos los campos obligatorios marcados con *
+          </small>
+        }
 
       </form>
     </div>

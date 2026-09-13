@@ -24,7 +24,7 @@
         (click)="toggleTheme()"
         [attr.aria-label]="isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
         [title]="isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-      >
+        >
         <iconify-icon [icon]="themeIcon" class="theme-icon"></iconify-icon>
         <span class="theme-label">{{ isDarkMode ? 'Modo claro' : 'Modo oscuro' }}</span>
       </button>
@@ -51,7 +51,7 @@
               type="email"
               formControlName="email"
               placeholder="nombre@empresa.com"
-            />
+              />
           </div>
         </div>
 
@@ -67,32 +67,38 @@
               formControlName="password"
               placeholder="••••••••"
               autocomplete="off"
-            />
+              />
             <button
               class="toggle-password"
               type="button"
               (click)="togglePasswordVisibility()"
               [attr.aria-label]="isPasswordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-            >
+              >
               <iconify-icon [icon]="isPasswordVisible() ? 'ph:eye-slash-light' : 'ph:eye-light'"></iconify-icon>
             </button>
           </div>
         </div>
 
         <!-- Mensaje de Error -->
-        <div class="error-container" *ngIf="errorMessage" role="alert">
-          <iconify-icon icon="ph:warning-circle-light"></iconify-icon>
-          <span>{{ errorMessage }}</span>
-        </div>
+        @if (errorMessage) {
+          <div class="error-container" role="alert">
+            <iconify-icon icon="ph:warning-circle-light"></iconify-icon>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
 
         <!-- Botón Submit -->
         <button
           class="btn-submit"
           type="submit"
           [disabled]="loginForm.invalid || isLoading()"
-        >
-          <span *ngIf="!isLoading()">Entrar al Sistema</span>
-          <div class="loader" *ngIf="isLoading()"></div>
+          >
+          @if (!isLoading()) {
+            <span>Entrar al Sistema</span>
+          }
+          @if (isLoading()) {
+            <div class="loader"></div>
+          }
         </button>
       </form>
 

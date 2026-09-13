@@ -10,19 +10,25 @@
             <div class="container-inputs">
               <label for="nombre">Nombre del Activo *</label>
               <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: MacBook Pro M2" />
-              <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('nombre')?.touched && agregarActivoForm.get('nombre')?.hasError('required')">Campo obligatorio</small>
+              @if (agregarActivoForm.get('nombre')?.touched && agregarActivoForm.get('nombre')?.hasError('required')) {
+                <small class="error-text" role="alert">Campo obligatorio</small>
+              }
             </div>
 
             <div class="container-inputs">
               <label for="dueno_id">Duenno / Responsable *</label>
               <ng-select id="dueno_id" formControlName="dueno_id" [items]="duenos" bindLabel="nombre" bindValue="id" placeholder="Seleccionar dueño..."></ng-select>
-              <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('dueno_id')?.touched && agregarActivoForm.get('dueno_id')?.hasError('required')">Campo obligatorio</small>
+              @if (agregarActivoForm.get('dueno_id')?.touched && agregarActivoForm.get('dueno_id')?.hasError('required')) {
+                <small class="error-text" role="alert">Campo obligatorio</small>
+              }
             </div>
 
             <div class="container-inputs">
               <label for="tipo_id">Tipo de Activo *</label>
               <ng-select id="tipo_id" formControlName="tipo_id" [items]="tiposActivos" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Ej: Hardware, Licencia..."></ng-select>
-              <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('tipo_id')?.touched && agregarActivoForm.get('tipo_id')?.hasError('required')">Campo obligatorio</small>
+              @if (agregarActivoForm.get('tipo_id')?.touched && agregarActivoForm.get('tipo_id')?.hasError('required')) {
+                <small class="error-text" role="alert">Campo obligatorio</small>
+              }
             </div>
           </div>
         </div>
@@ -31,10 +37,16 @@
           <h2>Imagen del Activo</h2>
           <div class="image-preview-container">
             <img [src]="previewUrl() || (imagenActual ? 'http://localhost:3000' + imagenActual : 'https://assets.mgdc.site/nemi/placeholder-image.png')" alt="Vista previa" />
-            <input *ngIf="!previewUrl()" type="file" id="imagen" (change)="onFileSelected($event)" accept="image/*" />
+            @if (!previewUrl()) {
+              <input type="file" id="imagen" (change)="onFileSelected($event)" accept="image/*" />
+            }
           </div>
-          <button type="button" class="btn-upload" *ngIf="previewUrl() || imagenActual" (click)="removeImage()">Quitar Imagen</button>
-          <span style="font-size: 11px; color: #a0aec0;" *ngIf="!previewUrl() && !imagenActual">Haz clic en el recuadro para subir</span>
+          @if (previewUrl() || imagenActual) {
+            <button type="button" class="btn-upload" (click)="removeImage()">Quitar Imagen</button>
+          }
+          @if (!previewUrl() && !imagenActual) {
+            <span style="font-size: 11px; color: #a0aec0;">Haz clic en el recuadro para subir</span>
+          }
         </div>
       </div>
 
@@ -68,22 +80,30 @@
           <div class="container-inputs">
             <label for="condicion_fisica">Condicion Fisica</label>
             <ng-select id="condicion_fisica" formControlName="condicion_fisica" [items]="condicionesFisicas" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar condicion..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('condicion_fisica')?.errors?.['condicionInvalida']">Condicion no valida.</small>
+            @if (agregarActivoForm.get('condicion_fisica')?.errors?.['condicionInvalida']) {
+              <small class="error-text" role="alert">Condicion no valida.</small>
+            }
           </div>
           <div class="container-inputs">
             <label for="etiqueta_serial">Etiqueta / Serial</label>
             <input type="text" id="etiqueta_serial" formControlName="etiqueta_serial" placeholder="Numero de serie" (blur)="validarEtiquetaSerial()" />
-            <small class="error-text" role="alert" *ngIf="serialError">{{ serialError }}</small>
+            @if (serialError) {
+              <small class="error-text" role="alert">{{ serialError }}</small>
+            }
           </div>
           <div class="container-inputs">
             <label for="estado">Estado Operativo *</label>
             <ng-select id="estado" formControlName="estado" [items]="estados" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar estado..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('estado')?.touched && agregarActivoForm.get('estado')?.hasError('required')">Campo obligatorio</small>
+            @if (agregarActivoForm.get('estado')?.touched && agregarActivoForm.get('estado')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
           <div class="container-inputs">
             <label for="ubicacion_id">Ubicacion *</label>
             <ng-select id="ubicacion_id" formControlName="ubicacion_id" [items]="ubicaciones" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar ubicacion..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('ubicacion_id')?.touched && agregarActivoForm.get('ubicacion_id')?.hasError('required')">Campo obligatorio</small>
+            @if (agregarActivoForm.get('ubicacion_id')?.touched && agregarActivoForm.get('ubicacion_id')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
         </div>
         <div class="container-inputs" style="margin-top: 20px;">
@@ -99,18 +119,26 @@
           <div class="container-inputs">
             <label for="fecha_adquisicion">Fecha de Adquisicion *</label>
             <input type="date" id="fecha_adquisicion" formControlName="fecha_adquisicion" />
-            <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('fecha_adquisicion')?.touched && agregarActivoForm.get('fecha_adquisicion')?.hasError('required')">Campo obligatorio</small>
+            @if (agregarActivoForm.get('fecha_adquisicion')?.touched && agregarActivoForm.get('fecha_adquisicion')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
           <div class="container-inputs">
             <label for="valor_compra">Valor de Compra *</label>
             <input type="number" id="valor_compra" formControlName="valor_compra" placeholder="0.00" />
-            <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('valor_compra')?.touched && agregarActivoForm.get('valor_compra')?.hasError('required')">Campo obligatorio</small>
-            <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('valor_compra')?.touched && agregarActivoForm.get('valor_compra')?.hasError('min')">Debe ser un numero positivo</small>
+            @if (agregarActivoForm.get('valor_compra')?.touched && agregarActivoForm.get('valor_compra')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
+            @if (agregarActivoForm.get('valor_compra')?.touched && agregarActivoForm.get('valor_compra')?.hasError('min')) {
+              <small class="error-text" role="alert">Debe ser un numero positivo</small>
+            }
           </div>
           <div class="container-inputs">
             <label for="proveedor_id">Proveedor *</label>
             <ng-select id="proveedor_id" formControlName="proveedor_id" [items]="proveedores" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar proveedor..."></ng-select>
-            <small class="error-text" role="alert" *ngIf="agregarActivoForm.get('proveedor_id')?.touched && agregarActivoForm.get('proveedor_id')?.hasError('required')">Campo obligatorio</small>
+            @if (agregarActivoForm.get('proveedor_id')?.touched && agregarActivoForm.get('proveedor_id')?.hasError('required')) {
+              <small class="error-text" role="alert">Campo obligatorio</small>
+            }
           </div>
           <div class="container-inputs">
             <label for="fecha_vencimiento_licencia">Proximo Vencimiento</label>
@@ -168,9 +196,11 @@
         <button type="submit" class="btn-guardar" [disabled]="!agregarActivoForm.valid">Guardar Activo</button>
       </div>
 
-      <small class="error-text" role="alert" style="text-align:center;display:block;margin-top:8px;" *ngIf="!agregarActivoForm.valid && agregarActivoForm.touched">
-        Completa todos los campos obligatorios marcados con *
-      </small>
+      @if (!agregarActivoForm.valid && agregarActivoForm.touched) {
+        <small class="error-text" role="alert" style="text-align:center;display:block;margin-top:8px;">
+          Completa todos los campos obligatorios marcados con *
+        </small>
+      }
 
     </form>
   </section>
