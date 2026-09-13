@@ -12,6 +12,7 @@ import {
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
+import { ThemeService } from "../../../shared/services/theme.service";
 import { AuthService } from "../../services/auth.service";
 
 @Component({
@@ -37,6 +38,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 		private authService: AuthService, // Servicio de autenticación
 		private router: Router,
 		private renderer: Renderer2, // Manipulación segura del DOM
+		public themeService: ThemeService,
 	) {
 		// Inicialización del formulario con validaciones
 		this.loginForm = this.fb.group({
@@ -46,6 +48,19 @@ export class LoginComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnInit() {}
+
+	toggleTheme(): void {
+		this.themeService.toggle();
+		this.cdr.markForCheck();
+	}
+
+	get isDarkMode(): boolean {
+		return this.themeService.current === "dark";
+	}
+
+	get themeIcon(): string {
+		return this.isDarkMode ? "ph:sun-bold" : "ph:moon-bold";
+	}
 
 	// Alterna visibilidad de contraseña
 	togglePasswordVisibility() {
@@ -86,7 +101,10 @@ export class LoginComponent implements OnInit, OnDestroy {
 						this.isLoading.set(false);
 						this.cdr.markForCheck();
 						// Guarda el token y datos del usuario
-						this.authService.saveToken(response.data.token, response.data.userData);
+						this.authService.saveToken(
+							response.data.token,
+							response.data.userData,
+						);
 						this.router.navigate(["/dashboard"]); // Redirige a dashboard
 					},
 					error: (error) => {

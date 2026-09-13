@@ -16,8 +16,26 @@
 
   <!-- Sección Derecha: Formulario de Login -->
   <section class="login-form-section">
+    <!-- Theme Switcher Flotante -->
+    <aside class="theme-toggle-wrapper">
+      <button
+        type="button"
+        class="theme-toggle-btn"
+        (click)="toggleTheme()"
+        [attr.aria-label]="isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        [title]="isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+      >
+        <iconify-icon [icon]="themeIcon" class="theme-icon"></iconify-icon>
+        <span class="theme-label">{{ isDarkMode ? 'Modo claro' : 'Modo oscuro' }}</span>
+      </button>
+    </aside>
+
     <div class="login-card">
       <div class="card-header">
+        <div class="mobile-branding">
+          <img src="https://assets.mgdc.site/nemi/logo.png" alt="Logo" class="mobile-logo" />
+          <span class="mobile-brand-name">Gestor de Activos</span>
+        </div>
         <h1>Iniciar sesión</h1>
         <p>Ingresa tus credenciales para acceder al panel administrativo.</p>
       </div>
