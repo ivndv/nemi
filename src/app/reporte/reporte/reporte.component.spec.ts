@@ -3,8 +3,8 @@ jest.mock("jspdf-autotable", () => ({}));
 jest.mock("html2canvas", () => ({}));
 jest.mock("chart.js/auto", () => ({}));
 
-import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { HttpClientTestingModule } from "@angular/common/http/testing";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 
 import { ReporteComponent } from "./reporte.component";
 

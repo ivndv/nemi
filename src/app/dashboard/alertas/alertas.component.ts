@@ -1,4 +1,10 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, ChangeDetectionStrategy } from "@angular/core";
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	OnDestroy,
+	OnInit,
+} from "@angular/core";
 import { Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
@@ -48,7 +54,8 @@ export class AlertasComponent implements OnInit, OnDestroy {
 						response.data.licencias_proximas_a_vencer || 0;
 					this.garantiasProximasAExpirar =
 						response.data.garantias_proximas_a_expirar || 0;
-					this.activosEnMantenimiento = response.data.activos_en_mantenimiento || 0;
+					this.activosEnMantenimiento =
+						response.data.activos_en_mantenimiento || 0;
 					this.activosProximosADevolver =
 						response.data.activos_proximos_a_devolver || 0;
 					this.cdr.markForCheck();

@@ -1,4 +1,9 @@
-import { ChangeDetectorRef, Component, OnInit, ChangeDetectionStrategy } from "@angular/core";
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	OnInit,
+} from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
@@ -44,7 +49,10 @@ export class DetalleActivoComponent implements OnInit {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe({
 				next: (response) => {
-					this.activo = { ...response.data, garantia: response.data.garantia ?? [] };
+					this.activo = {
+						...response.data,
+						garantia: response.data.garantia ?? [],
+					};
 					this.cdr.markForCheck();
 					console.log("Activo cargado correctamente:", this.activo);
 				},

@@ -1,14 +1,20 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, ChangeDetectionStrategy } from "@angular/core";
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	OnDestroy,
+	OnInit,
+} from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import { debounceTime, switchMap } from "rxjs/operators";
+import Swal from "sweetalert2";
 import {
 	DatosAuxiliares,
 	SelectItem,
 } from "../../models/datos-auxiliares.interface";
 import { HistorialEntry } from "../../models/historial.interface";
 import { HistorialService } from "../service/historial.service";
-import Swal from "sweetalert2";
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -122,7 +128,11 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 					// Mostrar el mensaje
 					this.errorMessage = errorMessage;
 					console.error("Error del backend:", errorMessage);
-				Swal.fire({ icon: "error", text: errorMessage, confirmButtonColor: "#1e293b" });
+					Swal.fire({
+						icon: "error",
+						text: errorMessage,
+						confirmButtonColor: "#1e293b",
+					});
 				},
 			});
 	}
@@ -164,7 +174,11 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 						error.error?.error || "Error al obtener historial";
 					this.errorMessage = errorMessage;
 					console.error("Error del backend:", errorMessage);
-					Swal.fire({ icon: "error", text: errorMessage, confirmButtonColor: "#1e293b" });
+					Swal.fire({
+						icon: "error",
+						text: errorMessage,
+						confirmButtonColor: "#1e293b",
+					});
 				},
 			});
 	}
@@ -190,7 +204,11 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 					// Mostrar el mensaje
 					this.errorMessage = errorMessage;
 					console.error("Error del backend:", errorMessage);
-					Swal.fire({ icon: "error", text: errorMessage, confirmButtonColor: "#1e293b" });
+					Swal.fire({
+						icon: "error",
+						text: errorMessage,
+						confirmButtonColor: "#1e293b",
+					});
 				},
 			});
 	}

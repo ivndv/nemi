@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, signal } from "@angular/core";
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	OnDestroy,
+	OnInit,
+	signal,
+} from "@angular/core";
 import {
 	AbstractControl,
 	FormBuilder,
@@ -153,7 +160,8 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 				this.previewUrl.set(reader.result as string);
 				// Guardar en localStorage (clave única para evitar conflictos)
 				const imageKey = `activo_img_${Date.now()}`;
-				if (this.previewUrl()) localStorage.setItem(imageKey, this.previewUrl()!);
+				if (this.previewUrl())
+					localStorage.setItem(imageKey, this.previewUrl()!);
 				this.imagenLocalStorageKey = imageKey; // Guardar la clave para usarla después
 			};
 			reader.readAsDataURL(file);
@@ -354,9 +362,9 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 				if (this.imagenLocalStorageKey) {
 					localStorage.removeItem(this.imagenLocalStorageKey);
 					this.imagenLocalStorageKey = null;
-				this.previewUrl.set(null);
-			}
-			this.router.navigate(["/gestion-activos"]);
+					this.previewUrl.set(null);
+				}
+				this.router.navigate(["/gestion-activos"]);
 			}
 		});
 	}

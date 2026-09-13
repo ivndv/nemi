@@ -16,7 +16,11 @@ main {
 
 /* Encabezado Hero */
 .reports-hero {
-	background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+	background: linear-gradient(
+		135deg,
+		var(--color-primary) 0%,
+		var(--color-primary-light) 100%
+	);
 	padding: 40px;
 	border-radius: 25px;
 	color: var(--color-white);

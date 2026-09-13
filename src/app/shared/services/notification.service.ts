@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { BehaviorSubject, Observable, map } from "rxjs";
+import { BehaviorSubject, map, Observable } from "rxjs";
 import { DashboardService } from "../../dashboard/services/dashboard.service";
 
 export interface AlertaItem {

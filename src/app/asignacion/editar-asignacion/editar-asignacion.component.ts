@@ -1,5 +1,11 @@
 import { Location } from "@angular/common";
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, ChangeDetectionStrategy } from "@angular/core";
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	OnDestroy,
+	OnInit,
+} from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
@@ -25,7 +31,7 @@ export class EditarAsignacionComponent implements OnInit, OnDestroy {
 	nombreActivo: string = "";
 	usuarios: { id: number; nombre: string }[] = [];
 	ubicaciones: { id: number; nombre: string }[] = [];
-		asignacionData: AsignacionData | null = null;
+	asignacionData: AsignacionData | null = null;
 
 	// FormGroup para el formulario
 	asignacionForm!: FormGroup;

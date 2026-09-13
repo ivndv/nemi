@@ -77,10 +77,12 @@ export class ResumenActivosComponent implements OnInit, OnDestroy {
 				next: (response) => {
 					this.totalActivos = Number(response.data.total_activos) || 0;
 					this.activosAsignados = Number(response.data.activos_asignados) || 0;
-					this.activosDisponibles = Number(response.data.activos_disponibles) || 0;
+					this.activosDisponibles =
+						Number(response.data.activos_disponibles) || 0;
 					this.activosEnMantenimiento =
 						Number(response.data.activos_en_mantenimiento) || 0;
-					this.activosDadosDeBaja = Number(response.data.activos_dados_de_baja) || 0;
+					this.activosDadosDeBaja =
+						Number(response.data.activos_dados_de_baja) || 0;
 
 					if (response.data.tendencia_mensual) {
 						this.tendenciaMensualData = {

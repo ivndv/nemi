@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, signal } from "@angular/core";
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	OnDestroy,
+	OnInit,
+	signal,
+} from "@angular/core";
 import {
 	AbstractControl,
 	FormBuilder,
@@ -126,14 +133,18 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 					this.cdr.markForCheck();
 				},
 				error: (error) => {
-				// Ejem. Si el backend devuelve { mensaje: "Error al obtener datos auxiliares" }
-				const errorMessage =
-					error.error?.mensaje || "Error al obtener datos auxiliares";
+					// Ejem. Si el backend devuelve { mensaje: "Error al obtener datos auxiliares" }
+					const errorMessage =
+						error.error?.mensaje || "Error al obtener datos auxiliares";
 
-				// Mostrar el mensaje
-				this.errorMessage = errorMessage;
-				console.error("Error del backend:", errorMessage);
-				Swal.fire({ icon: "error", text: errorMessage, confirmButtonColor: "#1e293b" });
+					// Mostrar el mensaje
+					this.errorMessage = errorMessage;
+					console.error("Error del backend:", errorMessage);
+					Swal.fire({
+						icon: "error",
+						text: errorMessage,
+						confirmButtonColor: "#1e293b",
+					});
 				},
 			});
 	}
@@ -190,14 +201,14 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 			.getActivoById(this.activoId)
 			.pipe(takeUntil(this.destroy$))
 			.subscribe({
-			next: (response) => {
+				next: (response) => {
 					console.log("Datos del activo:", response);
 					// Guarda la imagen actual y la original para comparaciones
 					this.imagenActual = response.data.foto_url || null;
 					this.imagenOriginal = response.data.foto_url || null;
 
-				// Si hay imagen actual, prepara la vista previa (esto es opcional ahora que usamos haCambiadoImagen)
-				this.previewUrl.set(null);
+					// Si hay imagen actual, prepara la vista previa (esto es opcional ahora que usamos haCambiadoImagen)
+					this.previewUrl.set(null);
 
 					// Manejo SEGURO de garantía (si es null o undefined)
 					const garantia: GarantiaItem =
@@ -244,13 +255,17 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 					console.log("Imagen actual:", this.imagenActual);
 				},
 				error: (error) => {
-				// Ejem. Si el backend devuelve { error: "Error al obtener activo" }
-				const errorMessage = error.error?.error || "Error al obtener activo";
+					// Ejem. Si el backend devuelve { error: "Error al obtener activo" }
+					const errorMessage = error.error?.error || "Error al obtener activo";
 
-				// Mostrar el mensaje
-				this.errorMessage = errorMessage;
-				console.error("Error del backend:", errorMessage);
-				Swal.fire({ icon: "error", text: errorMessage, confirmButtonColor: "#1e293b" });
+					// Mostrar el mensaje
+					this.errorMessage = errorMessage;
+					console.error("Error del backend:", errorMessage);
+					Swal.fire({
+						icon: "error",
+						text: errorMessage,
+						confirmButtonColor: "#1e293b",
+					});
 				},
 			});
 	}
@@ -265,12 +280,17 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 				this.previewUrl.set(reader.result as string);
 				// Guardar en localStorage (clave única para evitar conflictos)
 				const imageKey = `activo_img_${Date.now()}`;
-				if (this.previewUrl()) localStorage.setItem(imageKey, this.previewUrl()!);
+				if (this.previewUrl())
+					localStorage.setItem(imageKey, this.previewUrl()!);
 				this.imagenLocalStorageKey = imageKey; // Guardar la clave para usarla después
 			};
 			reader.readAsDataURL(file);
 		} else {
-			Swal.fire({ icon: "error", text: "Por favor selecciona una imagen válida (JPEG, PNG, GIF).", confirmButtonColor: "#1e293b" });
+			Swal.fire({
+				icon: "error",
+				text: "Por favor selecciona una imagen válida (JPEG, PNG, GIF).",
+				confirmButtonColor: "#1e293b",
+			});
 		}
 	}
 	// Manejar el envío del formulario
@@ -401,9 +421,9 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 				if (this.imagenLocalStorageKey) {
 					localStorage.removeItem(this.imagenLocalStorageKey);
 					this.imagenLocalStorageKey = null;
-				this.previewUrl.set(null);
-			}
-			this.router.navigate(["/gestion-activos"]);
+					this.previewUrl.set(null);
+				}
+				this.router.navigate(["/gestion-activos"]);
 			}
 		});
 	}

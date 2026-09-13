@@ -17,7 +17,8 @@ export class ThemeService {
 		this.renderer = rendererFactory.createRenderer(null, null);
 
 		const saved = localStorage.getItem(this.STORAGE_KEY) as Theme | null;
-		const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+		const prefersDark =
+			window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 		const initial: Theme = saved ?? (prefersDark ? "dark" : "light");
 
 		this.themeSubject = new BehaviorSubject<Theme>(initial);
