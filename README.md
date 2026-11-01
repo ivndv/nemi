@@ -29,34 +29,12 @@ Esta es la interfaz gráfica del Gestor de Activos IT, una plataforma web donde 
 ## Tecnologías Utilizadas
 
 - HTML / CSS / TypeScript
-- Angular 19
+- Angular 22
 - Angular Material
 - Chart.js
 - jsPDF
-- npm
+- Bun
 
-## Instalación
-
-1. **Clonar el Repositorio**: Descarga el código de este proyecto a tu máquina usando Git.
-
-```bash
-git clone https://github.com/Ivandv19/nemi.git
-```
-
-2. **Instalar Dependencias**: Abre una terminal en la carpeta principal del proyecto y ejecuta:
-
-```bash
-npm install
-```
-
-3. **Configuración**: El proyecto está configurado para conectarse localmente por defecto. Puedes ajustar las URLs en la carpeta `src/environments` si es necesario.
-
-4. **Iniciar el Proyecto**: Enciende la página localmente con el siguiente comando:
-
-```bash
-npm run start
-```
-*(Nota: Asegúrate de tener encendido tu proyecto backend en paralelo para que el inicio de sesión y la carga de datos funcione correctamente).*
 
 ## Créditos
 
@@ -66,12 +44,10 @@ Este proyecto administra la cara visual de las herramientas empresariales del ec
 
 ## Despliegue
 
-El sitio web está desplegado en Cloudflare Pages. Puedes visitarlo directamente aquí: [nemi.mgdc.site](https://nemi.mgdc.site/).
+El sitio web está desplegado en Cloudflare Pages. Puedes visitarlo directamente aquí: [Nemi](https://nemi.mgdc.site/).
 
 ## Licencia
 
-Licencia de Uso Personal:
+[PolyForm Noncommercial 1.0.0](LICENSE). Uso personal y no comercial; el uso comercial requiere permiso.
 
-Este software es propiedad de **Ivan Cruz**. Se permite el uso de este software solo para fines personales y no comerciales. No se permite la distribución, modificación ni uso comercial de este software sin el consentimiento expreso de **Ivan Cruz**.
-
-Cualquier uso no autorizado puede resultar en acciones legales.
+© 2026 Ivan Cruz

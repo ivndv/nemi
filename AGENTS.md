@@ -6,7 +6,7 @@ Guía operativa, arquitectónica y técnica para agentes de Inteligencia Artific
 
 ## 1. Visión General del Proyecto
 
-**Nemi Frontend** es una Single Page Application (SPA) corporativa construida en **Angular 19**, diseñada para la gestión, auditoría, asignación y rastreo de activos tecnológicos (hardware, software, licencias y garantías) en tiempo real.
+**Nemi Frontend** es una Single Page Application (SPA) corporativa construida en **Angular 22**, diseñada para la gestión, auditoría, asignación y rastreo de activos tecnológicos (hardware, software, licencias y garantías) en tiempo real.
 
 * **Propósito:** Interfaz administrativa intuitiva, reactiva y segura con soporte de roles (RBAC), modo claro/oscuro dinámico, reportes analíticos con gráficas interactivas y exportación en PDF.
 * **Dominio Frontend en Producción:** [https://nemi.mgdc.site](https://nemi.mgdc.site)
@@ -40,16 +40,16 @@ Este proyecto cuenta con un grafo de conocimiento indexado con **CodeGraph** (10
 
 | Capa | Tecnología | Versión / Detalle |
 | :--- | :--- | :--- |
-| **Framework SPA** | **Angular 19** | `@angular/core ^19.2.25`, Angular CLI `^19.2.27` |
-| **Runtime & Gestor** | **Bun** | Bun `v1.3.x` (`bun.lock`) |
-| **Lenguaje** | **TypeScript** | `typescript ~5.7.3` (Modo estricto ESM) |
-| **UI & Componentes** | **Angular Material + CDK** | `@angular/material ^19.2.19`, `@angular/cdk ^19.2.19` |
+| **Framework SPA** | **Angular 22** | `@angular/core ^22.1.6`, Angular CLI `^22.1.8` |
+| **Runtime & Gestor** | **Bun** | Bun `1.4.4` (`bun.lock`) |
+| **Lenguaje** | **TypeScript** | `typescript ~6.0.3` (Modo estricto ESM) |
+| **UI & Componentes** | **Angular Material + CDK** | `@angular/material ^22.1.6`, `@angular/cdk ^22.1.6` |
 | **Iconografía** | **Iconify** | `iconify-icon ^3.0.2` (Web Components con prefijo `ph:` de Phosphor Icons) |
-| **Selects Avanzados** | **Ng-Select** | `@ng-select/ng-select ^14.2.8` |
-| **Gráficas** | **Chart.js** | `chart.js ^4.4.9` (Gráficas de pastel y barras en reportes) |
-| **Generación de PDFs**| **jsPDF + html2canvas** | `jspdf ^3.0.1`, `jspdf-autotable ^5.0.2`, `html2canvas ^1.4.1` |
-| **Alertas Modales** | **SweetAlert2** | `sweetalert2 ^11.26.24` (Estilizado con clases corporativas premium) |
-| **Pruebas Unitarias** | **Jest + Jest Preset Angular** | `jest ^29.7.0`, `jest-preset-angular ^14.6.2`, `ts-jest ^29.4.12` |
+| **Selects Avanzados** | **Ng-Select** | `@ng-select/ng-select ^24.1.2` |
+| **Gráficas** | **Chart.js** | `chart.js ^4.5.1` (Gráficas de pastel y barras en reportes) |
+| **Generación de PDFs**| **jsPDF + html2canvas** | `jspdf ^4.2.1`, `jspdf-autotable ^5.0.8`, `html2canvas ^1.4.1` |
+| **Alertas Modales** | **SweetAlert2** | `sweetalert2 ^11.26.25` (Estilizado con clases corporativas premium) |
+| **Pruebas Unitarias** | **Jest + Jest Preset Angular** | `jest ^30.5.1`, `jest-preset-angular ^17.0.0`, `ts-jest ^29.4.12` |
 | **Linter & Formatter**| **Biome 2** | `@biomejs/biome ^2.5.13` (`biome.json`) |
 | **Despliegue** | **Cloudflare Pages** | Configurado en `public/_headers` con CSP, cache inmutable y SSL estricto |
 
