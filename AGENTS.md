@@ -8,11 +8,11 @@ Guía operativa, arquitectónica y técnica para agentes de Inteligencia Artific
 
 **Nemi Frontend** es una Single Page Application (SPA) corporativa construida en **Angular 22**, diseñada para la gestión, auditoría, asignación y rastreo de activos tecnológicos (hardware, software, licencias y garantías) en tiempo real.
 
-* **Propósito:** Interfaz administrativa intuitiva, reactiva y segura con soporte de roles (RBAC), modo claro/oscuro dinámico, reportes analíticos con gráficas interactivas y exportación en PDF.
-* **Dominio Frontend en Producción:** [https://nemi.mgdc.site](https://nemi.mgdc.site)
-* **Backend API:** [https://nemi-api.fluxdv.icu](https://nemi-api.fluxdv.icu) (ver [AGENTS.md del Backend](file:///home/ivan/software-dev/nemi-api/AGENTS.md))
-* **Assets en Cloudflare R2:** [https://assets.mgdc.site/nemi/](https://assets.mgdc.site/nemi/)
-* **Repositorio en GitHub:** [https://github.com/ivndv/nemi](https://github.com/ivndv/nemi)
+- **Propósito:** Interfaz administrativa intuitiva, reactiva y segura con soporte de roles (RBAC), modo claro/oscuro dinámico, reportes analíticos con gráficas interactivas y exportación en PDF.
+- **Dominio Frontend en Producción:** [https://nemi.mgdc.site](https://nemi.mgdc.site)
+- **Backend API:** [https://nemi-api.fluxdv.icu](https://nemi-api.fluxdv.icu) (ver [AGENTS.md del Backend](file:///home/ivan/software-dev/nemi-api/AGENTS.md))
+- **Assets en Cloudflare R2:** [https://assets.mgdc.site/nemi/](https://assets.mgdc.site/nemi/)
+- **Repositorio en GitHub:** [https://github.com/ivndv/nemi](https://github.com/ivndv/nemi)
 
 ---
 
@@ -20,16 +20,19 @@ Guía operativa, arquitectónica y técnica para agentes de Inteligencia Artific
 
 Este proyecto cuenta con un grafo de conocimiento indexado con **CodeGraph** (107 archivos, >1,100 nodos).
 
-* **Uso del MCP CodeGraph:** Antes de realizar búsquedas masivas de texto (`grep`), listar directorios o leer múltiples archivos a ciegas, invoca la herramienta MCP `codegraph_explore` indicando:
+- **Uso del MCP CodeGraph:** Antes de realizar búsquedas masivas de texto (`grep`), listar directorios o leer múltiples archivos a ciegas, invoca la herramienta MCP `codegraph_explore` indicando:
+
   ```json
   {
     "projectPath": "/home/ivan/software-dev/nemi",
     "query": "tu consulta de arquitectura, componente o flujo"
   }
   ```
+
   Te proveerá el grafo de dependencias, blast radius y código verbatim de los componentes y servicios en una sola llamada eficiente.
-* **Sincronización del Índice:**
+- **Sincronización del Índice:**
   Si creas o renombras componentes/módulos, sincroniza el índice ejecutando:
+
   ```bash
   codegraph sync /home/ivan/software-dev/nemi
   ```
@@ -38,20 +41,20 @@ Este proyecto cuenta con un grafo de conocimiento indexado con **CodeGraph** (10
 
 ## 3. Stack Tecnológico
 
-| Capa | Tecnología | Versión / Detalle |
-| :--- | :--- | :--- |
-| **Framework SPA** | **Angular 22** | `@angular/core ^22.1.6`, Angular CLI `^22.1.8` |
-| **Runtime & Gestor** | **Bun** | Bun `1.4.4` (`bun.lock`) |
-| **Lenguaje** | **TypeScript** | `typescript ~6.0.3` (Modo estricto ESM) |
-| **UI & Componentes** | **Angular Material + CDK** | `@angular/material ^22.1.6`, `@angular/cdk ^22.1.6` |
-| **Iconografía** | **Iconify** | `iconify-icon ^3.0.2` (Web Components con prefijo `ph:` de Phosphor Icons) |
-| **Selects Avanzados** | **Ng-Select** | `@ng-select/ng-select ^24.1.2` |
-| **Gráficas** | **Chart.js** | `chart.js ^4.5.1` (Gráficas de pastel y barras en reportes) |
-| **Generación de PDFs**| **jsPDF + html2canvas** | `jspdf ^4.2.1`, `jspdf-autotable ^5.0.8`, `html2canvas ^1.4.1` |
-| **Alertas Modales** | **SweetAlert2** | `sweetalert2 ^11.26.25` (Estilizado con clases corporativas premium) |
-| **Pruebas Unitarias** | **Jest + Jest Preset Angular** | `jest ^30.5.1`, `jest-preset-angular ^17.0.0`, `ts-jest ^29.4.12` |
-| **Linter & Formatter**| **Biome 2** | `@biomejs/biome ^2.5.13` (`biome.json`) |
-| **Despliegue** | **Cloudflare Pages** | Configurado en `public/_headers` con CSP, cache inmutable y SSL estricto |
+| Capa                   | Tecnología                     | Versión / Detalle                                                          |
+| :--------------------- | :----------------------------- | :------------------------------------------------------------------------- |
+| **Framework SPA**      | **Angular 22**                 | `@angular/core ^22.2.4`, Angular CLI `^22.2.5`                             |
+| **Runtime & Gestor**   | **Bun**                        | Bun `1.4.4` (`bun.lock`)                                                   |
+| **Lenguaje**           | **TypeScript**                 | `typescript ~6.0.3` (Modo estricto ESM)                                    |
+| **UI & Componentes**   | **Angular Material + CDK**     | `@angular/material ^22.2.5`, `@angular/cdk ^22.2.5`                        |
+| **Iconografía**        | **Iconify**                    | `iconify-icon ^3.0.5` (Web Components con prefijo `ph:` de Phosphor Icons) |
+| **Selects Avanzados**  | **Ng-Select**                  | `@ng-select/ng-select ^24.2.1`                                             |
+| **Gráficas**           | **Chart.js**                   | `chart.js ^4.6.1` (Gráficas de pastel y barras en reportes)                |
+| **Generación de PDFs** | **jsPDF + html2canvas**        | `jspdf ^4.2.1`, `jspdf-autotable ^5.0.9`, `html2canvas ^1.4.1`             |
+| **Alertas Modales**    | **SweetAlert2**                | `sweetalert2 ^11.26.25` (Estilizado con clases corporativas premium)       |
+| **Pruebas Unitarias**  | **Jest + Jest Preset Angular** | `jest ^30.5.2`, `jest-preset-angular ^17.0.3`, `ts-jest ^29.4.15`          |
+| **Linter & Formatter** | **Biome 2**                    | `@biomejs/biome ^2.6.4` (`biome.json`)                                     |
+| **Despliegue**         | **Cloudflare Pages**           | Configurado en `public/_headers` con CSP, cache inmutable y SSL estricto   |
 
 ---
 
@@ -93,31 +96,36 @@ src/app/
 ## 5. Servicios Clave y Patrones
 
 ### `AuthService` (`src/app/login/services/auth.service.ts`)
-* Maneja `authToken` y `user` en `localStorage`.
-* Decodifica el payload JWT en base64 para evaluar expiración (`isLoggedIn()`).
-* Métodos de autorización: `hasRole(role: string)` e `isAdmin(): boolean`.
-* Emite eventos de logout a través de `logoutSubject: Subject<void>`.
+
+- Maneja `authToken` y `user` en `localStorage`.
+- Decodifica el payload JWT en base64 para evaluar expiración (`isLoggedIn()`).
+- Métodos de autorización: `hasRole(role: string)` e `isAdmin(): boolean`.
+- Emite eventos de logout a través de `logoutSubject: Subject<void>`.
 
 ### `ThemeService` (`src/app/shared/services/theme.service.ts`)
-* Soporta `"light"` y `"dark"`.
-* Persiste la preferencia en `localStorage.getItem("nemi-theme")`.
-* Si no hay valor previo, detecta `prefers-color-scheme: dark`.
-* Aplica o remueve dinámicamente la clase `dark-mode` en `document.body`.
-* Expone `theme$: Observable<Theme>` y `current: Theme`.
+
+- Soporta `"light"` y `"dark"`.
+- Persiste la preferencia en `localStorage.getItem("nemi-theme")`.
+- Si no hay valor previo, detecta `prefers-color-scheme: dark`.
+- Aplica o remueve dinámicamente la clase `dark-mode` en `document.body`.
+- Expone `theme: Signal<Theme>` y `isDark: Signal<boolean>`; `current` se mantiene por compatibilidad.
 
 ### `NotificationService` (`src/app/shared/services/notification.service.ts`)
-* Consulta los endpoints de alertas del backend (`licencia_proxima`, `garantia_proxima`, `devolucion_proxima`, etc.).
-* Alimenta el contador numérico del badge y el menú desplegable de notificaciones del Header.
+
+- Consulta los endpoints de alertas del backend (`licencia_proxima`, `garantia_proxima`, `devolucion_proxima`, etc.).
+- Alimenta el contador numérico del badge y el menú desplegable de notificaciones del Header.
 
 ### `RoleGuard` & `AuthGuard` (`src/app/services/`)
-* Protege las rutas administrativas (`canActivate: [RoleGuard]`, `data: { expectedRole: 'Administrador' }`).
-* Redirige a `/login` si el token es nulo o expiró.
+
+- Protege las rutas administrativas (`canActivate: [RoleGuard]`, `data: { expectedRole: 'Administrador' }`).
+- Redirige a `/login` si el token es nulo o expiró.
 
 ---
 
 ## 6. Variables de Entorno
 
-* **Desarrollo (`src/environments/environment.ts`):**
+- **Desarrollo (`src/environments/environment.ts`):**
+
   ```typescript
   export const environment = {
     production: false,
@@ -125,7 +133,8 @@ src/app/
     r2PublicUrl: "https://assets.mgdc.site/nemi"
   };
   ```
-* **Producción (`src/environments/environment.prod.ts`):**
+- **Producción (`src/environments/environment.prod.ts`):**
+
   ```typescript
   export const environment = {
     production: true,
@@ -139,16 +148,16 @@ src/app/
 ## 7. Estándares de Seguridad y Despliegue (`public/_headers`)
 
 El archivo `public/_headers` se sincroniza con Cloudflare Pages en cada despliegue:
-* **CSP (Content-Security-Policy):**
-  * `default-src 'self';`
-  * Scripts permitidos: `self`, `static.cloudflareinsights.com`, `challenges.cloudflare.com`, `code.iconify.design`.
-  * Imágenes permitidas: `self`, `data:`, `https:`, `https://assets.mgdc.site`, `https://nemi-api.fluxdv.icu`.
-  * Conexiones permitidas: `self`, `http://localhost:*`, `https://nemi-api.fluxdv.icu`, `https://api.iconify.design`, Cloudflare Turnstile e Insights.
-  * Directiva `upgrade-insecure-requests;` para forzar HTTPS estricto.
-* **Cache Control:**
-  * `/index.html` y `/*.html`: `public, max-age=0, s-maxage=3600, must-revalidate` (actualización inmediata post-deploy).
-  * `/assets/*.js`, `/assets/*.css`, `/*.woff2`: `public, max-age=31536000, s-maxage=2592000, immutable`.
-  * Imágenes: `public, max-age=31536000, s-maxage=604800`.
+- **CSP (Content-Security-Policy):**
+  - `default-src 'self';`
+  - Scripts permitidos: `self`, `static.cloudflareinsights.com`, `challenges.cloudflare.com`, `code.iconify.design`.
+  - Imágenes permitidas: `self`, `data:`, `https:`, `https://assets.mgdc.site`, `https://nemi-api.fluxdv.icu`.
+  - Conexiones permitidas: `self`, `http://localhost:*`, `https://nemi-api.fluxdv.icu`, `https://api.iconify.design`, Cloudflare Turnstile e Insights.
+  - Directiva `upgrade-insecure-requests;` para forzar HTTPS estricto.
+- **Cache Control:**
+  - `/index.html` y `/*.html`: `public, max-age=0, s-maxage=3600, must-revalidate` (actualización inmediata post-deploy).
+  - `/assets/*.js`, `/assets/*.css`, `/*.woff2`: `public, max-age=31536000, s-maxage=2592000, immutable`.
+  - Imágenes: `public, max-age=31536000, s-maxage=604800`.
 
 ---
 
@@ -187,7 +196,7 @@ codegraph
 ## 9. Reglas y Directrices para Agentes
 
 1. **Usa CodeGraph MCP Primero:** Antes de modificar un servicio o componente, ejecuta `codegraph_explore` para identificar qué otros archivos y pruebas se verán afectados por el cambio.
-2. **Consistencia de Tema (Dark/Light):** Toda nueva vista, tabla, modal o formulario debe soportar modo claro y modo oscuro utilizando variables CSS semánticas (`--color-surface`, `--color-bg`, `--color-heading`, `--color-border`) definidas en `src/styles.css`.
+2. **Consistencia de Tema (Dark/Light):** Toda nueva vista, tabla, modal o formulario debe soportar modo claro y modo oscuro utilizando variables CSS semánticas (`--surface`, `--bg`, `--text`, `--border`, `--primary`) definidas en `src/styles/_tokens.scss`.
 3. **Validación de Formularios:** Utiliza `ReactiveFormsModule` con validaciones declarativas y mensajes de error accesibles.
 4. **Pruebas Unitarias:** Si agregas o modificas un servicio o componente, asegúrate de actualizar su archivo `.spec.ts` y verificar con `bun run test`.
 5. **No Comitear sin Aprobación:** Nunca ejecutes `git commit` o `git push` sin la confirmación explícita del usuario.
