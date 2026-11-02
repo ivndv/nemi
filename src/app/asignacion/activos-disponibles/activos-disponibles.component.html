@@ -1,87 +1,100 @@
-<main>
-  <!-- Sección de búsqueda y filtros (Toolbar Premium) -->
+<main class="page">
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Activos disponibles</h2>
+      <p class="page-subtitle">
+        {{ pagination.total }} {{ pagination.total === 1 ? 'activo listo para asignar' : 'activos listos para asignar' }}
+      </p>
+    </div>
+  </header>
+
   <section class="toolbar-container">
     <div class="search-box">
       <input
+        #searchInput
         type="text"
         id="busqueda"
         placeholder="Buscar activo disponible..."
         (input)="onSearchInput($event)"
-        />
+      />
     </div>
 
     <div class="filters-group">
-      <select name="filtro" id="filtro" (change)="cargarOpcionesFiltro($event)">
-        <option value="">Filtrar por...</option>
+      <select name="filtro" id="filtro" [value]="filtroSeleccionado" (change)="cargarOpcionesFiltro($event)">
+        <option value="">Filtrar por</option>
         <option value="tipo">Tipo</option>
         <option value="proveedor">Proveedor</option>
         <option value="ubicacion">Ubicación</option>
       </select>
 
-      <select name="opciones" id="opciones" (change)="aplicarFiltro($event)">
+      <select name="opciones" id="opciones" [value]="opcionSeleccionada" (change)="aplicarFiltro($event)">
         <option value="">Todas las opciones</option>
+        @for (op of opcionesFiltro; track op.id) {
+          <option [value]="op.id">{{ op.nombre }}</option>
+        }
       </select>
 
-      <select name="direccion" id="direccion" (change)="aplicarOrden($event)">
-        <option value="asc">A - Z</option>
-        <option value="desc">Z - A</option>
+      <select name="direccion" id="direccion" [value]="ordenSeleccionado" (change)="aplicarOrden($event)">
+        <option value="asc">Nombre: A-Z</option>
+        <option value="desc">Nombre: Z-A</option>
       </select>
     </div>
 
     <div class="actions-group">
       <button class="btn-secondary" (click)="limpiarFiltros()">
-        <img src="https://assets.mgdc.site/nemi/reiniciar-filtros.png" alt="Limpiar" />
+        <iconify-icon icon="ph:arrow-counter-clockwise"></iconify-icon>
         Limpiar
       </button>
     </div>
   </section>
 
-  <!-- Tabla de activos Premium -->
   <section class="tabla-activos">
     <table aria-label="Lista de activos disponibles">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Imagen</th>
-          <th>Nombre</th>
+          <th>Activo</th>
           <th>Tipo</th>
           <th>Estado</th>
           <th>Proveedor</th>
           <th>Ubicación</th>
-          @if (isAdmin()) {
-            <th>Acciones</th>
+          @if (puedeOperar()) {
+            <th class="col-actions">Acciones</th>
           }
         </tr>
       </thead>
       <tbody>
         @if (!activosDisponibles || activosDisponibles.length === 0) {
           <tr>
-            <td [attr.colspan]="isAdmin() ? '8' : '7'" style="text-align: center; padding: 40px;">
-              <p>No hay activos disponibles para mostrar</p>
+            <td [attr.colspan]="puedeOperar() ? '6' : '5'">
+              <div class="vacio">
+                <iconify-icon icon="ph:package" style="font-size: 26px; margin-bottom: 8px;"></iconify-icon>
+                <p>No hay activos disponibles para mostrar</p>
+              </div>
             </td>
           </tr>
         }
         @for (activo of activosDisponibles; track trackById($index, activo)) {
           <tr>
-            <td>{{ activo.id }}</td>
             <td>
-              @if (activo.foto_url) {
-                <img
-                  [src]="getAssetPhoto(activo.foto_url)"
-                  alt="Activo"
-                  class="imagen-circular"
-                  />
-              }
-              @if (!activo.foto_url) {
-                <div class="texto-na">N/A</div>
-              }
-            </td>
-            <td>
-              @for (parte of dividirTexto(activo.activo); track parte) {
-                <span>
-                  <span [class.highlight]="esParteResaltada(parte)">{{ parte }}</span>
-                </span>
-              }
+              <div class="activo-cell">
+                @if (activo.foto_url) {
+                  <img [src]="getAssetPhoto(activo.foto_url)" alt="Activo" class="imagen-circular" width="38" height="38" loading="lazy" />
+                } @else {
+                  <div class="texto-na"><iconify-icon icon="ph:cube"></iconify-icon></div>
+                }
+                <div class="activo-meta">
+                  <strong>
+                    @for (parte of dividirTexto(activo.activo); track parte) {
+                      <span [class.highlight]="esParteResaltada(parte)">{{ parte }}</span>
+                    }
+                  </strong>
+                  <span>#{{ activo.id }}</span>
+                </div>
+              </div>
             </td>
             <td>{{ activo.tipo_activo }}</td>
             <td>
@@ -91,8 +104,8 @@
             </td>
             <td>{{ activo.proveedor }}</td>
             <td>{{ activo.ubicacion || "Sin ubicación" }}</td>
-            @if (isAdmin()) {
-              <td>
+            @if (puedeOperar()) {
+              <td class="col-actions">
                 <button class="btn-ver-detalles" (click)="asignar(activo.id)">
                   Asignar
                 </button>
@@ -104,32 +117,42 @@
     </table>
   </section>
 
-  <!-- Sección de paginación Premium -->
   <section class="container-paginacion">
     @if (pagination.total > 0) {
       <div class="pagination-info">
-        Mostrando {{ primerActivoMostrado }}-{{ ultimoActivoMostrado }} de {{ pagination.total }} activos
+        Mostrando {{ primerActivoMostrado }}–{{ ultimoActivoMostrado }} de {{ pagination.total }}
       </div>
     }
 
     @if (pagination.totalPages > 1) {
       <div class="pagination">
-        <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" aria-label="Ir a la primera página">«</button>
-        <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1" aria-label="Ir a la página anterior">‹</button>
+        <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" aria-label="Ir a la primera página">
+          <iconify-icon icon="ph:caret-double-left"></iconify-icon>
+        </button>
+        <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1" aria-label="Ir a la página anterior">
+          <iconify-icon icon="ph:caret-left"></iconify-icon>
+        </button>
         @for (pagina of paginasVisibles; track $index) {
-          <span>
-            <button (click)="cambiarPagina(pagina)" [class.active]="pagina === paginaActual" [attr.aria-label]="'Ir a la página ' + pagina" [attr.aria-current]="pagina === paginaActual ? 'page' : null">
-              {{ pagina }}
-            </button>
-          </span>
+          <button
+            (click)="cambiarPagina(pagina)"
+            [class.active]="pagina === paginaActual"
+            [attr.aria-label]="'Ir a la página ' + pagina"
+            [attr.aria-current]="pagina === paginaActual ? 'page' : null"
+          >
+            {{ pagina }}
+          </button>
         }
-        <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === pagination.totalPages" aria-label="Ir a la página siguiente">›</button>
-        <button (click)="cambiarPagina(pagination.totalPages)" [disabled]="paginaActual === pagination.totalPages" aria-label="Ir a la última página">»</button>
+        <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === pagination.totalPages" aria-label="Ir a la página siguiente">
+          <iconify-icon icon="ph:caret-right"></iconify-icon>
+        </button>
+        <button (click)="cambiarPagina(pagination.totalPages)" [disabled]="paginaActual === pagination.totalPages" aria-label="Ir a la última página">
+          <iconify-icon icon="ph:caret-double-right"></iconify-icon>
+        </button>
       </div>
     }
 
     <div class="limite-pagina">
-      <p>Mostrar:</p>
+      <span>Mostrar</span>
       <select (change)="onLimitChange($event)">
         <option value="10" [selected]="limitePorPagina === 10">10</option>
         <option value="20" [selected]="limitePorPagina === 20">20</option>

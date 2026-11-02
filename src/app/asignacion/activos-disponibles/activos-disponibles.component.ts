@@ -1,23 +1,27 @@
 import {
 	ChangeDetectionStrategy,
-	ChangeDetectorRef,
 	Component,
+	ElementRef,
+	inject,
 	OnDestroy,
-	OnInit,
+	signal,
+	ViewChild,
 } from "@angular/core";
 import { Router } from "@angular/router";
-import { Subject, takeUntil } from "rxjs";
-import { debounceTime, switchMap } from "rxjs/operators";
-import Swal from "sweetalert2";
+import {
+	injectQuery,
+	keepPreviousData,
+} from "@tanstack/angular-query-experimental";
+import { firstValueFrom } from "rxjs";
+import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
+import { getHttpErrorMessage } from "../../core/http/http-error";
 import { AuthService } from "../../login/services/auth.service";
 import { ActivoDisponibleResponse } from "../../models/activo.interface";
-import {
-	DatosAuxiliares,
-	SelectItem,
-} from "../../models/datos-auxiliares.interface";
+import type { SelectItem } from "../../models/datos-auxiliares.interface";
 import { getCloudflareImage } from "../../utils/images";
 import { ActivosDisponiblesService } from "../services/activos-disponibles.service";
-import { AuxiliaresService } from "../services/auxiliares.service";
+
+const EMPTY_ITEMS: SelectItem[] = [];
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,171 +30,93 @@ import { AuxiliaresService } from "../services/auxiliares.service";
 	templateUrl: "./activos-disponibles.component.html",
 	styleUrl: "./activos-disponibles.component.css",
 })
-export class ActivosDisponiblesComponent implements OnInit, OnDestroy {
-	filtroSeleccionado: string = "";
-	opcionSeleccionada: string = "";
-	ordenSeleccionado: string = "asc";
+export class ActivosDisponiblesComponent implements OnDestroy {
+	filtroSeleccionado = "";
+	opcionSeleccionada = "";
+	ordenSeleccionado = "asc";
+	paginaActual = 1;
+	limitePorPagina = 10;
+	terminoBusqueda = "";
+	private readonly activosDisponiblesServices = inject(
+		ActivosDisponiblesService,
+	);
+	private readonly catalogosFacade = inject(CatalogosFacade);
+	private readonly router = inject(Router);
+	private readonly authService = inject(AuthService);
+	private readonly refresco = signal(0);
+	private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
-	activosDisponibles: ActivoDisponibleResponse[] = [];
-	pagination: {
-		total: number;
-		totalPages: number;
-		page: number;
-		limit: number;
-	} = { total: 0, totalPages: 0, page: 1, limit: 10 };
-	paginaActual: number = 1;
-	limitePorPagina: number = 10;
-	private searchSubject = new Subject<string>();
-	private destroy$ = new Subject<void>();
-	terminoBusqueda: string = "";
-	datosAuxiliares: DatosAuxiliares["data"] | null = null;
-	errorMessage: string = "";
+	private readonly query = injectQuery(() => ({
+		queryKey: [
+			"asignaciones",
+			"disponibles",
+			this.refresco(),
+			{
+				page: this.paginaActual,
+				limit: this.limitePorPagina,
+				search: this.terminoBusqueda,
+				filtro: this.filtroSeleccionado,
+				opcion: this.opcionSeleccionada,
+				orden: this.ordenSeleccionado,
+			},
+		],
+		queryFn: () =>
+			firstValueFrom(
+				this.activosDisponiblesServices.getActivosDisponibles(
+					this.paginaActual,
+					this.limitePorPagina,
+					this.terminoBusqueda,
+					this.filtroSeleccionado,
+					this.opcionSeleccionada,
+					this.ordenSeleccionado,
+				),
+			),
+		placeholderData: keepPreviousData,
+		staleTime: 0,
+	}));
 
-	constructor(
-		private cdr: ChangeDetectorRef,
-		private activosDisponiblesServices: ActivosDisponiblesService,
-		private auxiliaresService: AuxiliaresService,
-		private router: Router,
-		private authService: AuthService,
-	) {}
+	get activosDisponibles(): ActivoDisponibleResponse[] {
+		return this.query.data()?.data ?? [];
+	}
 
-	ngOnInit(): void {
-		this.cargarActivosDisponibles(); // Cargar los activos al inicializar el componente
-		this.obtenerDatosAuxiliares(); // Obtener los datos auxiliares
+	get pagination() {
+		return (
+			this.query.data()?.pagination ?? {
+				total: 0,
+				totalPages: 0,
+				page: this.paginaActual,
+				limit: this.limitePorPagina,
+			}
+		);
+	}
 
-		this.searchSubject
-			.pipe(
-				debounceTime(500), // Espera 500ms después del último cambio en la barra de búsqueda
-				switchMap((term) => {
-					console.log("Término enviado al backend:", term);
-					this.terminoBusqueda = term;
-					this.paginaActual = 1;
-					return this.activosDisponiblesServices.getActivosDisponibles(
-						this.paginaActual,
-						this.limitePorPagina,
-						this.terminoBusqueda,
-					);
-				}),
-				takeUntil(this.destroy$),
-			)
-			.subscribe({
-				next: (response) => {
-					console.log("Respuesta del backend recibida:", response);
-					this.activosDisponibles = response.data;
-					this.pagination = response.pagination;
-					console.log("Activos disponibles xd:", this.activosDisponibles);
-					this.cdr.markForCheck();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Error al obtener los activos disponibles" }
-					const errorMessage =
-						error.error?.error || "Error al obtener los activos disponibles";
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
+	get errorMessage(): string {
+		return getHttpErrorMessage(
+			this.query.error(),
+			"Error al obtener los activos disponibles",
+		);
+	}
+
+	@ViewChild("searchInput") private searchInput?: ElementRef<HTMLInputElement>;
+
+	get opcionesFiltro(): SelectItem[] {
+		const data = this.catalogosFacade.catalogos();
+		if (!data) return EMPTY_ITEMS;
+
+		switch (this.filtroSeleccionado) {
+			case "tipo":
+				return data.tiposActivos ?? EMPTY_ITEMS;
+			case "proveedor":
+				return data.proveedores ?? EMPTY_ITEMS;
+			case "ubicacion":
+				return data.ubicaciones ?? EMPTY_ITEMS;
+			default:
+				return EMPTY_ITEMS;
+		}
 	}
 
 	cargarActivosDisponibles(): void {
-		// Logs detallados para depuración
-		console.group("[CARGAR ACTIVOS DISPONIBLES]");
-		console.log("Parámetros enviados al backend:", {
-			paginaActual: this.paginaActual,
-			limitePorPagina: this.limitePorPagina,
-			terminoBusqueda: this.terminoBusqueda,
-			filtroSeleccionado: this.filtroSeleccionado,
-			opcionSeleccionada: this.opcionSeleccionada,
-			ordenSeleccionado: this.ordenSeleccionado,
-		});
-
-		// Llamada al servicio para obtener los activos disponibles
-		this.activosDisponiblesServices
-			.getActivosDisponibles(
-				this.paginaActual,
-				this.limitePorPagina,
-				this.terminoBusqueda,
-				this.filtroSeleccionado,
-				this.opcionSeleccionada,
-				this.ordenSeleccionado,
-			)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					console.log("Respuesta del backend recibida:", response);
-					this.activosDisponibles = response.data;
-					this.pagination = response.pagination;
-					this.cdr.markForCheck();
-					console.groupEnd();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Error al obtener los activos disponibles" }
-					const errorMessage =
-						error.error?.error || "Error al obtener los activos disponibles";
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
-	}
-
-	// Función para obtener los datos auxiliares
-	obtenerDatosAuxiliares(): void {
-		const idActivo = 1; // Supongamos que estamos buscando datos auxiliares para un activo con ID 1
-		this.auxiliaresService
-			.getDatosAuxiliares(idActivo)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					console.log("Datos auxiliares recibidos:", response);
-					this.datosAuxiliares = response.data; // Almacena los datos auxiliares
-					this.cdr.markForCheck();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Error al obtener los datos auxiliares" }
-					const errorMessage =
-						error.error?.error || "Error al obtener los datos auxiliares";
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
+		this.refresco.update((valor) => valor + 1);
 	}
 
 	// Cambiar de página
@@ -209,27 +135,10 @@ export class ActivosDisponiblesComponent implements OnInit, OnDestroy {
 		this.ordenSeleccionado = "asc";
 		this.paginaActual = 1;
 
-		const searchInput = document.getElementById("busqueda") as HTMLInputElement;
-		if (searchInput) searchInput.value = "";
-
-		// Limpiar el selector de filtro
-		const filtroSelect = document.getElementById("filtro") as HTMLSelectElement;
-		if (filtroSelect) filtroSelect.value = "";
-
-		// Limpiar el selector de opciones
-		const opcionesSelect = document.getElementById(
-			"opciones",
-		) as HTMLSelectElement;
-		if (opcionesSelect) {
-			opcionesSelect.value = "";
-			while (opcionesSelect.options.length > 1) {
-				opcionesSelect.remove(1); // Elimina todas las opciones dinámicas excepto la primera
-			}
-		}
+		if (this.searchInput) this.searchInput.nativeElement.value = "";
 
 		this.cargarActivosDisponibles();
 	}
-
 	/**
 	 * Maneja el cambio en el selector de límite por página.
 	 * @param event Evento de cambio en el selector.
@@ -304,102 +213,40 @@ export class ActivosDisponiblesComponent implements OnInit, OnDestroy {
 		this.router.navigate(["/asignaciones/asignar", id]);
 	}
 
-	// Maneja el cambio en la barra de búsqueda
 	onSearchInput(event: Event): void {
-		const inputElement = event.target as HTMLInputElement; // Casting seguro
-		this.terminoBusqueda = inputElement.value; // Obtiene el valor
-		this.onSearchChange(inputElement.value);
-	}
-
-	onSearchChange(term: string): void {
-		this.terminoBusqueda = term;
+		this.terminoBusqueda = (event.target as HTMLInputElement).value;
 		this.paginaActual = 1;
-		this.searchSubject.next(term);
+		if (this.searchTimer) clearTimeout(this.searchTimer);
+		this.searchTimer = setTimeout(() => this.cargarActivosDisponibles(), 500);
 	}
 
 	/**
 	 * Carga las opciones dinámicas según el filtro seleccionado
 	 * @param event Evento del select de filtro
 	 */
-	cargarOpcionesFiltro(_event: Event): void {
-		const filtroSelect = document.getElementById("filtro") as HTMLSelectElement;
-		this.filtroSeleccionado = filtroSelect.value; // Guarda el tipo de filtro
-
-		const opcionesSelect = document.getElementById(
-			"opciones",
-		) as HTMLSelectElement;
-
-		// Limpiar opciones existentes
-		while (opcionesSelect.options.length > 1) {
-			opcionesSelect.remove(1);
-		}
-
-		let opciones: SelectItem[] = [];
-
-		switch (
-			this.filtroSeleccionado // Usamos la variable guardada
-		) {
-			case "tipo":
-				opciones = this.datosAuxiliares?.tiposActivos || [];
-				break;
-			case "proveedor":
-				opciones = this.datosAuxiliares?.proveedores || [];
-				break;
-			case "ubicacion":
-				opciones = this.datosAuxiliares?.ubicaciones || [];
-				break;
-			default:
-				return;
-		}
-
-		console.log("[FILTRO] Opciones cargadas:", opciones);
-		opciones.forEach((opcion) => {
-			const optionElement = document.createElement("option");
-			optionElement.value = String(opcion.id);
-			optionElement.textContent = opcion.nombre || opcion.descripcion || null;
-			opcionesSelect.appendChild(optionElement);
-		});
+	cargarOpcionesFiltro(event: Event): void {
+		this.filtroSeleccionado = (event.target as HTMLSelectElement).value;
+		this.opcionSeleccionada = "";
+		this.paginaActual = 1;
+		this.cargarActivosDisponibles();
 	}
 
-	aplicarFiltro(_event: Event): void {
-		// Seleccionar el elemento por su ID
-		const opcionesSelect = document.getElementById(
-			"opciones",
-		) as HTMLSelectElement;
-
-		// Verificar que el elemento exista
-		if (opcionesSelect) {
-			this.opcionSeleccionada = opcionesSelect.value; // Obtener el valor seleccionado
-			console.log("[FILTRO] Aplicando filtro:", {
-				tipo: this.filtroSeleccionado, // Tipo de filtro seleccionado
-				valor: this.opcionSeleccionada, // Valor seleccionado en el filtro
-			});
-
-			this.paginaActual = 1; // Resetea a la primera página
-			this.cargarActivosDisponibles(); // Recarga los datos con el filtro aplicado
-		} else {
-			console.error('[ERROR] No se encontró el elemento con ID "opciones2".');
-		}
+	aplicarFiltro(event: Event): void {
+		this.opcionSeleccionada = (event.target as HTMLSelectElement).value;
+		this.paginaActual = 1;
+		this.cargarActivosDisponibles();
 	}
 
-	aplicarOrden(_event: Event): void {
-		const ordenSelect = document.getElementById(
-			"direccion",
-		) as HTMLSelectElement;
-
-		// Verificar que el elemento exista
-		if (ordenSelect) {
-			this.ordenSeleccionado = ordenSelect.value; // Obtener el valor seleccionado
-			console.log("[ORDEN] Orden seleccionado:", this.ordenSeleccionado);
-
-			this.cargarActivosDisponibles(); // Recarga los datos con el nuevo orden
-		} else {
-			console.error('[ERROR] No se encontró el elemento con ID "orden2".');
-		}
+	aplicarOrden(event: Event): void {
+		this.ordenSeleccionado = (event.target as HTMLSelectElement).value;
+		this.cargarActivosDisponibles();
 	}
-
 	isAdmin(): boolean {
 		return this.authService.isAdmin();
+	}
+
+	puedeOperar(): boolean {
+		return this.authService.puedeOperar();
 	}
 
 	getAssetPhoto(fotoUrl: string): string {
@@ -415,7 +262,6 @@ export class ActivosDisponiblesComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.destroy$.next();
-		this.destroy$.complete();
+		if (this.searchTimer) clearTimeout(this.searchTimer);
 	}
 }

@@ -10,11 +10,14 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
+import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
 import { AsignacionPayload } from "../../models/asignacion.interface";
 import { SelectItem } from "../../models/datos-auxiliares.interface";
 import { getCloudflareImage } from "../../utils/images";
 import { AsignacionService } from "../services/asignacion.service";
 import { AuxiliaresService } from "../services/auxiliares.service";
+
+const EMPTY_ITEMS: SelectItem[] = [];
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,8 +29,14 @@ import { AuxiliaresService } from "../services/auxiliares.service";
 export class AsignarActivoComponent implements OnInit, OnDestroy {
 	// Variables para almacenar datos auxiliares
 	id: number | null = null;
-	usuarios: SelectItem[] = [];
-	ubicaciones: SelectItem[] = [];
+
+	get usuarios(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.usuarios ?? EMPTY_ITEMS;
+	}
+
+	get ubicaciones(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.ubicaciones ?? EMPTY_ITEMS;
+	}
 
 	// FormGroup para el formulario
 	asignacionForm!: FormGroup;
@@ -41,6 +50,7 @@ export class AsignarActivoComponent implements OnInit, OnDestroy {
 		private cdr: ChangeDetectorRef,
 		private route: ActivatedRoute,
 		private auxiliaresService: AuxiliaresService,
+		private catalogosFacade: CatalogosFacade,
 		private asignacionService: AsignacionService,
 		private fb: FormBuilder,
 		private router: Router,
@@ -53,7 +63,6 @@ export class AsignarActivoComponent implements OnInit, OnDestroy {
 		this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
 			this.id = +params["id"];
 			this.cdr.markForCheck();
-			console.log("ID recibido:", this.id);
 
 			if (this.id) {
 				this.cargarDatosAuxiliares(this.id);
@@ -78,15 +87,11 @@ export class AsignarActivoComponent implements OnInit, OnDestroy {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe({
 				next: (response) => {
-					this.usuarios = response.data.usuarios || [];
-					this.ubicaciones = response.data.ubicaciones || [];
 					this.foto_url = response.data.foto_url || null;
 
 					const nombre = response.data.nombre || "Nombre no disponible";
 					this.asignacionForm.get("nombre")?.setValue(nombre);
 					this.cdr.markForCheck();
-
-					console.log("Datos cargados:", response);
 				},
 				error: (error) => {
 					const errorMessage =
@@ -123,14 +128,11 @@ export class AsignarActivoComponent implements OnInit, OnDestroy {
 
 			payload.activo_id = this.id || undefined;
 
-			console.log("Datos enviados al backend:", payload);
-
 			this.asignacionService
 				.createAsignacion(payload)
 				.pipe(takeUntil(this.destroy$))
 				.subscribe({
-					next: (response) => {
-						console.log("Asignación creada exitosamente:", response);
+					next: (_response) => {
 						this.cdr.markForCheck();
 						Swal.fire({
 							title: "¡Éxito!",

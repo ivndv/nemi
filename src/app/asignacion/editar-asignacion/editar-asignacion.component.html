@@ -1,28 +1,43 @@
-<main>
-  <div class="container">
-    <div class="form-card">
-      <!-- Encabezado del Activo -->
-      <header class="asset-header">
-        <div class="asset-icon">
-          <img 
-            [src]="getAssetPhoto(fotoActivo) || 'https://assets.mgdc.site/nemi/gestionar-activos.png'" 
-            alt="Foto Activo" 
-            [style.object-fit]="'cover'"
-            style="width: 100%; height: 100%; border-radius: 15px;"
-          />
-        </div>
-        <div class="asset-info-title">
-          <span>Editando Asignación</span>
-          <h1>{{ asignacionForm.get('nombre')?.value || 'Cargando activo...' }}</h1>
-        </div>
-      </header>
+<main class="page form-page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Editar asignación</h2>
+      <p class="page-subtitle">Actualiza el responsable, las fechas o la ubicación.</p>
+    </div>
+  </header>
 
-      <form [formGroup]="asignacionForm" (ngSubmit)="onSubmit()">
+  <section class="form-section asset-context">
+    <div class="asset-header">
+      <div class="asset-icon">
+        <img
+          [src]="getAssetPhoto(fotoActivo) || 'https://assets.mgdc.site/nemi/gestionar-activos.png'"
+          alt="Foto del activo"
+          width="64"
+          height="64"
+          loading="eager"
+        />
+      </div>
+      <div class="asset-info-title">
+        <span>Editando asignación</span>
+        <h1>{{ asignacionForm.get("nombre")?.value || "Cargando activo..." }}</h1>
+      </div>
+    </div>
+  </section>
+
+  <form [formGroup]="asignacionForm" (ngSubmit)="onSubmit()" class="form-layout form-layout--single">
+    <div class="form-main">
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:user-check"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Destino y fechas</h3>
+            <p>Responsable y vigencia de la asignación.</p>
+          </div>
+        </div>
+
         <div class="form-grid">
-          
-          <!-- Columna Izquierda -->
           <div class="form-group">
-            <label for="usuario_id">Usuario Responsable</label>
+            <label for="usuario_id">Usuario responsable</label>
             <ng-select
               id="usuario_id"
               formControlName="usuario_id"
@@ -30,21 +45,33 @@
               bindLabel="nombre"
               bindValue="id"
               placeholder="Seleccionar usuario..."
-            >
-            </ng-select>
+            ></ng-select>
           </div>
 
           <div class="form-group">
-            <label for="fecha_asignacion">Fecha de Asignación</label>
-            <input
-              type="date"
-              id="fecha_asignacion"
-              formControlName="fecha_asignacion"
-            />
+            <label for="fecha_asignacion">Fecha de asignación</label>
+            <input type="date" id="fecha_asignacion" formControlName="fecha_asignacion" />
           </div>
 
-          <div class="form-group">
-            <label for="ubicacion_id">Ubicación de Destino</label>
+          <div class="form-group full-width">
+            <label for="fecha_devolucion">Fecha estimada de devolución</label>
+            <input type="date" id="fecha_devolucion" formControlName="fecha_devolucion" />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:map-pin"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Ubicación y notas</h3>
+            <p>Dónde está el activo y observaciones.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="ubicacion_id">Ubicación de destino</label>
             <ng-select
               id="ubicacion_id"
               formControlName="ubicacion_id"
@@ -52,47 +79,31 @@
               bindLabel="nombre"
               bindValue="id"
               placeholder="Seleccionar ubicación..."
-            >
-            </ng-select>
+            ></ng-select>
           </div>
 
-          <div class="form-group">
-            <label for="fecha_devolucion">Fecha Estimada Devolución</label>
-            <input
-              type="date"
-              id="fecha_devolucion"
-              formControlName="fecha_devolucion"
-            />
-          </div>
-
-          <!-- Ancho Completo -->
           <div class="form-group full-width">
-            <label for="comentarios">Comentarios / Observaciones</label>
+            <label for="comentarios">Comentarios / observaciones</label>
             <textarea
               id="comentarios"
               formControlName="comentarios"
               placeholder="Notas relevantes sobre la edición..."
             ></textarea>
           </div>
-
         </div>
-
-        <!-- Botones de Acción -->
-        <div class="actions-container">
-          <button type="button" class="btn-cancelar" (click)="cancelarEdicion()">
-            Cancelar
-          </button>
-          
-          <div style="display: flex; gap: 10px;">
-            <button type="button" (click)="eliminarAsignacion()" class="btn-eliminar">
-              Eliminar Asignación
-            </button>
-            <button type="submit" class="btn-guardar" [disabled]="!asignacionForm.valid">
-              Guardar Cambios
-            </button>
-          </div>
-        </div>
-      </form>
+      </section>
     </div>
-  </div>
+
+    <footer class="form-actions form-actions--split">
+      <button type="button" class="btn-danger" (click)="eliminarAsignacion()">
+        Eliminar asignación
+      </button>
+      <div class="form-actions-right">
+        <button type="button" class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="!asignacionForm.valid">
+          Guardar cambios
+        </button>
+      </div>
+    </footer>
+  </form>
 </main>

@@ -42,8 +42,6 @@ export class AsignacionService {
 		if (orden) {
 			params = params.set("orden", orden); // Agregar ordenamiento
 		}
-
-		console.log("[SERVICE] Parámetros enviados al backend:", params.toString());
 		return this.http.get<Pagination<AsignacionData>>(this.apiUrl, {
 			params,
 		});

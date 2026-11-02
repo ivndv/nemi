@@ -1,23 +1,27 @@
 import {
 	ChangeDetectionStrategy,
-	ChangeDetectorRef,
 	Component,
+	ElementRef,
+	inject,
 	OnDestroy,
-	OnInit,
+	signal,
+	ViewChild,
 } from "@angular/core";
 import { Router } from "@angular/router";
-import { Subject, takeUntil } from "rxjs";
-import { debounceTime, switchMap } from "rxjs/operators";
-import Swal from "sweetalert2";
+import {
+	injectQuery,
+	keepPreviousData,
+} from "@tanstack/angular-query-experimental";
+import { firstValueFrom } from "rxjs";
+import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
+import { getHttpErrorMessage } from "../../core/http/http-error";
 import { AuthService } from "../../login/services/auth.service";
 import { AsignacionData } from "../../models/asignacion.interface";
-import {
-	DatosAuxiliares,
-	SelectItem,
-} from "../../models/datos-auxiliares.interface";
+import type { SelectItem } from "../../models/datos-auxiliares.interface";
 import { getCloudflareImage } from "../../utils/images";
 import { AsignacionService } from "../services/asignacion.service";
-import { AuxiliaresService } from "../services/auxiliares.service";
+
+const EMPTY_ITEMS: SelectItem[] = [];
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,178 +30,93 @@ import { AuxiliaresService } from "../services/auxiliares.service";
 	templateUrl: "./activos-asignados.component.html",
 	styleUrl: "./activos-asignados.component.css",
 })
-export class ActivosAsignadosComponent implements OnInit, OnDestroy {
-	filtroSeleccionado: string = "";
-	opcionSeleccionada: string = "";
-	ordenSeleccionado: string = "asc";
-	listaAsignaciones: AsignacionData[] = [];
-	pagination: {
-		total: number;
-		totalPages: number;
-		page: number;
-		limit: number;
-	} = { total: 0, totalPages: 0, page: 1, limit: 10 };
-	limitePorPagina: number = 10;
-	paginaActual: number = 1;
-	private searchSubject = new Subject<string>();
-	private destroy$ = new Subject<void>();
-	terminoBusqueda: string = "";
-	datosAuxiliares: DatosAuxiliares["data"] | null = null;
-	errorMessage: string = "";
+export class ActivosAsignadosComponent implements OnDestroy {
+	filtroSeleccionado = "";
+	opcionSeleccionada = "";
+	ordenSeleccionado = "asc";
+	limitePorPagina = 10;
+	paginaActual = 1;
+	terminoBusqueda = "";
+	private readonly asignacionService = inject(AsignacionService);
+	private readonly enrutador = inject(Router);
+	private readonly authService = inject(AuthService);
+	private readonly catalogosFacade = inject(CatalogosFacade);
+	private readonly refresco = signal(0);
+	private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
-	constructor(
-		private cdr: ChangeDetectorRef,
-		private asignacionService: AsignacionService,
-		private enrutador: Router,
-		private auxiliaresService: AuxiliaresService,
-		private authService: AuthService,
-	) {}
+	private readonly query = injectQuery(() => ({
+		queryKey: [
+			"asignaciones",
+			"asignados",
+			this.refresco(),
+			{
+				page: this.paginaActual,
+				limit: this.limitePorPagina,
+				search: this.terminoBusqueda,
+				filtro: this.filtroSeleccionado,
+				opcion: this.opcionSeleccionada,
+				orden: this.ordenSeleccionado,
+			},
+		],
+		queryFn: () =>
+			firstValueFrom(
+				this.asignacionService.getAsignaciones(
+					this.paginaActual,
+					this.limitePorPagina,
+					this.terminoBusqueda,
+					this.filtroSeleccionado,
+					this.opcionSeleccionada,
+					this.ordenSeleccionado,
+				),
+			),
+		placeholderData: keepPreviousData,
+		staleTime: 0,
+	}));
 
-	ngOnInit(): void {
-		this.cargarAsignaciones(); // Carga inicial de datos
-		this.obtenerDatosAuxiliares(); // Obtener los datos auxiliares
+	get listaAsignaciones(): AsignacionData[] {
+		return this.query.data()?.data ?? [];
+	}
 
-		this.searchSubject
-			.pipe(
-				debounceTime(500), // Espera 500ms después del último cambio en la barra de búsqueda
-				switchMap((term) => {
-					console.log("Término enviado al backend:", term);
-					this.terminoBusqueda = term;
-					this.paginaActual = 1;
-					return this.asignacionService.getAsignaciones(
-						this.paginaActual,
-						this.limitePorPagina,
-						this.terminoBusqueda,
-					);
-				}),
-				takeUntil(this.destroy$),
-			)
-			.subscribe({
-				next: (response) => {
-					console.log("Respuesta del backend recibida:", response);
-					this.listaAsignaciones = response.data;
-					this.pagination = response.pagination;
-					this.cdr.markForCheck();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Erro al crear activo" }
-					const errorMessage =
-						error.error?.error || "Erro al obtener asignaciones";
+	get pagination() {
+		return (
+			this.query.data()?.pagination ?? {
+				total: 0,
+				totalPages: 0,
+				page: this.paginaActual,
+				limit: this.limitePorPagina,
+			}
+		);
+	}
 
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
+	get errorMessage(): string {
+		return getHttpErrorMessage(
+			this.query.error(),
+			"Error al obtener asignaciones",
+		);
+	}
+
+	@ViewChild("searchInput") private searchInput?: ElementRef<HTMLInputElement>;
+
+	get opcionesFiltro(): SelectItem[] {
+		const data = this.catalogosFacade.catalogos();
+		if (!data) return EMPTY_ITEMS;
+
+		switch (this.filtroSeleccionado) {
+			case "tipo":
+				return data.tiposActivos ?? EMPTY_ITEMS;
+			case "proveedor":
+				return data.proveedores ?? EMPTY_ITEMS;
+			case "ubicacion":
+				return data.ubicaciones ?? EMPTY_ITEMS;
+			case "usuario_asignado":
+				return data.usuarios ?? EMPTY_ITEMS;
+			default:
+				return EMPTY_ITEMS;
+		}
 	}
 
 	cargarAsignaciones(): void {
-		// Logs detallados para depuración
-		console.group("[CARGAR ACTIVOS DISPONIBLES]");
-		console.log("Parámetros enviados al backend:", {
-			paginaActual: this.paginaActual,
-			limitePorPagina: this.limitePorPagina,
-			terminoBusqueda: this.terminoBusqueda,
-			filtroSeleccionado: this.filtroSeleccionado,
-			opcionSeleccionada: this.opcionSeleccionada,
-			ordenSeleccionado: this.ordenSeleccionado,
-		});
-
-		this.asignacionService
-			.getAsignaciones(
-				this.paginaActual,
-				this.limitePorPagina,
-				this.terminoBusqueda,
-				this.filtroSeleccionado,
-				this.opcionSeleccionada,
-				this.ordenSeleccionado,
-			)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					console.log("Respuesta del backend recibida:", response);
-					this.listaAsignaciones = response.data;
-					this.pagination = response.pagination;
-					this.cdr.markForCheck();
-					console.groupEnd();
-
-					// Verificar si no hay resultados
-					if (response.data.length === 0) {
-						console.warn("No se encontraron activos disponibles.");
-					}
-
-					console.groupEnd();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Erro al obtener asignaciones';" }
-					const errorMessage =
-						error.error?.error || "Erro al obtener asignaciones";
-
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
-	}
-
-	// Función para obtener los datos auxiliares
-	obtenerDatosAuxiliares(): void {
-		const idActivo = 1; // Supongamos que estamos buscando datos auxiliares para un activo con ID 1
-		this.auxiliaresService
-			.getDatosAuxiliares(idActivo)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					console.log("Datos auxiliares recibidos:", response);
-					this.datosAuxiliares = response.data;
-					this.cdr.markForCheck();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Error al obtener datos auxiliares" }
-					const errorMessage =
-						error.error?.error || "Error al obtener datos auxiliares";
-
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
+		this.refresco.update((valor) => valor + 1);
 	}
 
 	// Función para dividir el texto en partes (para resaltar coincidencias)
@@ -224,17 +143,11 @@ export class ActivosAsignadosComponent implements OnInit, OnDestroy {
 		this.enrutador.navigate(["/asignaciones/editar", id]);
 	}
 
-	// Maneja el cambio en la barra de búsqueda
 	onSearchInput(event: Event): void {
-		const inputElement = event.target as HTMLInputElement; // Casting seguro
-		this.terminoBusqueda = inputElement.value; // Obtiene el valor
-		this.onSearchChange(inputElement.value);
-	}
-
-	onSearchChange(term: string): void {
-		this.terminoBusqueda = term;
+		this.terminoBusqueda = (event.target as HTMLInputElement).value;
 		this.paginaActual = 1;
-		this.searchSubject.next(term);
+		if (this.searchTimer) clearTimeout(this.searchTimer);
+		this.searchTimer = setTimeout(() => this.cargarAsignaciones(), 500);
 	}
 
 	/**
@@ -307,113 +220,33 @@ export class ActivosAsignadosComponent implements OnInit, OnDestroy {
 		this.ordenSeleccionado = "asc";
 		this.paginaActual = 1;
 
-		const searchInput = document.getElementById(
-			"busqueda2",
-		) as HTMLInputElement;
-		if (searchInput) searchInput.value = "";
+		if (this.searchInput) this.searchInput.nativeElement.value = "";
 
-		// Limpiar el selector de filtro
-		const filtroSelect = document.getElementById(
-			"filtro2",
-		) as HTMLSelectElement;
-		if (filtroSelect) filtroSelect.value = "";
-
-		// Limpiar el selector de opciones
-		const opcionesSelect = document.getElementById(
-			"opciones2",
-		) as HTMLSelectElement;
-		if (opcionesSelect) {
-			opcionesSelect.value = ""; // Resetea el valor seleccionado
-			while (opcionesSelect.options.length > 1) {
-				opcionesSelect.remove(1); // Elimina todas las opciones dinámicas excepto la primera
-			}
-		}
-
-		// Recargar los datos sin filtros
+		this.cargarAsignaciones();
+	}
+	cargarOpcionesFiltro(event: Event): void {
+		this.filtroSeleccionado = (event.target as HTMLSelectElement).value;
+		this.opcionSeleccionada = "";
+		this.paginaActual = 1;
 		this.cargarAsignaciones();
 	}
 
-	cargarOpcionesFiltro(_event: Event): void {
-		const filtroSelect = document.getElementById(
-			"filtro2",
-		) as HTMLSelectElement;
-		this.filtroSeleccionado = filtroSelect.value; // Guarda el tipo de filtro
-
-		const opcionesSelect = document.getElementById(
-			"opciones2",
-		) as HTMLSelectElement;
-
-		// Limpiar opciones existentes
-		while (opcionesSelect.options.length > 1) {
-			opcionesSelect.remove(1);
-		}
-
-		let opciones: SelectItem[] = [];
-
-		switch (this.filtroSeleccionado) {
-			case "tipo":
-				opciones = this.datosAuxiliares?.tiposActivos || [];
-				break;
-			case "proveedor":
-				opciones = this.datosAuxiliares?.proveedores || [];
-				break;
-			case "ubicacion":
-				opciones = this.datosAuxiliares?.ubicaciones || [];
-				break;
-			case "usuario_asignado":
-				opciones = this.datosAuxiliares?.usuarios || [];
-				break;
-			default:
-				return;
-		}
-
-		console.log("[FILTRO] Opciones cargadas:", opciones);
-		opciones.forEach((opcion) => {
-			const optionElement = document.createElement("option");
-			optionElement.value = String(opcion.id);
-			optionElement.textContent = opcion.nombre || opcion.descripcion || null;
-			opcionesSelect.appendChild(optionElement);
-		});
+	aplicarFiltro(event: Event): void {
+		this.opcionSeleccionada = (event.target as HTMLSelectElement).value;
+		this.paginaActual = 1;
+		this.cargarAsignaciones();
 	}
 
-	aplicarFiltro(_event: Event): void {
-		const opcionesSelect = document.getElementById(
-			"opciones2",
-		) as HTMLSelectElement;
-
-		// Verificar que el elemento exista
-		if (opcionesSelect) {
-			this.opcionSeleccionada = opcionesSelect.value; // Obtener el valor seleccionado
-			console.log("[FILTRO] Aplicando filtro:", {
-				tipo: this.filtroSeleccionado, // Tipo de filtro seleccionado
-				valor: this.opcionSeleccionada, // Valor seleccionado en el filtro
-			});
-
-			this.paginaActual = 1; // Resetea a la primera página
-			this.cargarAsignaciones(); // Recarga los datos con el filtro aplicado
-		} else {
-			console.error('[ERROR] No se encontró el elemento con ID "opciones2".');
-		}
+	aplicarOrden(event: Event): void {
+		this.ordenSeleccionado = (event.target as HTMLSelectElement).value;
+		this.cargarAsignaciones();
 	}
-
-	aplicarOrden(_event: Event): void {
-		const ordenSelect = document.getElementById(
-			"direccion2",
-		) as HTMLSelectElement;
-
-		// Verificar que el elemento exista
-		if (ordenSelect) {
-			this.ordenSeleccionado = ordenSelect.value; // Obtener el valor seleccionado
-			console.log("[ORDEN] Orden seleccionado:", this.ordenSeleccionado);
-
-			this.cargarAsignaciones(); // Recarga los datos con el nuevo orden
-		} else {
-			console.error('[ERROR] No se encontró el elemento con ID "orden2".');
-		}
-	}
-
 	isAdmin(): boolean {
 		return this.authService.isAdmin();
+	}
+
+	puedeOperar(): boolean {
+		return this.authService.puedeOperar();
 	}
 
 	getAssetPhoto(fotoUrl: string): string {
@@ -429,7 +262,6 @@ export class ActivosAsignadosComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.destroy$.next();
-		this.destroy$.complete();
+		if (this.searchTimer) clearTimeout(this.searchTimer);
 	}
 }

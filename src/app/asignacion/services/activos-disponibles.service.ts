@@ -36,8 +36,6 @@ export class ActivosDisponiblesService {
 		if (orden) {
 			params = params.set("orden", orden);
 		}
-
-		console.log("[SERVICE] Parámetros enviados al backend:", params.toString());
 		return this.http.get<Pagination<ActivoDisponibleResponse>>(this.apiUrl, {
 			params,
 		});

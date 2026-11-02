@@ -13,13 +13,13 @@ const routes: Routes = [
 		path: "asignar/:id",
 		component: AsignarActivoComponent,
 		canActivate: [RoleGuard],
-		data: { expectedRole: "Administrador" },
+		data: { expectedRoles: ["Administrador", "Técnico", "Almacén"] },
 	}, // Ruta independiente (/asignaciones/asignar)
 	{
 		path: "editar/:id",
 		component: EditarAsignacionComponent,
 		canActivate: [RoleGuard],
-		data: { expectedRole: "Administrador" },
+		data: { expectedRoles: ["Administrador", "Técnico", "Almacén"] },
 	}, // Ruta independiente (/asignaciones/editar/:id)
 ];
 

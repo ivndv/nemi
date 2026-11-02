@@ -10,6 +10,10 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
+import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
+
+const EMPTY_ITEMS: { id: number; nombre: string }[] = [];
+
 import {
 	AsignacionData,
 	AsignacionPayload,
@@ -29,8 +33,13 @@ export class EditarAsignacionComponent implements OnInit, OnDestroy {
 	// Propiedades para almacenar datos
 	activoId!: number; // ID del activo
 	nombreActivo: string = "";
-	usuarios: { id: number; nombre: string }[] = [];
-	ubicaciones: { id: number; nombre: string }[] = [];
+	get usuarios(): { id: number; nombre: string }[] {
+		return this.catalogosFacade.catalogos()?.usuarios ?? EMPTY_ITEMS;
+	}
+
+	get ubicaciones(): { id: number; nombre: string }[] {
+		return this.catalogosFacade.catalogos()?.ubicaciones ?? EMPTY_ITEMS;
+	}
 	asignacionData: AsignacionData | null = null;
 
 	// FormGroup para el formulario
@@ -50,6 +59,7 @@ export class EditarAsignacionComponent implements OnInit, OnDestroy {
 		private fb: FormBuilder,
 		private auxiliaresService: AuxiliaresService,
 		private asignacionService: AsignacionService,
+		private catalogosFacade: CatalogosFacade,
 		private location: Location,
 	) {}
 
@@ -81,7 +91,6 @@ export class EditarAsignacionComponent implements OnInit, OnDestroy {
 			.subscribe({
 				next: (response) => {
 					this.asignacionData = response.data;
-					console.log("Datos de la asignación cargados:", this.asignacionData);
 					this.fotoActivo = this.asignacionData.foto_url;
 					this.idAsignacion = this.asignacionData.id;
 					this.asignacionForm.patchValue({
@@ -126,11 +135,8 @@ export class EditarAsignacionComponent implements OnInit, OnDestroy {
 			.getDatosAuxiliares(this.activoId)
 			.pipe(takeUntil(this.destroy$))
 			.subscribe({
-				next: (response) => {
-					this.usuarios = response.data.usuarios || [];
-					this.ubicaciones = response.data.ubicaciones || [];
+				next: (_response) => {
 					this.cdr.markForCheck();
-					console.log("Datos auxiliares cargados:", response);
 				},
 				error: (error) => {
 					// Ejem. Si el backend devuelve { error: "Error al cargar datos auxiliares" }
@@ -167,14 +173,11 @@ export class EditarAsignacionComponent implements OnInit, OnDestroy {
 				}
 			}
 
-			console.log("Datos enviados al backend:", payload);
-
 			this.asignacionService
 				.updateAsignacion(this.activoId, payload)
 				.pipe(takeUntil(this.destroy$))
 				.subscribe({
-					next: (response) => {
-						console.log("Asignación actualizada exitosamente:", response);
+					next: (_response) => {
 						Swal.fire({
 							title: "¡Éxito!",
 							text: "Asignación actualizada correctamente.",
