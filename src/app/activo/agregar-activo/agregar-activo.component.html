@@ -1,207 +1,258 @@
-<main>
-  <section class="container">
-    <form [formGroup]="agregarActivoForm" (ngSubmit)="onSubmit()">
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Nuevo activo</h2>
+      <p class="page-subtitle">Registra el equipo, licencia o componente dentro del inventario.</p>
+    </div>
+  </header>
 
-      <!-- Bloque 1: Informacion Principal y Fotografia -->
-      <div class="grid-layout">
-        <div class="form-card">
-          <h2>Informacion Principal</h2>
-          <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div class="container-inputs">
-              <label for="nombre">Nombre del Activo *</label>
-              <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: MacBook Pro M2" />
-              @if (agregarActivoForm.get('nombre')?.touched && agregarActivoForm.get('nombre')?.hasError('required')) {
-                <small class="error-text" role="alert">Campo obligatorio</small>
-              }
-            </div>
-
-            <div class="container-inputs">
-              <label for="dueno_id">Duenno / Responsable *</label>
-              <ng-select id="dueno_id" formControlName="dueno_id" [items]="duenos" bindLabel="nombre" bindValue="id" placeholder="Seleccionar dueño..."></ng-select>
-              @if (agregarActivoForm.get('dueno_id')?.touched && agregarActivoForm.get('dueno_id')?.hasError('required')) {
-                <small class="error-text" role="alert">Campo obligatorio</small>
-              }
-            </div>
-
-            <div class="container-inputs">
-              <label for="tipo_id">Tipo de Activo *</label>
-              <ng-select id="tipo_id" formControlName="tipo_id" [items]="tiposActivos" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Ej: Hardware, Licencia..."></ng-select>
-              @if (agregarActivoForm.get('tipo_id')?.touched && agregarActivoForm.get('tipo_id')?.hasError('required')) {
-                <small class="error-text" role="alert">Campo obligatorio</small>
-              }
-            </div>
-          </div>
-        </div>
-
-        <div class="form-card image-upload-card">
-          <h2>Imagen del Activo</h2>
-          <div class="image-preview-container">
-            <img [src]="previewUrl() || (imagenActual ? 'http://localhost:3000' + imagenActual : 'https://assets.mgdc.site/nemi/placeholder-image.png')" alt="Vista previa" />
-            @if (!previewUrl()) {
-              <input type="file" id="imagen" (change)="onFileSelected($event)" accept="image/*" />
-            }
-          </div>
-          @if (previewUrl() || imagenActual) {
-            <button type="button" class="btn-upload" (click)="removeImage()">Quitar Imagen</button>
-          }
-          @if (!previewUrl() && !imagenActual) {
-            <span style="font-size: 11px; color: #a0aec0;">Haz clic en el recuadro para subir</span>
-          }
+  <form [formGroup]="agregarActivoForm" (ngSubmit)="onSubmit()" class="form-layout">
+    <div class="form-main">
+      <section class="form-section">
+      <div class="section-header">
+        <span class="section-icon"><iconify-icon icon="ph:identification-card"></iconify-icon></span>
+        <div>
+          <h3>Información principal</h3>
+          <p>Datos básicos para identificar el activo.</p>
         </div>
       </div>
 
-      <!-- Bloque 2: Detalles Tecnicos -->
-      <div class="form-card">
-        <h2>Detalles Tecnicos y Software</h2>
-        <div class="grid-layout">
-          <div class="container-inputs">
-            <label for="modelo">Modelo</label>
-            <input type="text" id="modelo" formControlName="modelo" placeholder="Ej: XPS 13 9310" />
-          </div>
-          <div class="container-inputs">
-            <label for="version_software">Version de Software</label>
-            <input type="text" id="version_software" formControlName="version_software" placeholder="Ej: macOS Sonoma / v1.0" />
-          </div>
-          <div class="container-inputs">
-            <label for="tipo_licencia">Tipo de Licencia</label>
-            <input type="text" id="tipo_licencia" formControlName="tipo_licencia" placeholder="Ej: Perpetua, Suscripcion..." />
-          </div>
-          <div class="container-inputs">
-            <label for="recursos_asignados">Recursos Asignados</label>
-            <input type="text" id="recursos_asignados" formControlName="recursos_asignados" placeholder="Ej: 16GB RAM, 512GB SSD" />
-          </div>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="nombre">Nombre del activo *</label>
+          <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: MacBook Pro M2" />
+          @if (agregarActivoForm.get('nombre')?.touched && agregarActivoForm.get('nombre')?.hasError('required')) {
+            <small class="error-text" role="alert">Campo obligatorio</small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="dueno_id">Dueño / responsable *</label>
+          <ng-select id="dueno_id" formControlName="dueno_id" [items]="duenos" bindLabel="nombre" bindValue="id" placeholder="Seleccionar dueño..."></ng-select>
+          @if (agregarActivoForm.get('dueno_id')?.touched && agregarActivoForm.get('dueno_id')?.hasError('required')) {
+            <small class="error-text" role="alert">Campo obligatorio</small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="tipo_id">Tipo de activo *</label>
+          <ng-select id="tipo_id" formControlName="tipo_id" [items]="tiposActivos" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Ej: Hardware, licencia..."></ng-select>
+          @if (agregarActivoForm.get('tipo_id')?.touched && agregarActivoForm.get('tipo_id')?.hasError('required')) {
+            <small class="error-text" role="alert">Campo obligatorio</small>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <span class="section-icon"><iconify-icon icon="ph:hard-drives"></iconify-icon></span>
+        <div>
+          <h3>Detalles técnicos y software</h3>
+          <p>Especificaciones del equipo o licencia.</p>
         </div>
       </div>
 
-      <!-- Bloque 3: Estado y Ubicacion -->
-      <div class="form-card">
-        <h2>Estado y Ubicacion</h2>
-        <div class="grid-layout">
-          <div class="container-inputs">
-            <label for="condicion_fisica">Condicion Fisica</label>
-            <ng-select id="condicion_fisica" formControlName="condicion_fisica" [items]="condicionesFisicas" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar condicion..."></ng-select>
-            @if (agregarActivoForm.get('condicion_fisica')?.errors?.['condicionInvalida']) {
-              <small class="error-text" role="alert">Condicion no valida.</small>
-            }
-          </div>
-          <div class="container-inputs">
-            <label for="etiqueta_serial">Etiqueta / Serial</label>
-            <input type="text" id="etiqueta_serial" formControlName="etiqueta_serial" placeholder="Numero de serie" (blur)="validarEtiquetaSerial()" />
-            @if (serialError) {
-              <small class="error-text" role="alert">{{ serialError }}</small>
-            }
-          </div>
-          <div class="container-inputs">
-            <label for="estado">Estado Operativo *</label>
-            <ng-select id="estado" formControlName="estado" [items]="estados" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar estado..."></ng-select>
-            @if (agregarActivoForm.get('estado')?.touched && agregarActivoForm.get('estado')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
-            }
-          </div>
-          <div class="container-inputs">
-            <label for="ubicacion_id">Ubicacion *</label>
-            <ng-select id="ubicacion_id" formControlName="ubicacion_id" [items]="ubicaciones" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar ubicacion..."></ng-select>
-            @if (agregarActivoForm.get('ubicacion_id')?.touched && agregarActivoForm.get('ubicacion_id')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
-            }
-          </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="modelo">Modelo</label>
+          <input type="text" id="modelo" formControlName="modelo" placeholder="Ej: XPS 13 9310" />
         </div>
-        <div class="container-inputs" style="margin-top: 20px;">
-          <label for="descripcion">Descripcion Detallada</label>
+        <div class="form-group">
+          <label for="version_software">Versión de software</label>
+          <input type="text" id="version_software" formControlName="version_software" placeholder="Ej: macOS Sonoma / v1.0" />
+        </div>
+        <div class="form-group">
+          <label for="tipo_licencia">Tipo de licencia</label>
+          <input type="text" id="tipo_licencia" formControlName="tipo_licencia" placeholder="Ej: Perpetua, suscripción..." />
+        </div>
+        <div class="form-group">
+          <label for="recursos_asignados">Recursos asignados</label>
+          <input type="text" id="recursos_asignados" formControlName="recursos_asignados" placeholder="Ej: 16 GB RAM, 512 GB SSD" />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <span class="section-icon"><iconify-icon icon="ph:map-pin"></iconify-icon></span>
+        <div>
+          <h3>Estado y ubicación</h3>
+          <p>Dónde está y en qué condición se encuentra.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="condicion_fisica">Condición física</label>
+          <ng-select id="condicion_fisica" formControlName="condicion_fisica" [items]="condicionesFisicas" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar condición..."></ng-select>
+          @if (agregarActivoForm.get('condicion_fisica')?.errors?.['condicionInvalida']) {
+            <small class="error-text" role="alert">Condición no válida.</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="etiqueta_serial">Etiqueta / serial</label>
+          <input type="text" id="etiqueta_serial" formControlName="etiqueta_serial" placeholder="Número de serie" (blur)="validarEtiquetaSerial()" />
+          @if (serialError) {
+            <small class="error-text" role="alert">{{ serialError }}</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="estado">Estado operativo *</label>
+          <ng-select id="estado" formControlName="estado" [items]="estados" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar estado..."></ng-select>
+          @if (agregarActivoForm.get('estado')?.touched && agregarActivoForm.get('estado')?.hasError('required')) {
+            <small class="error-text" role="alert">Campo obligatorio</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="ubicacion_id">Ubicación *</label>
+          <ng-select id="ubicacion_id" formControlName="ubicacion_id" [items]="ubicaciones" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar ubicación..."></ng-select>
+          @if (agregarActivoForm.get('ubicacion_id')?.touched && agregarActivoForm.get('ubicacion_id')?.hasError('required')) {
+            <small class="error-text" role="alert">Campo obligatorio</small>
+          }
+        </div>
+        <div class="form-group full-width">
+          <label for="descripcion">Descripción detallada</label>
           <textarea id="descripcion" formControlName="descripcion" placeholder="Notas adicionales sobre el activo..."></textarea>
         </div>
       </div>
+    </section>
 
-      <!-- Bloque 4: Datos Financieros y Fechas -->
-      <div class="form-card">
-        <h2>Datos Financieros y Planificacion</h2>
-        <div class="grid-layout">
-          <div class="container-inputs">
-            <label for="fecha_adquisicion">Fecha de Adquisicion *</label>
-            <input type="date" id="fecha_adquisicion" formControlName="fecha_adquisicion" />
-            @if (agregarActivoForm.get('fecha_adquisicion')?.touched && agregarActivoForm.get('fecha_adquisicion')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
-            }
-          </div>
-          <div class="container-inputs">
-            <label for="valor_compra">Valor de Compra *</label>
-            <input type="number" id="valor_compra" formControlName="valor_compra" placeholder="0.00" />
-            @if (agregarActivoForm.get('valor_compra')?.touched && agregarActivoForm.get('valor_compra')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
-            }
-            @if (agregarActivoForm.get('valor_compra')?.touched && agregarActivoForm.get('valor_compra')?.hasError('min')) {
-              <small class="error-text" role="alert">Debe ser un numero positivo</small>
-            }
-          </div>
-          <div class="container-inputs">
-            <label for="proveedor_id">Proveedor *</label>
-            <ng-select id="proveedor_id" formControlName="proveedor_id" [items]="proveedores" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar proveedor..."></ng-select>
-            @if (agregarActivoForm.get('proveedor_id')?.touched && agregarActivoForm.get('proveedor_id')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
-            }
-          </div>
-          <div class="container-inputs">
-            <label for="fecha_vencimiento_licencia">Proximo Vencimiento</label>
-            <input type="date" id="fecha_vencimiento_licencia" formControlName="fecha_vencimiento_licencia" />
-          </div>
-          <div class="container-inputs">
-            <label for="costo_mensual">Costo Mensual Mant.</label>
-            <input type="number" id="costo_mensual" formControlName="costo_mensual" placeholder="0.00" />
-          </div>
+    <section class="form-section">
+      <div class="section-header">
+        <span class="section-icon"><iconify-icon icon="ph:currency-dollar"></iconify-icon></span>
+        <div>
+          <h3>Datos financieros y planificación</h3>
+          <p>Costos, proveedor y fechas relevantes.</p>
         </div>
       </div>
 
-      <!-- Bloque 5: Garantia (Opcional) -->
-      <div class="form-card section-garantia">
-        <h2>Informacion de Garantia (Opcional)</h2>
-        <div class="grid-layout">
-          <div class="container-inputs">
-            <label for="nombre_garantia">Nombre de Garantia</label>
-            <input type="text" id="nombre_garantia" formControlName="nombre_garantia" placeholder="Ej: AppleCare+" />
-          </div>
-          <div class="container-inputs">
-            <label for="proveedor_garantia_id">Proveedor Garantia</label>
-            <ng-select id="proveedor_garantia_id" formControlName="proveedor_garantia_id" [items]="proveedorGarantia" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar..."></ng-select>
-          </div>
-          <div class="container-inputs">
-            <label for="fecha_inicio">Inicio de Garantia</label>
-            <input type="date" id="fecha_inicio" formControlName="fecha_inicio" />
-          </div>
-          <div class="container-inputs">
-            <label for="fecha_fin">Fin de Garantia</label>
-            <input type="date" id="fecha_fin" formControlName="fecha_fin" />
-          </div>
-          <div class="container-inputs">
-            <label for="costo">Costo Garantia</label>
-            <input type="text" id="costo" formControlName="costo" placeholder="0.00" />
-          </div>
-          <div class="container-inputs">
-            <label for="estado_garantia">Estado Garantia</label>
-            <ng-select id="estado_garantia" formControlName="estado_garantia" [items]="estadoGarantia" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar..."></ng-select>
-          </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fecha_adquisicion">Fecha de adquisición *</label>
+          <input type="date" id="fecha_adquisicion" formControlName="fecha_adquisicion" />
+          @if (agregarActivoForm.get('fecha_adquisicion')?.touched && agregarActivoForm.get('fecha_adquisicion')?.hasError('required')) {
+            <small class="error-text" role="alert">Campo obligatorio</small>
+          }
         </div>
-        <div class="container-inputs" style="margin-top: 20px;">
-          <label for="condiciones">Condiciones de Garantia</label>
-          <input type="text" id="condiciones" formControlName="condiciones" placeholder="Ej: No incluye danos accidentales" />
+        <div class="form-group">
+          <label for="valor_compra">Valor de compra *</label>
+          <input type="number" id="valor_compra" formControlName="valor_compra" placeholder="0.00" />
+          @if (agregarActivoForm.get('valor_compra')?.touched && agregarActivoForm.get('valor_compra')?.hasError('required')) {
+            <small class="error-text" role="alert">Campo obligatorio</small>
+          }
+          @if (agregarActivoForm.get('valor_compra')?.touched && agregarActivoForm.get('valor_compra')?.hasError('min')) {
+            <small class="error-text" role="alert">Debe ser un número positivo</small>
+          }
         </div>
-        <div class="container-inputs" style="margin-top: 20px;">
-          <label for="descripcion_garantia">Descripcion de Garantia</label>
-          <textarea id="descripcion_garantia" formControlName="descripcion_garantia" placeholder="Detalles adicionales de la poliza..."></textarea>
+        <div class="form-group">
+          <label for="proveedor_id">Proveedor *</label>
+          <ng-select id="proveedor_id" formControlName="proveedor_id" [items]="proveedores" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar proveedor..."></ng-select>
+          @if (agregarActivoForm.get('proveedor_id')?.touched && agregarActivoForm.get('proveedor_id')?.hasError('required')) {
+            <small class="error-text" role="alert">Campo obligatorio</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="fecha_vencimiento_licencia">Próximo vencimiento</label>
+          <input type="date" id="fecha_vencimiento_licencia" formControlName="fecha_vencimiento_licencia" />
+        </div>
+        <div class="form-group">
+          <label for="costo_mensual">Costo mensual de mantenimiento</label>
+          <input type="number" id="costo_mensual" formControlName="costo_mensual" placeholder="0.00" />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <span class="section-icon"><iconify-icon icon="ph:shield-check"></iconify-icon></span>
+        <div>
+          <h3>Garantía <span class="optional">Opcional</span></h3>
+          <p>Póliza y cobertura del activo.</p>
         </div>
       </div>
 
-      <!-- Footer con Acciones -->
-      <div class="botones-container">
-        <button type="button" class="btn-cancelar" (click)="onCancelar()">Cancelar y Salir</button>
-        <button type="submit" class="btn-guardar" [disabled]="!agregarActivoForm.valid">Guardar Activo</button>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="nombre_garantia">Nombre de la garantía</label>
+          <input type="text" id="nombre_garantia" formControlName="nombre_garantia" placeholder="Ej: AppleCare+" />
+        </div>
+        <div class="form-group">
+          <label for="proveedor_garantia_id">Proveedor de garantía</label>
+          <ng-select id="proveedor_garantia_id" formControlName="proveedor_garantia_id" [items]="proveedorGarantia" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar..."></ng-select>
+        </div>
+        <div class="form-group">
+          <label for="fecha_inicio">Inicio de garantía</label>
+          <input type="date" id="fecha_inicio" formControlName="fecha_inicio" />
+        </div>
+        <div class="form-group">
+          <label for="fecha_fin">Fin de garantía</label>
+          <input type="date" id="fecha_fin" formControlName="fecha_fin" />
+        </div>
+        <div class="form-group">
+          <label for="costo">Costo de garantía</label>
+          <input type="text" id="costo" formControlName="costo" placeholder="0.00" />
+        </div>
+        <div class="form-group">
+          <label for="estado_garantia">Estado de garantía</label>
+          <ng-select id="estado_garantia" formControlName="estado_garantia" [items]="estadoGarantia" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar..."></ng-select>
+        </div>
+        <div class="form-group full-width">
+          <label for="condiciones">Condiciones de garantía</label>
+          <input type="text" id="condiciones" formControlName="condiciones" placeholder="Ej: No incluye daños accidentales" />
+        </div>
+        <div class="form-group full-width">
+          <label for="descripcion_garantia">Descripción de garantía</label>
+          <textarea id="descripcion_garantia" formControlName="descripcion_garantia" placeholder="Detalles adicionales de la póliza..."></textarea>
+        </div>
+      </div>
+    </section>
+
+    </div>
+
+    <aside class="form-side">
+    <section class="form-card image-upload-card">
+      <div class="section-header">
+        <span class="section-icon"><iconify-icon icon="ph:image"></iconify-icon></span>
+        <div>
+          <h3>Imagen del activo</h3>
+          <p>Opcional. JPG o PNG.</p>
+        </div>
       </div>
 
-      @if (!agregarActivoForm.valid && agregarActivoForm.touched) {
-        <small class="error-text" role="alert" style="text-align:center;display:block;margin-top:8px;">
-          Completa todos los campos obligatorios marcados con *
-        </small>
+      <div class="image-preview-container" (click)="fileInput.click()">
+        @if (previewUrl()) {
+          <img [src]="previewUrl()" alt="Vista previa" width="400" height="300" loading="lazy" />
+        } @else {
+          <div class="image-empty">
+            <iconify-icon icon="ph:upload-simple"></iconify-icon>
+            <span>Subir imagen</span>
+          </div>
+        }
+        <input #fileInput type="file" id="imagen" (change)="onFileSelected($event)" accept="image/*" hidden />
+      </div>
+
+      @if (previewUrl()) {
+        <button type="button" class="btn-secondary btn-block" (click)="removeImage()">
+          <iconify-icon icon="ph:trash"></iconify-icon>
+          Quitar imagen
+        </button>
       }
+    </section>
+    </aside>
 
-    </form>
-  </section>
+    <footer class="form-actions">
+      <button type="button" class="btn-secondary" (click)="onCancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="!agregarActivoForm.valid">
+        <iconify-icon icon="ph:check"></iconify-icon>
+        Guardar activo
+      </button>
+    </footer>
+
+    @if (!agregarActivoForm.valid && agregarActivoForm.touched) {
+      <small class="error-text form-error" role="alert">
+        Completa todos los campos obligatorios marcados con *
+      </small>
+    }
+  </form>
 </main>

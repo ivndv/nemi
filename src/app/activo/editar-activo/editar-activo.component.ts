@@ -17,11 +17,15 @@ import {
 import { ActivatedRoute, Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
+import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
+import { getHttpErrorMessage } from "../../core/http/http-error";
 import { ActivoPayload, GarantiaItem } from "../../models/activo.interface";
 import { SelectItem } from "../../models/datos-auxiliares.interface";
 import { getCloudflareImage } from "../../utils/images";
+import { ActivosMutacionesFacade } from "../application/activos-mutaciones.facade";
 import { ActivoService } from "../service/activo.service";
-import { DatosService } from "../service/datos.service";
+
+const EMPTY_ITEMS: SelectItem[] = [];
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,13 +38,31 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 	// Formulario para editar un activo
 	editarActivoForm!: FormGroup;
 	activoId!: number; // ID del activo
-	tiposActivos: SelectItem[] = [];
-	proveedores: SelectItem[] = [];
-	ubicaciones: SelectItem[] = [];
-	proveedorGarantia: SelectItem[] = [];
-	duenos: SelectItem[] = [];
 	errorMessage: string = "";
-	estados: SelectItem[] = [];
+
+	get tiposActivos(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.tipos ?? EMPTY_ITEMS;
+	}
+
+	get proveedores(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.proveedores ?? EMPTY_ITEMS;
+	}
+
+	get ubicaciones(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.ubicaciones ?? EMPTY_ITEMS;
+	}
+
+	get proveedorGarantia(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.proveedoresGarantia ?? EMPTY_ITEMS;
+	}
+
+	get duenos(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.duenos ?? EMPTY_ITEMS;
+	}
+
+	get estados(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.estados ?? EMPTY_ITEMS;
+	}
 
 	public previewUrl = signal<string | null>(null); // Vista previa de la nueva imagen
 	imagenActual: string | null | undefined = null; // URL de la imagen actual del activo
@@ -74,7 +96,8 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 		private route: ActivatedRoute,
 		private router: Router,
 		private activoService: ActivoService,
-		private datosService: DatosService,
+		private mutaciones: ActivosMutacionesFacade,
+		private catalogosFacade: CatalogosFacade,
 		private cdr: ChangeDetectorRef,
 	) {}
 
@@ -82,7 +105,6 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 		this.activoId = +(this.route.snapshot.paramMap.get("id") || 0);
 		this.inicializarFormulario();
 		this.cargarDatosActivo();
-		this.cargarDatosAdicionales();
 	}
 
 	// Inicializar el formulario
@@ -114,39 +136,6 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 			costo: [null],
 			condiciones: [""],
 		});
-	}
-
-	// Cargar datos auxiliares (tipos, proveedores, ubicaciones, etc.)
-	cargarDatosAdicionales(): void {
-		this.datosService
-			.obtenerDatosAuxiliares()
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					console.log(response);
-					this.tiposActivos = response.data.tipos || [];
-					this.proveedores = response.data.proveedores || [];
-					this.ubicaciones = response.data.ubicaciones || [];
-					this.proveedorGarantia = response.data.proveedoresGarantia || [];
-					this.duenos = response.data.duenos || [];
-					this.estados = response.data.estados || [];
-					this.cdr.markForCheck();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { mensaje: "Error al obtener datos auxiliares" }
-					const errorMessage =
-						error.error?.mensaje || "Error al obtener datos auxiliares";
-
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						icon: "error",
-						text: errorMessage,
-						confirmButtonColor: "#1e293b",
-					});
-				},
-			});
 	}
 
 	// Quitar imagen completamente (enviará null al backend al guardar)
@@ -202,7 +191,6 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe({
 				next: (response) => {
-					console.log("Datos del activo:", response);
 					// Guarda la imagen actual y la original para comparaciones
 					this.imagenActual = response.data.foto_url || null;
 					this.imagenOriginal = response.data.foto_url || null;
@@ -251,8 +239,6 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 
 					this.editarActivoForm.patchValue(datosFormulario);
 					this.cdr.markForCheck();
-					console.log("Datos del formulario:", datosFormulario);
-					console.log("Imagen actual:", this.imagenActual);
 				},
 				error: (error) => {
 					// Ejem. Si el backend devuelve { error: "Error al obtener activo" }
@@ -280,8 +266,8 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 				this.previewUrl.set(reader.result as string);
 				// Guardar en localStorage (clave única para evitar conflictos)
 				const imageKey = `activo_img_${Date.now()}`;
-				if (this.previewUrl())
-					localStorage.setItem(imageKey, this.previewUrl()!);
+				const preview = this.previewUrl();
+				if (preview) localStorage.setItem(imageKey, preview);
 				this.imagenLocalStorageKey = imageKey; // Guardar la clave para usarla después
 			};
 			reader.readAsDataURL(file);
@@ -294,7 +280,7 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 		}
 	}
 	// Manejar el envío del formulario
-	onSubmit(): void {
+	async onSubmit(): Promise<void> {
 		if (!this.editarActivoForm.valid) {
 			this.editarActivoForm.markAllAsTouched();
 			return;
@@ -329,56 +315,53 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 			didOpen: () => Swal.showLoading(),
 		});
 
-		this.activoService
-			.updateActivo(this.activoId, formData)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					this.isUploading.set(false);
-					Swal.close();
-					console.log("activo actualizado exitosamente:", response);
-					if (this.imagenLocalStorageKey) {
-						localStorage.removeItem(this.imagenLocalStorageKey);
-						this.imagenLocalStorageKey = null;
-					}
-					this.cdr.markForCheck();
-					Swal.fire({
-						title: "¡Actualizado!",
-						text: "Los cambios se han guardado exitosamente.",
-						icon: "success",
-						timer: 2000,
-						timerProgressBar: true,
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					}).then(() => {
-						this.router.navigate(["/gestion-activos"]);
-					});
-				},
-				error: (error) => {
-					this.isUploading.set(false);
-					Swal.close();
-					const errorMessage =
-						error.error?.error || "Error al actualizar el activo";
-					Swal.fire({
-						title: "Error de Guardado",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-					this.errorMessage = errorMessage;
+		try {
+			await this.mutaciones.editar(this.activoId, formData);
+			Swal.close();
+
+			if (this.imagenLocalStorageKey) {
+				localStorage.removeItem(this.imagenLocalStorageKey);
+				this.imagenLocalStorageKey = null;
+			}
+
+			await Swal.fire({
+				title: "¡Actualizado!",
+				text: "Los cambios se han guardado exitosamente.",
+				icon: "success",
+				timer: 2000,
+				timerProgressBar: true,
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
 				},
 			});
+
+			this.router.navigate(["/gestion-activos"]);
+		} catch (error) {
+			Swal.close();
+			const errorMessage = getHttpErrorMessage(
+				error,
+				"Error al actualizar el activo",
+			);
+			this.errorMessage = errorMessage;
+			Swal.fire({
+				title: "Error de guardado",
+				text: errorMessage,
+				icon: "error",
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
+				},
+			});
+		} finally {
+			this.isUploading.set(false);
+		}
 	}
 
 	/**

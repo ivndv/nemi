@@ -1,16 +1,16 @@
 import {
 	ChangeDetectionStrategy,
-	ChangeDetectorRef,
 	Component,
+	effect,
+	inject,
 	OnInit,
 } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
-import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
+import { getHttpErrorMessage } from "../../core/http/http-error";
 import { AuthService } from "../../login/services/auth.service";
-import { ActivoDetalleResponse } from "../../models/activo.interface";
 import { getCloudflareImage } from "../../utils/images";
-import { ActivoService } from "../service/activo.service";
+import { ActivoDetalleFacade } from "../application/activo-detalle.facade";
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,75 +20,53 @@ import { ActivoService } from "../service/activo.service";
 	styleUrl: "./detalle-activo.component.css",
 })
 export class DetalleActivoComponent implements OnInit {
-	activo: ActivoDetalleResponse["data"] | null = null;
-	errorMessage: string = "";
+	private readonly facade = inject(ActivoDetalleFacade);
+	private readonly route = inject(ActivatedRoute);
+	private readonly router = inject(Router);
+	private readonly authService = inject(AuthService);
+	private lastError = "";
 
-	activoId!: number; // ID del activo
-	private destroy$ = new Subject<void>();
+	constructor() {
+		effect(() => {
+			const message = this.facade.errorMessage();
+			if (!message || message === this.lastError) return;
 
-	constructor(
-		private route: ActivatedRoute,
-		private activoService: ActivoService,
-		private router: Router,
-		private authService: AuthService,
-		private cdr: ChangeDetectorRef,
-	) {}
-
-	ngOnInit(): void {
-		// Obtener el ID del activo desde la ruta
-		this.activoId = +(this.route.snapshot.paramMap.get("id") || 0);
-
-		// Cargar el activo al inicializar el componente
-		this.cargarActivo();
-	}
-
-	// Método para cargar el activo por ID desde la URL
-	cargarActivo(): void {
-		this.activoService
-			.getActivoById(this.activoId)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					this.activo = {
-						...response.data,
-						garantia: response.data.garantia ?? [],
-					};
-					this.cdr.markForCheck();
-					console.log("Activo cargado correctamente:", this.activo);
-				},
-				error: (error) => {
-					const errorMessage =
-						error.error?.error || "Error al obtener el activo";
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
+			this.lastError = message;
+			Swal.fire({
+				title: "Error",
+				text: message,
+				icon: "error",
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
 				},
 			});
+		});
 	}
 
-	darDeBaja(): void {
-		if (!this.activo) {
-			console.error("No se puede dar de baja: Activo no cargado.");
-			return;
-		}
+	ngOnInit(): void {
+		const id = Number(this.route.snapshot.paramMap.get("id") ?? 0);
+		this.facade.setActivoId(id);
+	}
 
-		const activoId = this.activo.id;
-		const activoNombre = this.activo.nombre;
+	get activo() {
+		return this.facade.activo();
+	}
 
-		Swal.fire({
-			title: "¿Dar de Baja?",
-			text: `¿Estás seguro de dar de baja el activo "${activoNombre}"? Esta acción no se puede deshacer.`,
+	get errorMessage(): string {
+		return this.facade.errorMessage();
+	}
+
+	async darDeBaja(): Promise<void> {
+		const activo = this.activo;
+		if (!activo) return;
+
+		const result = await Swal.fire({
+			title: "¿Dar de baja?",
+			text: `¿Estás seguro de dar de baja el activo "${activo.nombre}"? Esta acción no se puede deshacer.`,
 			icon: "warning",
 			showCancelButton: true,
 			confirmButtonText: "Sí, dar de baja",
@@ -102,64 +80,67 @@ export class DetalleActivoComponent implements OnInit {
 				confirmButton: "premium-swal-confirm",
 				cancelButton: "premium-swal-cancel",
 			},
-		}).then((result) => {
-			if (result.isConfirmed) {
-				this.activoService
-					.darDeBajaActivo(activoId)
-					.pipe(takeUntil(this.destroy$))
-					.subscribe({
-						next: (_response) => {
-							this.cdr.markForCheck();
-							Swal.fire({
-								title: "¡Baja Exitosa!",
-								text: "El activo ha sido retirado del sistema.",
-								icon: "success",
-								timer: 2000,
-								timerProgressBar: true,
-								buttonsStyling: false,
-								customClass: {
-									popup: "premium-swal-popup",
-									title: "premium-swal-title",
-									htmlContainer: "premium-swal-html",
-									confirmButton: "premium-swal-confirm",
-								},
-							}).then(() => {
-								this.router.navigate(["/gestion-activos"]);
-							});
-						},
-						error: (error) => {
-							const errorMessage =
-								error.error?.message || "Error al dar de baja";
-							Swal.fire({
-								title: "Error",
-								text: errorMessage,
-								icon: "error",
-								buttonsStyling: false,
-								customClass: {
-									popup: "premium-swal-popup",
-									title: "premium-swal-title",
-									htmlContainer: "premium-swal-html",
-									confirmButton: "premium-swal-confirm",
-								},
-							});
-						},
-					});
-			}
 		});
+
+		if (!result.isConfirmed) return;
+
+		try {
+			await this.facade.darDeBaja();
+
+			await Swal.fire({
+				title: "Baja exitosa",
+				text: "El activo ha sido retirado del sistema.",
+				icon: "success",
+				timer: 2000,
+				timerProgressBar: true,
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
+				},
+			});
+
+			this.router.navigate(["/gestion-activos"]);
+		} catch (error) {
+			Swal.fire({
+				title: "Error",
+				text: getHttpErrorMessage(error, "Error al dar de baja"),
+				icon: "error",
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
+				},
+			});
+		}
 	}
 
 	editarActivo(): void {
-		if (!this.activo) return;
-		this.router.navigate(["/gestion-activos/editar", this.activo.id]);
+		const activo = this.activo;
+		if (!activo) return;
+		this.router.navigate(["/gestion-activos/editar", activo.id]);
 	}
 
 	verHistorial(): void {
-		if (!this.activo) return;
-		this.router.navigate(["/gestion-activos/historial", this.activo.id]);
+		const activo = this.activo;
+		if (!activo) return;
+		this.router.navigate(["/gestion-activos/historial", activo.id]);
 	}
 
 	isAdmin(): boolean {
 		return this.authService.isAdmin();
+	}
+
+	puedeOperar(): boolean {
+		return this.authService.puedeOperar();
+	}
+
+	puedeMantenimiento(): boolean {
+		return this.authService.puedeMantenimiento();
 	}
 
 	getAssetPhoto(fotoUrl: string): string {
@@ -168,10 +149,5 @@ export class DetalleActivoComponent implements OnInit {
 
 	trackById(_index: number, item: { id: number }): number {
 		return item.id;
-	}
-
-	ngOnDestroy(): void {
-		this.destroy$.next();
-		this.destroy$.complete();
 	}
 }

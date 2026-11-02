@@ -28,24 +28,16 @@ export class HistorialService {
 			.set("limit", limit.toString());
 
 		if (searchTerm) {
-			console.log("[HISTORIAL SERVICE] Aplicando búsqueda:", searchTerm);
 			params = params.set("search", searchTerm);
 		}
 
 		if (filtro && valorFiltro) {
-			console.log("[HISTORIAL SERVICE] Aplicando filtro:", {
-				tipo: filtro,
-				valor: valorFiltro,
-			});
 			params = params.set(filtro, valorFiltro.toString());
 		}
 
 		if (orden) {
-			console.log("[HISTORIAL SERVICE] Aplicando orden:", orden);
 			params = params.set("orden", orden);
 		}
-
-		console.log("[HISTORIAL SERVICE] Parámetros finales:", params.toString());
 		return this.http.get<Pagination<HistorialEntry>>(
 			`${this.apiUrl}/activos/${activoId}`,
 			{ params },

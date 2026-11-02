@@ -32,24 +32,16 @@ export class ActivoService {
 			.set("limit", limit.toString());
 
 		if (searchTerm) {
-			console.log("[SERVICE] Aplicando búsqueda:", searchTerm);
 			params = params.set("search", searchTerm);
 		}
 
 		if (filtro && valorFiltro) {
-			console.log("[SERVICE] Aplicando filtro:", {
-				tipo: filtro,
-				valor: valorFiltro,
-			});
 			params = params.set(filtro, valorFiltro);
 		}
 
 		if (orden) {
-			console.log("[SERVICE] Aplicando orden:", orden);
 			params = params.set("orden", orden);
 		}
-
-		console.log("[SERVICE] Parámetros finales:", params.toString());
 		return this.http.get<Pagination<ActivoListItem>>(`${this.apiUrl}/activos`, {
 			params,
 		});

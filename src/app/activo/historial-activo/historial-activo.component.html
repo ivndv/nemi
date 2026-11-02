@@ -1,151 +1,147 @@
-<main>
-  <div class="container">
-    <div class="history-card">
+<main class="page">
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
 
-      <!-- Encabezado con título -->
-      <header class="card-header">
-        <h2>Historial del Activo</h2>
-      </header>
-
-      <!-- Barra de Herramientas (Búsqueda y Filtros) -->
-      <section class="toolbar">
-        <!-- Búsqueda -->
-        <div class="search-group">
-          <label>Buscar en el historial</label>
-          <div class="search-input-wrapper">
-            <iconify-icon icon="lucide:search"></iconify-icon>
-            <input
-              type="text"
-              placeholder="Filtra por acción, detalles o responsable..."
-              (input)="onSearchInput($event)"
-              />
-          </div>
-        </div>
-
-        <!-- Filtro Principal -->
-        <div class="filter-group">
-          <label>Filtrar por</label>
-          <select name="filtro" id="filtro" (change)="cargarOpcionesFiltro($event)">
-            <option value="">Cualquier categoría</option>
-            <option value="accion">Tipo de Acción</option>
-            <option value="usuario_responsable">Responsable</option>
-          </select>
-        </div>
-
-        <!-- Opciones dinámicas -->
-        <div class="filter-group">
-          <label>Opciones</label>
-          <select name="opciones" id="opciones" (change)="aplicarFiltro($event)">
-            <option value="">Ver todos</option>
-          </select>
-        </div>
-
-        <!-- Orden -->
-        <div class="filter-group">
-          <label>Orden</label>
-          <select name="direccion" id="direccion" (change)="aplicarOrden($event)">
-            <option value="asc">Más antiguos primero</option>
-            <option value="desc" selected>Más recientes primero</option>
-          </select>
-        </div>
-
-        <!-- Botón Limpiar -->
-        <button class="btn-limpiar" (click)="limpiarFiltros()" title="Restablecer filtros">
-          <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
-          Limpiar
-        </button>
-      </section>
-
-      <!-- Tabla de Datos -->
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 60px;">ID</th>
-              <th style="width: 200px;">Acción</th>
-              <th>Detalles de la Operación</th>
-              <th style="width: 180px;">Fecha y Hora</th>
-              <th style="width: 200px;">Responsable</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (registro of historial; track trackById($index, registro)) {
-              <tr>
-                <td style="color: #a0aec0; font-weight: 600;">#{{ registro.id }}</td>
-                <td>
-                  <span [class]="'action-badge ' + getBadgeClass(registro.accion)">
-                    <iconify-icon [icon]="getBadgeIcon(registro.accion)"></iconify-icon>
-                    @for (parte of dividirTexto(registro.accion); track parte) {
-                      <span>
-                        <span [class.highlight]="esParteResaltada(parte)">{{ parte }}</span>
-                      </span>
-                    }
-                  </span>
-                </td>
-                <td style="line-height: 1.4;">{{ registro.detalles }}</td>
-                <td style="font-weight: 600;">
-                  <iconify-icon icon="lucide:calendar" style="margin-right: 5px; vertical-align: middle;"></iconify-icon>
-                  {{ registro.fecha | date:'dd MMM, yyyy' }}
-                  <div class="hora-texto">
-                    {{ registro.fecha | date:'HH:mm:ss' }}
-                  </div>
-                </td>
-                <td>
-                  <div style="display: flex; align-items: center; gap: 10px;">
-                    <div class="user-avatar">
-                      {{ registro.usuario_responsable.substring(0,2) | uppercase }}
-                    </div>
-                    <span class="user-name">{{ registro.usuario_responsable }}</span>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Footer con Paginación -->
-      <footer class="pagination-footer">
-        @if (pagination.total > 0) {
-          <div class="pagination-info">
-            <p>Mostrando <b>{{ primerActivoMostrado }}</b> al <b>{{ ultimoActivoMostrado }}</b> de <b>{{ pagination.total }}</b> registros</p>
-          </div>
-        }
-
-        @if (pagination.totalPages > 1) {
-          <div class="pagination-controls">
-            <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" title="Primera página">
-              <iconify-icon icon="lucide:chevrons-left"></iconify-icon>
-            </button>
-            <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
-              <iconify-icon icon="lucide:chevron-left"></iconify-icon>
-            </button>
-            @for (pagina of paginasVisibles; track $index) {
-              <span>
-                <button (click)="cambiarPagina(pagina)" [class.active]="pagina === paginaActual">
-                  {{ pagina }}
-                </button>
-              </span>
-            }
-            <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === pagination.totalPages">
-              <iconify-icon icon="lucide:chevron-right"></iconify-icon>
-            </button>
-            <button (click)="cambiarPagina(pagination.totalPages)" [disabled]="paginaActual === pagination.totalPages">
-              <iconify-icon icon="lucide:chevrons-right"></iconify-icon>
-            </button>
-          </div>
-        }
-
-        <div class="page-limit">
-          <label style="margin: 0;">Ver:</label>
-          <select (change)="onLimitChange($event)">
-            <option value="10" [selected]="limitePorPagina === 10">10</option>
-            <option value="20" [selected]="limitePorPagina === 20">20</option>
-            <option value="50" [selected]="limitePorPagina === 50">50</option>
-          </select>
-        </div>
-      </footer>
-
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Historial del activo</h2>
+      <p class="page-subtitle">Trazabilidad completa de cambios, asignaciones y mantenimientos.</p>
     </div>
-  </div>
+  </header>
+
+  <section class="toolbar-container">
+    <div class="search-box">
+      <input
+        #searchInput
+        type="text"
+        placeholder="Buscar por acción, detalle o responsable..."
+        (input)="onSearchInput($event)"
+      />
+    </div>
+
+    <div class="filters-group">
+      <select name="filtro" id="filtro" [value]="filtroSeleccionado" (change)="cargarOpcionesFiltro($event)">
+        <option value="">Cualquier categoría</option>
+        <option value="accion">Tipo de acción</option>
+        <option value="usuario_responsable">Responsable</option>
+      </select>
+
+      <select name="opciones" id="opciones" [value]="opcionSeleccionada" (change)="aplicarFiltro($event)">
+        <option value="">Ver todos</option>
+        @for (op of opcionesFiltro; track op.id) {
+          <option [value]="op.id">{{ op.nombre }}</option>
+        }
+      </select>
+
+      <select name="direccion" id="direccion" [value]="ordenSeleccionado" (change)="aplicarOrden($event)">
+        <option value="asc">Más antiguos primero</option>
+        <option value="desc">Más recientes primero</option>
+      </select>
+    </div>
+
+    <div class="actions-group">
+      <button class="btn-secondary" (click)="limpiarFiltros()" title="Restablecer filtros">
+        <iconify-icon icon="ph:arrow-counter-clockwise"></iconify-icon>
+        Limpiar
+      </button>
+    </div>
+  </section>
+
+  <section class="history-card">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 64px;">ID</th>
+            <th style="width: 210px;">Acción</th>
+            <th>Detalles de la operación</th>
+            <th style="width: 170px;">Fecha</th>
+            <th style="width: 200px;">Responsable</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (historial.length === 0) {
+            <tr>
+              <td colspan="5">
+                <div class="vacio">
+                  <iconify-icon icon="ph:clock-counter-clockwise" style="font-size: 26px; margin-bottom: 8px;"></iconify-icon>
+                  <p>No hay registros en el historial</p>
+                </div>
+              </td>
+            </tr>
+          }
+
+          @for (registro of historial; track trackById($index, registro)) {
+            <tr>
+              <td class="id-cell">#{{ registro.id }}</td>
+              <td>
+                <span [class]="'action-badge ' + getBadgeClass(registro.slug || registro.accion)">
+                  <iconify-icon [icon]="getBadgeIcon(registro.slug || registro.accion)"></iconify-icon>
+                  @for (parte of dividirTexto(registro.accion); track parte) {
+                    <span [class.highlight]="esParteResaltada(parte)">{{ parte }}</span>
+                  }
+                </span>
+              </td>
+              <td class="detalles-cell">{{ registro.detalles }}</td>
+              <td>
+                <span class="fecha-cell">{{ registro.fecha | fechaApp:'fechaTexto' }}</span>
+                <span class="hora-texto">{{ registro.fecha | fechaApp:'hora' }}</span>
+              </td>
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar">
+                    {{ registro.usuario_responsable.substring(0, 2) | uppercase }}
+                  </div>
+                  <span class="user-name">{{ registro.usuario_responsable }}</span>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="historial-pie">
+      @if (pagination.total > 0) {
+        <div class="pagination-info">
+          <p>
+            Mostrando {{ primerActivoMostrado }}–{{ ultimoActivoMostrado }} de
+            {{ pagination.total }} registros
+          </p>
+        </div>
+      }
+
+      @if (pagination.totalPages > 1) {
+        <div class="pagination-controls">
+          <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" title="Primera página">
+            <iconify-icon icon="ph:caret-double-left"></iconify-icon>
+          </button>
+          <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+            <iconify-icon icon="ph:caret-left"></iconify-icon>
+          </button>
+          @for (pagina of paginasVisibles; track $index) {
+            <button (click)="cambiarPagina(pagina)" [class.active]="pagina === paginaActual">
+              {{ pagina }}
+            </button>
+          }
+          <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === pagination.totalPages">
+            <iconify-icon icon="ph:caret-right"></iconify-icon>
+          </button>
+          <button (click)="cambiarPagina(pagination.totalPages)" [disabled]="paginaActual === pagination.totalPages">
+            <iconify-icon icon="ph:caret-double-right"></iconify-icon>
+          </button>
+        </div>
+      }
+
+      <div class="page-limit">
+        <span>Mostrar</span>
+        <select (change)="onLimitChange($event)">
+          <option value="10" [selected]="limitePorPagina === 10">10</option>
+          <option value="20" [selected]="limitePorPagina === 20">20</option>
+          <option value="50" [selected]="limitePorPagina === 50">50</option>
+        </select>
+      </div>
+    </footer>
+  </section>
 </main>

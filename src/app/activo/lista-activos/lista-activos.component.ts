@@ -1,23 +1,21 @@
 import {
 	ChangeDetectionStrategy,
-	ChangeDetectorRef,
 	Component,
+	ElementRef,
+	effect,
+	inject,
 	OnDestroy,
 	OnInit,
+	signal,
+	ViewChild,
 } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
-import { debounceTime, switchMap } from "rxjs/operators";
 import Swal from "sweetalert2";
 import { AuthService } from "../../login/services/auth.service";
 import { ActivoListItem } from "../../models/activo.interface";
-import {
-	DatosAuxiliares,
-	SelectItem,
-} from "../../models/datos-auxiliares.interface";
 import { getCloudflareImage } from "../../utils/images";
-import { ActivoService } from "../service/activo.service";
-import { DatosService } from "../service/datos.service";
+import { ActivosFacade } from "../application/activos.facade";
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,284 +25,122 @@ import { DatosService } from "../service/datos.service";
 	styleUrl: "./lista-activos.component.css",
 })
 export class ListaActivosComponent implements OnInit, OnDestroy {
-	// Variables para los filtros
-	filtroSeleccionado: string = "";
-	opcionSeleccionada: string = "";
-	ordenSeleccionado: string = "asc";
-	activos: ActivoListItem[] = [];
-	pagination: {
-		total: number;
-		totalPages: number;
-		page: number;
-		limit: number;
-	} = { total: 0, totalPages: 0, page: 1, limit: 10 };
-	limitePorPagina: number = 10;
-	paginaActual: number = 1;
-	searchTerm: string = "";
-	private searchSubject = new Subject<string>();
-	private destroy$ = new Subject<void>();
-	datosAuxiliares: DatosAuxiliares["data"] | null = null;
-	errorMessage: string = "";
+	private readonly facade = inject(ActivosFacade);
+	private readonly router = inject(Router);
+	private readonly route = inject(ActivatedRoute);
+	private readonly authService = inject(AuthService);
 
-	constructor(
-		private activoService: ActivoService,
-		private router: Router,
-		private datosService: DatosService,
-		private route: ActivatedRoute,
-		private authService: AuthService,
-		private cdr: ChangeDetectorRef,
-	) {}
+	readonly searchTerm = signal("");
+	@ViewChild("searchInput") private searchInput?: ElementRef<HTMLInputElement>;
+
+	private readonly destroy$ = new Subject<void>();
+	private searchTimer: ReturnType<typeof setTimeout> | null = null;
+	private lastError = "";
+
+	constructor() {
+		effect(() => {
+			const message = this.facade.errorMessage();
+			if (!message || message === this.lastError) return;
+
+			this.lastError = message;
+			Swal.fire({
+				title: "Error",
+				text: message,
+				icon: "error",
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
+				},
+			});
+		});
+	}
 
 	ngOnInit(): void {
-		// Leer los query params de la URL
 		this.route.queryParams
 			.pipe(takeUntil(this.destroy$))
 			.subscribe((params) => {
-				console.log("Query params recibidos:", params);
-
-				// Mapear los query params a las propiedades del componente
 				if (params["licencia_proxima"]) {
-					this.filtroSeleccionado = "licencia_proxima";
-					this.opcionSeleccionada = "true";
+					this.facade.aplicarFiltroInicial("licencia_proxima", "true");
 				} else if (params["garantia_proxima"]) {
-					this.filtroSeleccionado = "garantia_proxima";
-					this.opcionSeleccionada = "true";
+					this.facade.aplicarFiltroInicial("garantia_proxima", "true");
 				} else if (params["estado"]) {
-					this.filtroSeleccionado = "estado";
-					this.opcionSeleccionada = params["estado"];
+					this.facade.aplicarFiltroInicial("estado", params["estado"]);
 				} else if (params["fecha_devolucion_proxima"]) {
-					this.filtroSeleccionado = "fecha_devolucion_proxima";
-					this.opcionSeleccionada = "true";
+					this.facade.aplicarFiltroInicial("fecha_devolucion_proxima", "true");
 				}
 
-				// Aplicar orden si está presente
 				if (params["orden"]) {
-					this.ordenSeleccionado = params["orden"];
+					this.facade.setOrden(params["orden"]);
 				}
-
-				// Cargar los datos con los filtros aplicados
-				this.cargarActivos();
-				this.cdr.markForCheck();
-			});
-
-		this.cargarDatosAuxiliares();
-
-		// Configuración del debounce para la barra de búsqueda
-		this.searchSubject
-			.pipe(
-				debounceTime(500), // Espera 500ms después del último cambio en la barra de búsqueda
-				switchMap((term) => {
-					console.log("Término enviado al backend:", term);
-					this.searchTerm = term;
-					this.paginaActual = 1;
-					return this.activoService.getActivos(
-						this.paginaActual,
-						this.limitePorPagina,
-						this.searchTerm,
-					);
-				}),
-				takeUntil(this.destroy$),
-			)
-			.subscribe({
-				next: (response) => {
-					console.log("Respuesta del backend recibida:", response);
-					this.activos = response.data; // Actualiza la lista de activos
-					this.pagination = response.pagination; // Actualiza la paginación
-					this.cdr.markForCheck();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Error al cargar los activos" }
-					const errorMessage =
-						error.error?.error || "Error al cargar los activos";
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
 			});
 	}
 
-	/**
-	 * Carga los activos desde el backend.
-	 */
-	cargarActivos(): void {
-		console.group("Cargando activos");
-		console.log("Parámetros actuales:", {
-			página: this.paginaActual,
-			límite: this.limitePorPagina,
-			filtro: this.filtroSeleccionado,
-			opción: this.opcionSeleccionada,
-			orden: this.ordenSeleccionado,
-		});
-
-		this.activoService
-			.getActivos(
-				this.paginaActual,
-				this.limitePorPagina,
-				this.searchTerm,
-				this.filtroSeleccionado,
-				this.opcionSeleccionada,
-				this.ordenSeleccionado,
-			)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					console.log("Respuesta del backend:", response);
-					this.activos = response.data;
-					this.pagination = response.pagination;
-					this.cdr.markForCheck();
-					console.groupEnd();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Error al cargar los activos" }
-					const errorMessage =
-						error.error?.error || "Error al cargar los activos";
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
+	// Señales expuestas a la plantilla
+	get activos(): ActivoListItem[] {
+		return this.facade.activos();
 	}
 
-	/**
-	 * Carga los datos auxiliares
-	 */
-	cargarDatosAuxiliares(): void {
-		this.datosService
-			.obtenerDatosAuxiliares()
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					console.log("Datos auxiliares cargados:", response);
-					this.datosAuxiliares = response.data;
-					this.cdr.markForCheck();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Error al cargar datos auxiliares" }
-					const errorMessage =
-						error.error?.error || "Error al cargar datos auxiliares";
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
+	get pagination() {
+		return this.facade.pagination();
 	}
 
-	/**
-	 * Divide el texto en partes resaltadas y no resaltadas.
-	 * @param texto Texto a dividir.
-	 * @returns Array de strings con las partes resaltadas y no resaltadas.
-	 */
-	dividirTexto(texto: string): string[] {
-		if (!this.searchTerm || !texto) return [texto]; // Si no hay término de búsqueda o texto, devuelve el texto completo
-		const regex = new RegExp(`(${this.searchTerm})`, "gi");
-		return texto.split(regex).filter(Boolean); // Divide el texto usando el término de búsqueda
+	get paginaActual(): number {
+		return this.facade.pagina();
 	}
 
-	// Maneja el cambio en la barra de búsqueda
+	get limitePorPagina(): number {
+		return this.facade.limite();
+	}
+
+	get filtroSeleccionado(): string {
+		return this.facade.filtro();
+	}
+
+	get opcionSeleccionada(): string {
+		return this.facade.opcion();
+	}
+
+	get ordenSeleccionado(): string {
+		return this.facade.orden();
+	}
+
+	get opcionesFiltro() {
+		return this.facade.opcionesFiltro();
+	}
+
+	get cargando(): boolean {
+		return this.facade.cargando();
+	}
+
 	onSearchInput(event: Event): void {
-		const inputElement = event.target as HTMLInputElement; // Casting seguro
-		this.searchTerm = inputElement.value; // Obtiene el valor
-		this.onSearchChange(inputElement.value); // Llama a la función de búsqueda
+		const term = (event.target as HTMLInputElement).value;
+		this.searchTerm.set(term);
+
+		if (this.searchTimer) clearTimeout(this.searchTimer);
+		this.searchTimer = setTimeout(() => {
+			this.facade.setBusqueda(term);
+		}, 350);
 	}
 
-	/**
-	 * Verifica si una palabra debe ser resaltada.
-	 * @param palabra Palabra a verificar.
-	 * @returns `true` si la palabra coincide con el término de búsqueda, `false` en caso contrario.
-	 */
-	esParteResaltada(palabra: string): boolean {
-		if (!this.searchTerm) return false; // Si no hay término de búsqueda, no hay nada que resaltar
-		const regex = new RegExp(`^${this.searchTerm}$`, "i");
-		return regex.test(palabra); // Compara la palabra con el término de búsqueda
-	}
-
-	/**
-	 * Navega a la página de detalles del activo.
-	 * @param id ID del activo seleccionado.
-	 */
-	verDetalles(id: number): void {
-		this.router.navigate(["/gestion-activos/detalle", id]); // Navega a la página de detalles
-	}
-
-	/**
-	 * Actualiza el término de búsqueda y carga los datos correspondientes.
-	 * @param term Término de búsqueda.
-	 */
-
-	// Maneja el cambio en la barra de búsqueda
 	onSearchChange(term: string): void {
-		this.searchTerm = term;
-		this.paginaActual = 1;
-		this.searchSubject.next(term);
+		this.facade.setBusqueda(term);
 	}
 
-	/**
-	 * Cambia el límite de activos por página.
-	 * @param limite Nuevo límite por página.
-	 */
 	cambiarLimitePorPagina(limite: string): void {
-		this.limitePorPagina = parseInt(limite, 10); // Convierte el límite a número
-		this.paginaActual = 1; // Resetea a la primera página
-		this.cargarActivos(); // Recarga los datos con el nuevo límite
+		this.facade.setLimite(Number.parseInt(limite, 10));
 	}
 
-	/**
-	 * Cambia la página actual.
-	 * @param pagina Número de página a mostrar.
-	 */
 	cambiarPagina(pagina: number): void {
-		if (pagina >= 1 && pagina <= this.pagination.totalPages) {
-			this.paginaActual = pagina; // Actualiza la página actual
-			this.cargarActivos(); // Recarga los datos para la nueva página
-		}
+		this.facade.setPagina(pagina);
 	}
 
-	/**
-	 * Calcula el primer activo mostrado en la tabla.
-	 */
 	get primerActivoMostrado(): number {
 		return (this.paginaActual - 1) * this.limitePorPagina + 1;
 	}
 
-	/**
-	 * Calcula el último activo mostrado en la tabla.
-	 */
 	get ultimoActivoMostrado(): number {
 		return Math.min(
 			this.paginaActual * this.limitePorPagina,
@@ -312,12 +148,9 @@ export class ListaActivosComponent implements OnInit, OnDestroy {
 		);
 	}
 
-	/**
-	 * Genera un array de páginas visibles para la paginación.
-	 */
 	get paginasVisibles(): number[] {
 		const totalPaginas = this.pagination.totalPages;
-		const rango = 5; // Máximo de páginas visibles
+		const rango = 5;
 		let inicio = Math.max(1, this.paginaActual - Math.floor(rango / 2));
 		const fin = Math.min(totalPaginas, inicio + rango - 1);
 
@@ -325,121 +158,62 @@ export class ListaActivosComponent implements OnInit, OnDestroy {
 			inicio = Math.max(1, fin - rango + 1);
 		}
 
-		return Array.from({ length: fin - inicio + 1 }, (_, i) => inicio + i); // Genera un array de páginas visibles
+		return Array.from({ length: fin - inicio + 1 }, (_, i) => inicio + i);
 	}
 
-	/**
-	 * Maneja el cambio en el selector de límite por página.
-	 * @param event Evento de cambio en el selector.
-	 */
 	onLimitChange(event: Event): void {
-		const selectElement = event.target as HTMLSelectElement; // Obtiene el valor seleccionado
-		this.cambiarLimitePorPagina(selectElement.value); // Actualiza el límite por página
+		this.cambiarLimitePorPagina((event.target as HTMLSelectElement).value);
 	}
 
-	/**
-	 * Carga las opciones dinámicas según el filtro seleccionado
-	 * @param event Evento del select de filtro
-	 */
 	cargarOpcionesFiltro(event: Event): void {
-		this.filtroSeleccionado = (event.target as HTMLSelectElement).value; // Guarda el tipo de filtro
-		console.log(
-			"[FILTRO] Tipo de filtro seleccionado:",
-			this.filtroSeleccionado,
-		);
-
-		const opcionesSelect = document.getElementById(
-			"opciones",
-		) as HTMLSelectElement;
-
-		// Limpiar opciones existentes
-		while (opcionesSelect.options.length > 1) {
-			opcionesSelect.remove(1);
-		}
-
-		let opciones: SelectItem[] = [];
-
-		switch (
-			this.filtroSeleccionado // Usamos la variable guardada
-		) {
-			case "estado":
-				opciones = this.datosAuxiliares?.estados || [];
-				break;
-			case "tipo":
-				opciones = this.datosAuxiliares?.tipos || [];
-				break;
-			case "ubicacion":
-				opciones = this.datosAuxiliares?.ubicaciones || [];
-				break;
-			case "usuario_asignado":
-				opciones = this.datosAuxiliares?.duenos || [];
-				break;
-			default:
-				return;
-		}
-
-		console.log("[FILTRO] Opciones cargadas:", opciones);
-		opciones.forEach((opcion) => {
-			const optionElement = document.createElement("option");
-			optionElement.value = String(opcion.id);
-			optionElement.textContent = opcion.nombre || opcion.descripcion || null;
-			opcionesSelect.appendChild(optionElement);
-		});
+		this.facade.setFiltro((event.target as HTMLSelectElement).value);
 	}
 
-	/**
-	 * Limpia los filtros aplicados y recarga los activos
-	 */
+	aplicarFiltro(event: Event): void {
+		this.facade.setOpcion((event.target as HTMLSelectElement).value);
+	}
+
+	aplicarOrden(event: Event): void {
+		this.facade.setOrden((event.target as HTMLSelectElement).value);
+	}
 
 	limpiarFiltros(): void {
-		this.searchTerm = "";
-		this.filtroSeleccionado = "";
-		this.opcionSeleccionada = "";
-		this.ordenSeleccionado = "asc";
-		this.paginaActual = 1;
-
-		// Resetear controles del formulario
-		const searchInput = document.querySelector(
-			'input[type="text"]',
-		) as HTMLInputElement;
-		if (searchInput) searchInput.value = "";
-
-		const filtroSelect = document.getElementById("filtro") as HTMLSelectElement;
-		if (filtroSelect) filtroSelect.value = "";
-
-		const opcionesSelect = document.getElementById(
-			"opciones",
-		) as HTMLSelectElement;
-		if (opcionesSelect) opcionesSelect.value = "";
-
-		this.cargarActivos();
+		if (this.searchTimer) clearTimeout(this.searchTimer);
+		this.searchTerm.set("");
+		if (this.searchInput) this.searchInput.nativeElement.value = "";
+		this.facade.limpiar();
 	}
 
-	/**
-	 * Aplica el filtro seleccionado y recarga los activos
-	 * @param event Evento del select de filtro
-	 */
-	aplicarFiltro(event: Event): void {
-		this.opcionSeleccionada = (event.target as HTMLSelectElement).value;
-		console.log("[FILTRO] Aplicando filtro:", {
-			tipo: this.filtroSeleccionado,
-			valor: this.opcionSeleccionada,
-		});
-		this.paginaActual = 1;
-		this.cargarActivos();
+	dividirTexto(texto: string): string[] {
+		const term = this.searchTerm();
+		if (!term || !texto) return [texto];
+
+		const regex = new RegExp(`(${term})`, "gi");
+		return texto.split(regex).filter(Boolean);
 	}
 
-	/**
-	 * Aplica el orden seleccionado y recarga los activos
-	 * @param event Evento del select de orden
-	 */
-	aplicarOrden(event: Event): void {
-		this.ordenSeleccionado = (event.target as HTMLSelectElement).value;
-		this.cargarActivos();
+	esParteResaltada(palabra: string): boolean {
+		const term = this.searchTerm();
+		if (!term) return false;
+
+		const regex = new RegExp(`^${term}$`, "i");
+		return regex.test(palabra);
+	}
+
+	verDetalles(id: number): void {
+		this.router.navigate(["/gestion-activos/detalle", id]);
 	}
 
 	isAdmin(): boolean {
 		return this.authService.isAdmin();
+	}
+
+	puedeOperar(): boolean {
+		return this.authService.puedeOperar();
+	}
+
+	isEmpleado(): boolean {
+		return this.authService.isEmpleado();
 	}
 
 	getAssetPhoto(fotoUrl: string): string {
@@ -447,6 +221,7 @@ export class ListaActivosComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
+		if (this.searchTimer) clearTimeout(this.searchTimer);
 		this.destroy$.next();
 		this.destroy$.complete();
 	}

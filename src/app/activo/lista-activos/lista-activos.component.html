@@ -1,126 +1,140 @@
-<main>
-  <!-- Sección de búsqueda y filtros -->
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">{{ isEmpleado() ? 'Mis activos' : 'Activos' }}</h2>
+      <p class="page-subtitle">
+        {{ pagination.total }} {{ pagination.total === 1 ? 'activo registrado' : 'activos registrados' }}
+      </p>
+    </div>
+
+    @if (puedeOperar()) {
+      <button class="btn-primary" routerLink="agregar">
+        <iconify-icon icon="ph:plus"></iconify-icon>
+        Nuevo activo
+      </button>
+    }
+  </header>
+
   <section class="busqueda">
     <div class="toolbar-container">
-      <!-- Búsqueda -->
       <div class="search-box">
         <input
+          #searchInput
           type="text"
-          placeholder="Buscar activo por nombre..."
+          placeholder="Buscar por nombre, serial o modelo..."
           (input)="onSearchInput($event)"
-          />
+        />
       </div>
 
-      <!-- Filtros -->
       <div class="filters-group">
-        <select (change)="cargarOpcionesFiltro($event)">
-          <option value="">Filtro: Seleccionar</option>
+        <select id="filtro" [value]="filtroSeleccionado" (change)="cargarOpcionesFiltro($event)">
+          <option value="">Filtrar por</option>
           <option value="estado">Estado</option>
           <option value="tipo">Tipo</option>
           <option value="ubicacion">Ubicación</option>
           <option value="usuario_asignado">Usuario asignado</option>
         </select>
 
-        <select id="opciones" (change)="aplicarFiltro($event)">
-          <option value="">Opciones: Todas</option>
+        <select id="opciones" [value]="opcionSeleccionada" (change)="aplicarFiltro($event)">
+          <option value="">Todas las opciones</option>
+          @for (op of opcionesFiltro; track op.id) {
+            <option [value]="op.id">{{ op.nombre }}</option>
+          }
         </select>
 
-        <select (change)="aplicarOrden($event)">
-          <option value="asc">Orden: A-Z</option>
-          <option value="desc">Orden: Z-A</option>
+        <select [value]="ordenSeleccionado" (change)="aplicarOrden($event)">
+          <option value="asc">Nombre: A-Z</option>
+          <option value="desc">Nombre: Z-A</option>
         </select>
       </div>
 
-      <!-- Botones -->
       <div class="actions-group">
-        <button class="btn-secondary" (click)="limpiarFiltros()" title="Limpiar Filtros">
-          <img src="https://assets.mgdc.site/nemi/reiniciar-filtros.png" alt="" />
+        <button class="btn-secondary" (click)="limpiarFiltros()" title="Limpiar filtros">
+          <iconify-icon icon="ph:arrow-counter-clockwise"></iconify-icon>
           Limpiar
         </button>
-
-        @if (isAdmin()) {
-          <button class="btn-primary" routerLink="agregar">
-            <img src="https://assets.mgdc.site/nemi/icono-agregar.png" alt="" />
-            Nuevo Activo
-          </button>
-        }
       </div>
     </div>
   </section>
 
-  <!-- Tabla de activos -->
   <section class="tabla-activos">
     <table aria-label="Lista de activos">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Imagen</th>
-          <th>Nombre</th>
+          <th>Activo</th>
           <th>Tipo</th>
           <th>Estado</th>
-          <th>Ubicacion</th>
+          <th>Ubicación</th>
           <th>Asignado a</th>
-          <th>Acciones</th>
+          <th class="col-actions">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        @if (!activos || activos.length === 0) {
+        @if (cargando) {
           <tr>
-            <td colspan="8" style="text-align: center; padding: 40px;">
-              <p>No hay activos para mostrar</p>
+            <td colspan="6">
+              <div class="vacio">Cargando activos...</div>
+            </td>
+          </tr>
+        } @else if (!activos || activos.length === 0) {
+          <tr>
+            <td colspan="6">
+              <div class="vacio">
+                <iconify-icon icon="ph:cube" style="font-size: 28px; margin-bottom: 8px;"></iconify-icon>
+                <p>No hay activos para mostrar</p>
+              </div>
             </td>
           </tr>
         }
+
         @for (activo of activos; track trackById($index, activo)) {
           <tr>
-            <!-- Itera sobre la lista de activos -->
-            <td>{{ activo.id }}</td>
             <td>
-              <!-- Si hay foto_url, muestra la imagen -->
-              @if (activo.foto_url) {
-                <img
-                  [src]="getAssetPhoto(activo.foto_url)"
-                  alt="Imagen del activo"
-                  class="imagen-circular"
+              <div class="activo-cell">
+                @if (activo.foto_url) {
+                  <img
+                    [src]="getAssetPhoto(activo.foto_url)"
+                    alt="Imagen del activo"
+                    class="imagen-circular"
+                    width="38"
+                    height="38"
+                    loading="lazy"
                   />
-              }
-              <!-- Si NO hay foto_url, muestra "N/A" -->
-              @if (!activo.foto_url) {
-                <div class="texto-na">
-                  N/A
+                } @else {
+                  <div class="texto-na">
+                    <iconify-icon icon="ph:cube"></iconify-icon>
+                  </div>
+                }
+                <div class="activo-meta">
+                  <strong>
+                    @for (parte of dividirTexto(activo.nombre); track parte) {
+                      <span [class.highlight]="esParteResaltada(parte)">{{ parte }}</span>
+                    }
+                  </strong>
+                  <span>#{{ activo.id }}</span>
                 </div>
-              }
-            </td>
-            <td>
-              @for (parte of dividirTexto(activo.nombre); track parte) {
-                <span>
-                  <!-- Divide el texto para resaltar coincidencias -->
-                  <span [class.highlight]="esParteResaltada(parte)">{{
-                    parte
-                  }}</span>
-                  <!-- Aplica clase 'highlight' si coincide -->
-                </span>
-              }
+              </div>
             </td>
             <td>{{ activo.tipo }}</td>
             <td>
               <span
                 class="status-badge"
-              [ngClass]="{
-                'status-disponible': activo.estado === 'Disponible',
-                'status-asignado': activo.estado === 'Asignado',
-                'status-mantenimiento': activo.estado === 'En mantenimiento',
-                'status-baja': activo.estado === 'Dado de baja'
-              }"
-                >
-                {{ activo.estado }}
+                [ngClass]="{
+                  'status-disponible': activo.estado === 'disponible',
+                  'status-asignado': activo.estado === 'asignado',
+                  'status-mantenimiento': activo.estado === 'mantenimiento',
+                  'status-baja': activo.estado === 'baja'
+                }"
+              >
+                {{ activo.estado_label || activo.estado }}
               </span>
             </td>
             <td>{{ activo.ubicacion }}</td>
             <td>{{ activo.usuario_asignado }}</td>
-            <td>
+            <td class="col-actions">
               <button class="btn-ver-detalles" (click)="verDetalles(activo.id)">
-                Ver Detalles
+                Ver
+                <iconify-icon icon="ph:arrow-right"></iconify-icon>
               </button>
             </td>
           </tr>
@@ -129,77 +143,70 @@
     </table>
   </section>
 
-  <!-- Sección de paginación -->
   <section class="container-paginacion">
     @if (pagination.total > 0) {
-      <section class="pagination-info">
+      <div class="pagination-info">
         <p>
           Mostrando {{ primerActivoMostrado }}-{{ ultimoActivoMostrado }} de
-          {{ pagination.total }} activos
-          <!-- Muestra información de la paginación -->
+          {{ pagination.total }}
         </p>
-      </section>
+      </div>
     }
 
-    <!-- Paginación avanzada -->
     @if (pagination.totalPages > 1) {
-      <section class="pagination">
-        <!-- Botones Primera página / Anterior -->
-        <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" aria-label="Ir a la primera página">
-          « Primera |
+      <div class="pagination">
+        <button
+          (click)="cambiarPagina(1)"
+          [disabled]="paginaActual === 1"
+          aria-label="Ir a la primera página"
+        >
+          <iconify-icon icon="ph:caret-double-left"></iconify-icon>
         </button>
-        <!-- Va a la primera página -->
+
         <button
           (click)="cambiarPagina(paginaActual - 1)"
           [disabled]="paginaActual === 1"
           aria-label="Ir a la página anterior"
-          >
-          « Anterior |
+        >
+          <iconify-icon icon="ph:caret-left"></iconify-icon>
         </button>
-        <!-- Va a la página anterior -->
-        <!-- Números de página -->
+
         @for (pagina of paginasVisibles; track $index) {
-          <span>
-            <button
-              (click)="cambiarPagina(pagina)"
-              [class.active]="pagina === paginaActual"
-              [attr.aria-label]="'Ir a la página ' + pagina"
-              [attr.aria-current]="pagina === paginaActual ? 'page' : null"
-              >
-              <!-- Resalta la página actual -->
-              {{ pagina }}
-            </button>
-          </span>
+          <button
+            (click)="cambiarPagina(pagina)"
+            [class.active]="pagina === paginaActual"
+            [attr.aria-label]="'Ir a la página ' + pagina"
+            [attr.aria-current]="pagina === paginaActual ? 'page' : null"
+          >
+            {{ pagina }}
+          </button>
         }
-        <!-- Botones Siguiente / Última página -->
+
         <button
           (click)="cambiarPagina(paginaActual + 1)"
           [disabled]="paginaActual === pagination.totalPages"
           aria-label="Ir a la página siguiente"
-          >
-          <!-- Deshabilita si estás en la última página -->
-          | Siguiente »
+        >
+          <iconify-icon icon="ph:caret-right"></iconify-icon>
         </button>
+
         <button
           (click)="cambiarPagina(pagination.totalPages)"
           [disabled]="paginaActual === pagination.totalPages"
           aria-label="Ir a la última página"
-          >
-          <!-- Deshabilita si estás en la última página -->
-          | Última »
+        >
+          <iconify-icon icon="ph:caret-double-right"></iconify-icon>
         </button>
-      </section>
+      </div>
     }
 
-    <!-- Selector de límite por página -->
-    <section class="limite-pagina">
-      <p>Mostrar:</p>
+    <div class="limite-pagina">
+      <span>Mostrar</span>
       <select (change)="onLimitChange($event)">
-        <!-- Cambia el número de elementos por página -->
         <option value="10" [selected]="limitePorPagina === 10">10</option>
         <option value="20" [selected]="limitePorPagina === 20">20</option>
         <option value="50" [selected]="limitePorPagina === 50">50</option>
       </select>
-    </section>
+    </div>
   </section>
 </main>

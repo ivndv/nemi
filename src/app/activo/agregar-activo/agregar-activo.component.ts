@@ -17,10 +17,14 @@ import {
 import { Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
+import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
+import { getHttpErrorMessage } from "../../core/http/http-error";
 import { ActivoPayload } from "../../models/activo.interface";
 import { SelectItem } from "../../models/datos-auxiliares.interface";
-import { ActivoService } from "../service/activo.service";
+import { ActivosMutacionesFacade } from "../application/activos-mutaciones.facade";
 import { DatosService } from "../service/datos.service";
+
+const EMPTY_ITEMS: SelectItem[] = [];
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,12 +42,29 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 	imagenActual: string | null = null; // Imagen actual del activo (si existe)
 	isUploading = signal(false);
 	private destroy$ = new Subject<void>();
-	tiposActivos: SelectItem[] = [];
-	proveedores: SelectItem[] = [];
-	ubicaciones: SelectItem[] = [];
-	proveedorGarantia: SelectItem[] = [];
-	duenos: SelectItem[] = [];
-	estados: SelectItem[] = [];
+	get tiposActivos(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.tipos ?? EMPTY_ITEMS;
+	}
+
+	get proveedores(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.proveedores ?? EMPTY_ITEMS;
+	}
+
+	get ubicaciones(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.ubicaciones ?? EMPTY_ITEMS;
+	}
+
+	get proveedorGarantia(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.proveedoresGarantia ?? EMPTY_ITEMS;
+	}
+
+	get duenos(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.duenos ?? EMPTY_ITEMS;
+	}
+
+	get estados(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.estados ?? EMPTY_ITEMS;
+	}
 
 	condicionesFisicas = [
 		{ id: 1, nombre: "Nuevo" },
@@ -60,7 +81,8 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 	constructor(
 		private fb: FormBuilder,
 		private datosService: DatosService,
-		private activoService: ActivoService,
+		private catalogosFacade: CatalogosFacade,
+		private mutaciones: ActivosMutacionesFacade,
 		private router: Router,
 		private cdr: ChangeDetectorRef,
 	) {}
@@ -68,9 +90,6 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 	ngOnInit(): void {
 		// Inicializa el formulario con campos vacíos
 		this.inicializarFormulario();
-
-		// Carga los datos auxiliares necesarios para los selectores
-		this.cargarDatosAuxiliares();
 	}
 
 	/**
@@ -106,63 +125,19 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	/**
-	 * Carga los datos auxiliares necesarios para los selectores.
-	 */
-	private cargarDatosAuxiliares(): void {
-		this.datosService
-			.obtenerDatosAuxiliares()
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					// Asigna los datos recibidos a las propiedades correspondientes
-					this.tiposActivos = response.data.tipos || [];
-					this.proveedores = response.data.proveedores || [];
-					this.ubicaciones = response.data.ubicaciones || [];
-					this.proveedorGarantia = response.data.proveedoresGarantia || [];
-					this.duenos = response.data.duenos || [];
-					this.estados = response.data.estados || [];
-					this.cdr.markForCheck();
-
-					console.log("Datos auxiliares cargados:", response);
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { mensaje: "Error al obtener datos auxiliares" }
-					const errorMessage =
-						error.error?.mensaje || "Error al obtener datos auxiliares";
-
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
-				},
-			});
-	}
-	// maneja el evento de selección de archivo
+	// Maneja el evento de selección de archivo
 	onFileSelected(event: Event): void {
 		const input = event.target as HTMLInputElement;
 		const file = input.files?.[0];
+
 		if (file?.type.startsWith("image/")) {
-			// Vista previa local
 			const reader = new FileReader();
 			reader.onload = () => {
 				this.previewUrl.set(reader.result as string);
-				// Guardar en localStorage (clave única para evitar conflictos)
 				const imageKey = `activo_img_${Date.now()}`;
-				if (this.previewUrl())
-					localStorage.setItem(imageKey, this.previewUrl()!);
-				this.imagenLocalStorageKey = imageKey; // Guardar la clave para usarla después
+				const preview = this.previewUrl();
+				if (preview) localStorage.setItem(imageKey, preview);
+				this.imagenLocalStorageKey = imageKey;
 			};
 			reader.readAsDataURL(file);
 		} else {
@@ -184,7 +159,7 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 	/**
 	 * Envía los datos del formulario al backend para crear un nuevo activo.
 	 */
-	onSubmit(): void {
+	async onSubmit(): Promise<void> {
 		if (!this.agregarActivoForm.valid) {
 			this.agregarActivoForm.markAllAsTouched();
 			return;
@@ -215,54 +190,50 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 			didOpen: () => Swal.showLoading(),
 		});
 
-		this.activoService
-			.createActivo(formData)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					this.isUploading.set(false);
-					Swal.close();
-					console.log("Activo creado con éxito:", response);
-					if (this.imagenLocalStorageKey) {
-						localStorage.removeItem(this.imagenLocalStorageKey);
-					}
-					this.cdr.markForCheck();
-					Swal.fire({
-						title: "¡Activo Creado!",
-						text: "El activo ha sido registrado exitosamente.",
-						icon: "success",
-						timer: 2000,
-						timerProgressBar: true,
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					}).then(() => {
-						this.router.navigate(["/gestion-activos"]);
-					});
-				},
-				error: (error) => {
-					this.isUploading.set(false);
-					Swal.close();
-					const errorMessage = error.error?.error || "Error al crear activo";
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						title: "Error",
-						text: errorMessage,
-						icon: "error",
-						buttonsStyling: false,
-						customClass: {
-							popup: "premium-swal-popup",
-							title: "premium-swal-title",
-							htmlContainer: "premium-swal-html",
-							confirmButton: "premium-swal-confirm",
-						},
-					});
+		try {
+			await this.mutaciones.crear(formData);
+			Swal.close();
+
+			if (this.imagenLocalStorageKey) {
+				localStorage.removeItem(this.imagenLocalStorageKey);
+				this.imagenLocalStorageKey = null;
+			}
+
+			await Swal.fire({
+				title: "¡Activo creado!",
+				text: "El activo ha sido registrado exitosamente.",
+				icon: "success",
+				timer: 2000,
+				timerProgressBar: true,
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
 				},
 			});
+
+			this.router.navigate(["/gestion-activos"]);
+		} catch (error) {
+			Swal.close();
+			const errorMessage = getHttpErrorMessage(error, "Error al crear activo");
+			this.errorMessage = errorMessage;
+			Swal.fire({
+				title: "Error",
+				text: errorMessage,
+				icon: "error",
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
+				},
+			});
+		} finally {
+			this.isUploading.set(false);
+		}
 	}
 
 	/**
@@ -304,11 +275,10 @@ export class AgregarActivoComponent implements OnInit, OnDestroy {
 				.validarEtiquetaSerial(etiquetaSerial)
 				.pipe(takeUntil(this.destroy$))
 				.subscribe({
-					next: (response) => {
+					next: (_response) => {
 						// La etiqueta serial está disponible
 						this.serialError = ""; // No hay error
 						this.cdr.markForCheck();
-						console.log("Respuesta del backend:", response);
 					},
 					error: (error) => {
 						// Manejar errores devueltos por el backend

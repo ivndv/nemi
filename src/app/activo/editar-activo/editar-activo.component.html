@@ -1,238 +1,293 @@
-<main>
-  <div class="container">
-    <div class="form-card">
+<main class="page form-page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Editar activo</h2>
+      <p class="page-subtitle">{{ editarActivoForm.get("nombre")?.value || "Cargando activo..." }}</p>
+    </div>
+  </header>
 
-      <!-- Hero de Edición: Contexto Inmediato -->
-      <header class="edit-hero">
-        <div style="display: flex; align-items: center; gap: 30px; flex: 1;">
-          <div class="hero-image-wrapper">
-            <img
-              [src]="getAssetPhoto(previewUrl() || imagenActual) || 'https://assets.mgdc.site/nemi/gestionar-activos.png'"
-              alt="Vista Previa"
-              />
-          </div>
-          <div class="hero-text">
-            <span>Editando Propiedades del Activo</span>
-            <h1>{{ editarActivoForm.get('nombre')?.value || 'Cargando...' }}</h1>
-          </div>
-        </div>
-
-        <!-- Controles de Imagen a la Derecha -->
-        <div class="upload-controls">
-          <label class="btn-file">
-            <iconify-icon icon="lucide:upload-cloud" style="vertical-align: middle; margin-right: 5px;"></iconify-icon>
-            Cambiar Foto
-            <input type="file" (change)="onFileSelected($event)" style="display: none;" accept="image/*" />
-          </label>
-          <div class="image-actions-row">
-            <!-- Eliminar: Solo si hay imagen y no la hemos cambiado aún -->
-            @if (!haCambiadoImagen && imagenActual) {
-              <button type="button" class="btn-danger-light" (click)="removeImage()">
-                Eliminar Foto
-              </button>
-            }
-
-            <!-- Restaurar: Solo si ya hubo un cambio (subida o borrado) -->
-            @if (haCambiadoImagen) {
-              <button type="button" class="btn-restore" (click)="restoreOriginalImage()">
-                Restaurar Original
-              </button>
-            }
+  <form [formGroup]="editarActivoForm" (ngSubmit)="onSubmit()" class="form-layout">
+    <div class="form-main">
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:identification-card"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Identificación</h3>
+            <p>Datos básicos del activo.</p>
           </div>
         </div>
-      </header>
 
-      <form [formGroup]="editarActivoForm" (ngSubmit)="onSubmit()">
-
-        <!-- Grid Principal: Datos del Activo -->
         <div class="form-grid">
-
-          <!-- Columna 1 -->
           <div class="form-group">
-            <label for="nombre">Nombre del Activo *</label>
+            <label for="nombre">Nombre del activo *</label>
             <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: MacBook Pro 16" />
-            @if (editarActivoForm.get('nombre')?.touched && editarActivoForm.get('nombre')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
+            @if (editarActivoForm.get("nombre")?.touched && editarActivoForm.get("nombre")?.hasError("required")) {
+              <small class="error-text">Campo obligatorio</small>
             }
           </div>
 
           <div class="form-group">
-            <label for="dueno_id">Dueño / Responsable *</label>
+            <label for="dueno_id">Dueño / responsable *</label>
             <ng-select id="dueno_id" formControlName="dueno_id" [items]="duenos" bindLabel="nombre" bindValue="id" placeholder="Seleccionar dueño..."></ng-select>
-            @if (editarActivoForm.get('dueno_id')?.touched && editarActivoForm.get('dueno_id')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
+            @if (editarActivoForm.get("dueno_id")?.touched && editarActivoForm.get("dueno_id")?.hasError("required")) {
+              <small class="error-text">Campo obligatorio</small>
             }
           </div>
 
           <div class="form-group">
-            <label for="tipo_id">Tipo de Activo *</label>
+            <label for="tipo_id">Tipo de activo *</label>
             <ng-select id="tipo_id" formControlName="tipo_id" [items]="tiposActivos" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar tipo..."></ng-select>
-            @if (editarActivoForm.get('tipo_id')?.touched && editarActivoForm.get('tipo_id')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
+            @if (editarActivoForm.get("tipo_id")?.touched && editarActivoForm.get("tipo_id")?.hasError("required")) {
+              <small class="error-text">Campo obligatorio</small>
             }
           </div>
 
           <div class="form-group">
-            <label for="fecha_adquisicion">Fecha de Adquisición *</label>
+            <label for="modelo">Modelo / referencia</label>
+            <input type="text" id="modelo" formControlName="modelo" placeholder="Ej: A2485" />
+          </div>
+
+          <div class="form-group">
+            <label for="etiqueta_serial">Etiqueta / serial</label>
+            <input type="text" id="etiqueta_serial" formControlName="etiqueta_serial" placeholder="Ej: SN-9988-XX" />
+          </div>
+
+          <div class="form-group full-width">
+            <label for="descripcion">Descripción detallada</label>
+            <textarea id="descripcion" formControlName="descripcion" placeholder="Notas sobre el estado, accesorios incluidos, etc..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:map-pin"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Estado y ubicación</h3>
+            <p>Dónde está y en qué condición se encuentra.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="estado">Estado del activo *</label>
+            <ng-select id="estado" formControlName="estado" [items]="estados" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar estado..."></ng-select>
+            @if (editarActivoForm.get("estado")?.touched && editarActivoForm.get("estado")?.hasError("required")) {
+              <small class="error-text">Campo obligatorio</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="ubicacion_id">Ubicación actual *</label>
+            <ng-select id="ubicacion_id" formControlName="ubicacion_id" [items]="ubicaciones" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar ubicación..."></ng-select>
+            @if (editarActivoForm.get("ubicacion_id")?.touched && editarActivoForm.get("ubicacion_id")?.hasError("required")) {
+              <small class="error-text">Campo obligatorio</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="condicion_fisica">Condición física</label>
+            <ng-select id="condicion_fisica" formControlName="condicion_fisica" [items]="condicionesFisicas" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Ej: Excelente, Bueno..."></ng-select>
+            @if (editarActivoForm.get("condicion_fisica")?.errors?.["condicionInvalida"]) {
+              <small class="error-text">Condición no válida.</small>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:hard-drives"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Detalles técnicos</h3>
+            <p>Software, licencia y recursos.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="version_software">Versión de software</label>
+            <input type="text" id="version_software" formControlName="version_software" placeholder="Ej: macOS Sequoia" />
+          </div>
+
+          <div class="form-group">
+            <label for="tipo_licencia">Tipo de licencia</label>
+            <input type="text" id="tipo_licencia" formControlName="tipo_licencia" placeholder="Ej: Perpetua / Suscripción" />
+          </div>
+
+          <div class="form-group">
+            <label for="fecha_vencimiento_licencia">Próximo vencimiento</label>
+            <input type="date" id="fecha_vencimiento_licencia" formControlName="fecha_vencimiento_licencia" />
+          </div>
+
+          <div class="form-group">
+            <label for="recursos_asignados">Recursos asignados</label>
+            <input type="text" id="recursos_asignados" formControlName="recursos_asignados" placeholder="Ej: 32GB RAM, 1TB SSD" />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:currency-dollar"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Información financiera</h3>
+            <p>Compra, proveedor y mantenimiento.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="fecha_adquisicion">Fecha de adquisición *</label>
             <input type="date" id="fecha_adquisicion" formControlName="fecha_adquisicion" />
-            @if (editarActivoForm.get('fecha_adquisicion')?.touched && editarActivoForm.get('fecha_adquisicion')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
+            @if (editarActivoForm.get("fecha_adquisicion")?.touched && editarActivoForm.get("fecha_adquisicion")?.hasError("required")) {
+              <small class="error-text">Campo obligatorio</small>
             }
           </div>
 
           <div class="form-group">
-            <label for="valor_compra">Valor de Compra ($) *</label>
+            <label for="valor_compra">Valor de compra *</label>
             <input type="number" id="valor_compra" formControlName="valor_compra" placeholder="0.00" />
-            @if (editarActivoForm.get('valor_compra')?.touched && editarActivoForm.get('valor_compra')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
+            @if (editarActivoForm.get("valor_compra")?.touched && editarActivoForm.get("valor_compra")?.hasError("required")) {
+              <small class="error-text">Campo obligatorio</small>
             }
-            @if (editarActivoForm.get('valor_compra')?.touched && editarActivoForm.get('valor_compra')?.hasError('min')) {
-              <small class="error-text" role="alert">Debe ser un número positivo</small>
+            @if (editarActivoForm.get("valor_compra")?.touched && editarActivoForm.get("valor_compra")?.hasError("min")) {
+              <small class="error-text">Debe ser un número positivo</small>
             }
           </div>
 
           <div class="form-group">
             <label for="proveedor_id">Proveedor *</label>
             <ng-select id="proveedor_id" formControlName="proveedor_id" [items]="proveedores" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar proveedor..."></ng-select>
-            @if (editarActivoForm.get('proveedor_id')?.touched && editarActivoForm.get('proveedor_id')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
+            @if (editarActivoForm.get("proveedor_id")?.touched && editarActivoForm.get("proveedor_id")?.hasError("required")) {
+              <small class="error-text">Campo obligatorio</small>
             }
           </div>
 
           <div class="form-group">
-            <label for="modelo">Modelo / Referencia</label>
-            <input type="text" id="modelo" formControlName="modelo" placeholder="Ej: A2485" />
-          </div>
-
-          <div class="form-group">
-            <label for="etiqueta_serial">Etiqueta / Serial</label>
-            <input type="text" id="etiqueta_serial" formControlName="etiqueta_serial" placeholder="Ej: SN-9988-XX" />
-          </div>
-
-          <div class="form-group">
-            <label for="estado">Estado del Activo *</label>
-            <ng-select id="estado" formControlName="estado" [items]="estados" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Seleccionar estado..."></ng-select>
-            @if (editarActivoForm.get('estado')?.touched && editarActivoForm.get('estado')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
-            }
-          </div>
-
-          <div class="form-group">
-            <label for="ubicacion_id">Ubicación Actual *</label>
-            <ng-select id="ubicacion_id" formControlName="ubicacion_id" [items]="ubicaciones" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar ubicación..."></ng-select>
-            @if (editarActivoForm.get('ubicacion_id')?.touched && editarActivoForm.get('ubicacion_id')?.hasError('required')) {
-              <small class="error-text" role="alert">Campo obligatorio</small>
-            }
-          </div>
-
-          <!-- Campos de Ancho Completo -->
-          <div class="form-group full-width">
-            <label for="descripcion">Descripción Detallada</label>
-            <textarea id="descripcion" formControlName="descripcion" placeholder="Notas sobre el estado, accesorios incluidos, etc..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="version_software">Versión de Software</label>
-            <input type="text" id="version_software" formControlName="version_software" placeholder="Ej: macOS Sequoia" />
-          </div>
-
-          <div class="form-group">
-            <label for="tipo_licencia">Tipo de Licencia</label>
-            <input type="text" id="tipo_licencia" formControlName="tipo_licencia" placeholder="Ej: Perpetua / Suscripción" />
-          </div>
-
-          <div class="form-group">
-            <label for="fecha_vencimiento_licencia">Próximo Vencimiento</label>
-            <input type="date" id="fecha_vencimiento_licencia" formControlName="fecha_vencimiento_licencia" />
-          </div>
-
-          <div class="form-group">
-            <label for="costo_mensual">Costo Mensual Mant.</label>
+            <label for="costo_mensual">Costo mensual de mantenimiento</label>
             <input type="number" id="costo_mensual" formControlName="costo_mensual" placeholder="0.00" />
           </div>
-
-          <div class="form-group">
-            <label for="recursos_asignados">Recursos (RAM, Almacenamiento)</label>
-            <input type="text" id="recursos_asignados" formControlName="recursos_asignados" placeholder="Ej: 32GB RAM, 1TB SSD" />
-          </div>
-
-          <div class="form-group">
-            <label for="condicion_fisica">Condición Física</label>
-            <ng-select id="condicion_fisica" formControlName="condicion_fisica" [items]="condicionesFisicas" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Ej: Excelente, Bueno..."></ng-select>
-            @if (editarActivoForm.get('condicion_fisica')?.errors?.['condicionInvalida']) {
-              <small class="error-text" role="alert">Condición no válida.</small>
-            }
-          </div>
-
         </div>
+      </section>
 
-        <!-- Sección de Garantía -->
-        <div class="warranty-section">
-          <h2>
-            <iconify-icon icon="lucide:shield-check"></iconify-icon>
-            Información de Garantía (Opcional)
-          </h2>
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="nombre_garantia">Nombre de la Póliza</label>
-              <input type="text" id="nombre_garantia" formControlName="nombre_garantia" placeholder="Ej: AppleCare+" />
-            </div>
-
-            <div class="form-group">
-              <label for="proveedor_garantia_id">Proveedor de Garantía</label>
-              <ng-select id="proveedor_garantia_id" formControlName="proveedor_garantia_id" [items]="proveedorGarantia" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar proveedor..."></ng-select>
-            </div>
-
-            <div class="form-group">
-              <label for="fecha_inicio">Fecha de Inicio</label>
-              <input type="date" id="fecha_inicio" formControlName="fecha_inicio" />
-            </div>
-
-            <div class="form-group">
-              <label for="fecha_fin">Fecha de Vencimiento</label>
-              <input type="date" id="fecha_fin" formControlName="fecha_fin" />
-            </div>
-
-            <div class="form-group">
-              <label for="costo">Costo de la Póliza ($)</label>
-              <input type="text" id="costo" formControlName="costo" placeholder="0.00" />
-            </div>
-
-            <div class="form-group">
-              <label for="estado_garantia">Estado de Garantía</label>
-              <ng-select id="estado_garantia" formControlName="estado_garantia" [items]="estadoGarantia" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Vigente / Vencida..."></ng-select>
-            </div>
-
-            <div class="form-group full-width">
-              <label for="condiciones">Condiciones / Cobertura</label>
-              <input type="text" id="condiciones" formControlName="condiciones" placeholder="Ej: No incluye daños por agua..." />
-            </div>
-
-            <div class="form-group full-width">
-              <label for="descripcion_garantia">Notas Adicionales de Garantía</label>
-              <textarea id="descripcion_garantia" formControlName="descripcion_garantia" placeholder="Detalles extra sobre el soporte técnico..."></textarea>
-            </div>
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:shield-check"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Garantía</h3>
+            <p>Opcional. Póliza y cobertura del activo.</p>
           </div>
         </div>
 
-        <!-- Footer de Acciones -->
-        <footer class="actions-footer">
-          <button type="button" class="btn-cancelar" (click)="onCancelar()">
-            Descartar Cambios
-          </button>
-          <button type="submit" class="btn-guardar" [disabled]="!editarActivoForm.valid">
-            Guardar Cambios
-          </button>
-        </footer>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="nombre_garantia">Nombre de la póliza</label>
+            <input type="text" id="nombre_garantia" formControlName="nombre_garantia" placeholder="Ej: AppleCare+" />
+          </div>
 
-        @if (!editarActivoForm.valid && editarActivoForm.touched) {
-          <small class="error-text" role="alert" style="text-align:center;display:block;margin-top:8px;">
-            Completa todos los campos obligatorios marcados con *
-          </small>
-        }
+          <div class="form-group">
+            <label for="proveedor_garantia_id">Proveedor de garantía</label>
+            <ng-select id="proveedor_garantia_id" formControlName="proveedor_garantia_id" [items]="proveedorGarantia" bindLabel="nombre" bindValue="id" [addTag]="true" placeholder="Seleccionar proveedor..."></ng-select>
+          </div>
 
-      </form>
+          <div class="form-group">
+            <label for="fecha_inicio">Fecha de inicio</label>
+            <input type="date" id="fecha_inicio" formControlName="fecha_inicio" />
+          </div>
+
+          <div class="form-group">
+            <label for="fecha_fin">Fecha de vencimiento</label>
+            <input type="date" id="fecha_fin" formControlName="fecha_fin" />
+          </div>
+
+          <div class="form-group">
+            <label for="costo">Costo de la póliza</label>
+            <input type="text" id="costo" formControlName="costo" placeholder="0.00" />
+          </div>
+
+          <div class="form-group">
+            <label for="estado_garantia">Estado de garantía</label>
+            <ng-select id="estado_garantia" formControlName="estado_garantia" [items]="estadoGarantia" bindLabel="nombre" bindValue="nombre" [addTag]="true" placeholder="Vigente / Vencida..."></ng-select>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="condiciones">Condiciones / cobertura</label>
+            <input type="text" id="condiciones" formControlName="condiciones" placeholder="Ej: No incluye daños por agua..." />
+          </div>
+
+          <div class="form-group full-width">
+            <label for="descripcion_garantia">Notas adicionales de garantía</label>
+            <textarea id="descripcion_garantia" formControlName="descripcion_garantia" placeholder="Detalles extra sobre el soporte técnico..."></textarea>
+          </div>
+        </div>
+      </section>
     </div>
-  </div>
+
+    <aside class="form-side">
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:image"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Imagen del activo</h3>
+            <p>JPG o PNG.</p>
+          </div>
+        </div>
+
+        <div class="hero-image-wrapper">
+          <img
+            [src]="getAssetPhoto(previewUrl() || imagenActual) || 'https://assets.mgdc.site/nemi/gestionar-activos.png'"
+            alt="Vista previa"
+            width="84"
+            height="84"
+            loading="eager"
+          />
+        </div>
+
+        <div class="upload-controls">
+          <label class="btn-secondary">
+            <iconify-icon icon="ph:upload-simple"></iconify-icon>
+            Cambiar foto
+            <input type="file" (change)="onFileSelected($event)" hidden accept="image/*" />
+          </label>
+
+          @if (!haCambiadoImagen && imagenActual) {
+            <button type="button" class="btn-danger" (click)="removeImage()">
+              Eliminar foto
+            </button>
+          }
+
+          @if (haCambiadoImagen) {
+            <button type="button" class="btn-secondary" (click)="restoreOriginalImage()">
+              Restaurar original
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-icon"><iconify-icon icon="ph:info"></iconify-icon></span>
+          <div class="form-section-title">
+            <h3>Buenas prácticas</h3>
+            <p>Antes de guardar.</p>
+          </div>
+        </div>
+        <p class="form-hint">Verifica el estado, la ubicación y el responsable antes de guardar cambios.</p>
+      </section>
+    </aside>
+
+    <footer class="form-actions">
+      <button type="button" class="btn-secondary" (click)="onCancelar()">Descartar cambios</button>
+      <button type="submit" class="btn-primary" [disabled]="!editarActivoForm.valid">
+        Guardar cambios
+      </button>
+    </footer>
+
+    @if (!editarActivoForm.valid && editarActivoForm.touched) {
+      <small class="error-text form-error" role="alert">
+        Completa todos los campos obligatorios marcados con *
+      </small>
+    }
+  </form>
 </main>

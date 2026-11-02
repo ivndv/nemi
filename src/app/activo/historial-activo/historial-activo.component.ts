@@ -2,13 +2,21 @@ import {
 	ChangeDetectionStrategy,
 	ChangeDetectorRef,
 	Component,
+	ElementRef,
+	inject,
 	OnDestroy,
 	OnInit,
+	signal,
+	ViewChild,
 } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { Subject, takeUntil } from "rxjs";
-import { debounceTime, switchMap } from "rxjs/operators";
+import {
+	injectQuery,
+	keepPreviousData,
+} from "@tanstack/angular-query-experimental";
+import { firstValueFrom, Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
+import { getHttpErrorMessage } from "../../core/http/http-error";
 import {
 	DatosAuxiliares,
 	SelectItem,
@@ -28,159 +36,130 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 	opcionSeleccionada: string = "";
 	ordenSeleccionado: string = "asc";
 
-	activoId!: number;
-	historial: HistorialEntry[] = [];
+	readonly activoId = signal(0);
+	paginaActual = 1;
+	limitePorPagina = 10;
 
-	pagination: {
-		total: number;
-		totalPages: number;
-		page: number;
-		limit: number;
-	} = { total: 0, totalPages: 0, page: 1, limit: 10 };
-	paginaActual: number = 1;
-	limitePorPagina: number = 10;
-
-	searchTerm: string = "";
-
-	errorMessage: string = "";
-
-	private searchSubject = new Subject<string>();
-	private destroy$ = new Subject<void>();
-
+	searchTerm = "";
 	datosAuxiliares: DatosAuxiliares["data"] | null = null;
 
-	constructor(
-		private route: ActivatedRoute,
-		private historialService: HistorialService,
-		private cdr: ChangeDetectorRef,
-	) {}
+	private readonly route = inject(ActivatedRoute);
+	private readonly historialService = inject(HistorialService);
+	private readonly cdr = inject(ChangeDetectorRef);
+	private readonly refresco = signal(0);
+	private readonly destroy$ = new Subject<void>();
+	private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
-	// Helper para determinar la clase del badge según la acción
-	getBadgeClass(accion: string): string {
-		const a = accion.toLowerCase();
-		if (a.includes("asignado") && !a.includes("desasignado"))
-			return "badge-assign";
-		if (a.includes("desasignado") || a.includes("baja"))
+	private readonly query = injectQuery(() => ({
+		queryKey: [
+			"historial",
+			this.activoId(),
+			this.refresco(),
+			{
+				page: this.paginaActual,
+				limit: this.limitePorPagina,
+				search: this.searchTerm,
+				filtro: this.filtroSeleccionado,
+				opcion: this.opcionSeleccionada,
+				orden: this.ordenSeleccionado,
+			},
+		],
+		queryFn: () =>
+			firstValueFrom(
+				this.historialService.getHistorial(
+					this.activoId(),
+					this.paginaActual,
+					this.limitePorPagina,
+					this.searchTerm,
+					this.filtroSeleccionado,
+					this.opcionSeleccionada,
+					this.ordenSeleccionado,
+				),
+			),
+		enabled: this.activoId() > 0,
+		placeholderData: keepPreviousData,
+		staleTime: 0,
+	}));
+
+	get historial(): HistorialEntry[] {
+		return this.query.data()?.data ?? [];
+	}
+
+	get pagination() {
+		return (
+			this.query.data()?.pagination ?? {
+				total: 0,
+				totalPages: 0,
+				page: this.paginaActual,
+				limit: this.limitePorPagina,
+			}
+		);
+	}
+
+	get errorMessage(): string {
+		return getHttpErrorMessage(
+			this.query.error(),
+			"Error al obtener historial",
+		);
+	}
+
+	@ViewChild("searchInput") private searchInput?: ElementRef<HTMLInputElement>;
+
+	get opcionesFiltro(): SelectItem[] {
+		if (this.filtroSeleccionado === "accion") {
+			return this.datosAuxiliares?.acciones ?? [];
+		}
+		if (this.filtroSeleccionado === "usuario_responsable") {
+			return this.datosAuxiliares?.usuarios ?? [];
+		}
+		return [];
+	}
+
+	// Helper para determinar la clase del badge según la acción o su slug
+	getBadgeClass(valor: string): string {
+		const a = valor.toLowerCase();
+
+		if (a.includes("baja") || a.includes("eliminad")) return "badge-unassign";
+		if (a.includes("devuelt") || a.includes("desasignad"))
 			return "badge-unassign";
+		if (a.includes("asignad")) return "badge-assign";
 		if (a.includes("creado") || a.includes("nuevo")) return "badge-create";
-		if (a.includes("actualizado") || a.includes("editado"))
-			return "badge-update";
+		if (a.includes("actualizad") || a.includes("editad")) return "badge-update";
+		if (a.includes("mantenimiento")) return "badge-update";
+		if (a.includes("licencia") || a.includes("solicitud"))
+			return "badge-create";
+		if (a.includes("incidencia") || a.includes("garantia"))
+			return "badge-default";
+
 		return "badge-default";
 	}
 
-	// Helper para determinar el icono según la acción
-	getBadgeIcon(accion: string): string {
-		const a = accion.toLowerCase();
-		if (a.includes("asignado") && !a.includes("desasignado"))
-			return "lucide:user-plus";
-		if (a.includes("desasignado")) return "lucide:user-minus";
+	// Helper para determinar el icono según la acción o su slug
+	getBadgeIcon(valor: string): string {
+		const a = valor.toLowerCase();
+
 		if (a.includes("baja")) return "lucide:trash-2";
+		if (a.includes("devuelt") || a.includes("desasignad"))
+			return "lucide:user-minus";
+		if (a.includes("asignad")) return "lucide:user-plus";
 		if (a.includes("creado")) return "lucide:plus-circle";
-		if (a.includes("actualizado")) return "lucide:edit-3";
+		if (a.includes("actualizad")) return "lucide:edit-3";
+		if (a.includes("mantenimiento")) return "lucide:wrench";
+		if (a.includes("licencia")) return "lucide:key-round";
+		if (a.includes("solicitud")) return "lucide:clipboard-list";
+		if (a.includes("incidencia")) return "lucide:alert-triangle";
+		if (a.includes("garantia")) return "lucide:shield-check";
+
 		return "lucide:info";
 	}
 
 	ngOnInit(): void {
-		// Obtener el ID del activo desde la ruta
-		this.activoId = +(this.route.snapshot.paramMap.get("id") || 0);
-		// Cargar el historial al inicializar el componente
-		this.cargarHistorial();
-
-		// Cargar datos auxiliares al inicializar el componente
+		this.activoId.set(Number(this.route.snapshot.paramMap.get("id") ?? 0));
 		this.cargarDatosAuxiliares();
-
-		// Configuración del debounce para la barra de búsqueda
-		this.searchSubject
-			.pipe(
-				debounceTime(500), // Espera 500ms después del último cambio en la barra de búsqueda
-				switchMap((term) => {
-					console.log("Término enviado al backend:", term);
-					this.searchTerm = term;
-					this.paginaActual = 1;
-					console.group("Cargando Historial");
-					console.log("parametros actuales", {
-						activoId: this.activoId,
-						paginaActual: this.paginaActual,
-						limitePorPagina: this.limitePorPagina,
-						searchTerm: this.searchTerm,
-					});
-					return this.historialService.getHistorial(
-						this.activoId,
-						this.paginaActual,
-						this.limitePorPagina,
-						this.searchTerm,
-					);
-				}),
-				takeUntil(this.destroy$),
-			)
-			.subscribe({
-				next: (response) => {
-					console.log("Respuesta del backend recibida:", response);
-					this.historial = response.data; // Actualiza la lista de activos
-					this.pagination = response.pagination; // Actualiza la paginación
-					this.cdr.markForCheck();
-				},
-				error: (error) => {
-					// Ejem. Si el backend devuelve { error: "Error al obtener historial" }
-					const errorMessage =
-						error.error?.error || "Error al obtener historial";
-
-					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						icon: "error",
-						text: errorMessage,
-						confirmButtonColor: "#1e293b",
-					});
-				},
-			});
 	}
 
-	// Método para cargar el historial con paginación
 	cargarHistorial(): void {
-		console.group("Cargando Historial");
-		console.log("parametros actuales", {
-			activoId: this.activoId,
-			paginaActual: this.paginaActual,
-			limitePorPagina: this.limitePorPagina,
-			searchTerm: this.searchTerm,
-			filtro: this.filtroSeleccionado,
-			opción: this.opcionSeleccionada,
-			orden: this.ordenSeleccionado,
-		});
-		this.historialService
-			.getHistorial(
-				this.activoId,
-				this.paginaActual,
-				this.limitePorPagina,
-				this.searchTerm,
-				this.filtroSeleccionado,
-				this.opcionSeleccionada,
-				this.ordenSeleccionado,
-			)
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response) => {
-					console.log("Respuesta del backend:", response);
-					this.historial = response.data;
-					this.pagination = response.pagination;
-					this.cdr.markForCheck();
-					console.log("Historial cargado:", this.historial);
-					console.groupEnd();
-				},
-				error: (error) => {
-					const errorMessage =
-						error.error?.error || "Error al obtener historial";
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						icon: "error",
-						text: errorMessage,
-						confirmButtonColor: "#1e293b",
-					});
-				},
-			});
+		this.refresco.update((valor) => valor + 1);
 	}
 
 	/**
@@ -192,7 +171,6 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe({
 				next: (response) => {
-					console.log("Datos auxiliares cargados:", response);
 					this.datosAuxiliares = response.data;
 					this.cdr.markForCheck();
 				},
@@ -202,7 +180,6 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 						error.error?.error || "Error al obtener datos auxiliares";
 
 					// Mostrar el mensaje
-					this.errorMessage = errorMessage;
 					console.error("Error del backend:", errorMessage);
 					Swal.fire({
 						icon: "error",
@@ -276,17 +253,11 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 		this.cambiarLimitePorPagina(selectElement.value); // Actualiza el límite por página
 	}
 
-	// Maneja el cambio en la barra de búsqueda
 	onSearchInput(event: Event): void {
-		const inputElement = event.target as HTMLInputElement; // Casting seguro
-		this.searchTerm = inputElement.value; // Obtiene el valor
-		this.onSearchChange(inputElement.value); // Llama a la función de búsqueda
-	}
-	// Maneja el cambio en la barra de búsqueda
-	onSearchChange(term: string): void {
-		this.searchTerm = term;
+		this.searchTerm = (event.target as HTMLInputElement).value;
 		this.paginaActual = 1;
-		this.searchSubject.next(term);
+		if (this.searchTimer) clearTimeout(this.searchTimer);
+		this.searchTimer = setTimeout(() => this.cargarHistorial(), 500);
 	}
 
 	/**
@@ -315,45 +286,11 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 	 * @param event Evento del select de filtro
 	 */
 	cargarOpcionesFiltro(event: Event): void {
-		this.filtroSeleccionado = (event.target as HTMLSelectElement).value; // Guarda el tipo de filtro
-		console.log(
-			"[FILTRO] Tipo de filtro seleccionado:",
-			this.filtroSeleccionado,
-		);
-
-		const opcionesSelect = document.getElementById(
-			"opciones",
-		) as HTMLSelectElement;
-
-		// Limpiar opciones existentes
-		while (opcionesSelect.options.length > 1) {
-			opcionesSelect.remove(1);
-		}
-
-		let opciones: SelectItem[] = [];
-
-		switch (
-			this.filtroSeleccionado // Usamos la variable guardada
-		) {
-			case "accion":
-				opciones = this.datosAuxiliares?.acciones || [];
-				break;
-			case "usuario_responsable":
-				opciones = this.datosAuxiliares?.usuarios || [];
-				break;
-			default:
-				return;
-		}
-
-		console.log("[FILTRO] Opciones cargadas:", opciones);
-		opciones.forEach((opcion) => {
-			const optionElement = document.createElement("option");
-			optionElement.value = String(opcion.id || opcion.nombre);
-			optionElement.textContent = opcion.nombre || opcion.descripcion || null;
-			opcionesSelect.appendChild(optionElement);
-		});
+		this.filtroSeleccionado = (event.target as HTMLSelectElement).value;
+		this.opcionSeleccionada = "";
+		this.paginaActual = 1;
+		this.cargarHistorial();
 	}
-
 	/**
 	 * Limpia los filtros aplicados y recarga los activos
 	 */
@@ -365,33 +302,15 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 		this.ordenSeleccionado = "asc";
 		this.paginaActual = 1;
 
-		// Resetear controles del formulario
-		const searchInput = document.querySelector(
-			'input[type="text"]',
-		) as HTMLInputElement;
-		if (searchInput) searchInput.value = "";
-
-		const filtroSelect = document.getElementById("filtro") as HTMLSelectElement;
-		if (filtroSelect) filtroSelect.value = "";
-
-		const opcionesSelect = document.getElementById(
-			"opciones",
-		) as HTMLSelectElement;
-		if (opcionesSelect) opcionesSelect.value = "";
-
+		if (this.searchInput) this.searchInput.nativeElement.value = "";
 		this.cargarHistorial();
 	}
-
 	/**
 	 * Aplica el filtro seleccionado y recarga los activos
 	 * @param event Evento del select de filtro
 	 */
 	aplicarFiltro(event: Event): void {
 		this.opcionSeleccionada = (event.target as HTMLSelectElement).value;
-		console.log("[FILTRO] Aplicando filtro:", {
-			tipo: this.filtroSeleccionado,
-			valor: this.opcionSeleccionada,
-		});
 		this.paginaActual = 1;
 		this.cargarHistorial();
 	}
@@ -414,6 +333,7 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
+		if (this.searchTimer) clearTimeout(this.searchTimer);
 		this.destroy$.next();
 		this.destroy$.complete();
 	}
