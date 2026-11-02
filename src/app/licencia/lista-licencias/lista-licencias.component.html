@@ -1,0 +1,124 @@
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Licencias</h2>
+      <p class="page-subtitle">
+        {{ pagination.total }} {{ pagination.total === 1 ? 'licencia registrada' : 'licencias registradas' }}
+      </p>
+    </div>
+  </header>
+
+  <section class="busqueda">
+    <div class="toolbar-container">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Buscar licencia por nombre..."
+          (input)="onSearchInput($event)"
+        />
+      </div>
+
+      <div class="filters-group">
+        <select (change)="cambiarOrden($event)">
+          <option value="asc">Nombre: A-Z</option>
+          <option value="desc">Nombre: Z-A</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabla-licencias">
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+
+    <table aria-label="Lista de licencias">
+      <thead>
+        <tr>
+          <th>Licencia</th>
+          <th>Tipo</th>
+          <th>Modalidad</th>
+          <th>Asientos</th>
+          <th>Renovación</th>
+          <th>Estado</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando) {
+          <tr>
+            <td colspan="7">
+              <div class="vacio">Cargando licencias...</div>
+            </td>
+          </tr>
+        }
+        @if (!cargando && licencias.length === 0) {
+          <tr>
+            <td colspan="7">
+              <div class="vacio">
+                <iconify-icon icon="ph:certificate" style="font-size: 26px; margin-bottom: 8px;"></iconify-icon>
+                <p>No hay licencias para mostrar</p>
+              </div>
+            </td>
+          </tr>
+        }
+        @for (licencia of licencias; track trackById($index, licencia)) {
+          <tr>
+            <td>
+              <strong>{{ licencia.nombre }}</strong>
+              <span class="proveedor">{{ licencia.proveedor }}</span>
+            </td>
+            <td>{{ licencia.tipo }}</td>
+            <td>
+              {{ licencia.modalidad_label }}
+              <span class="proveedor">{{ licencia.tipo_uso_label }}</span>
+            </td>
+            <td>
+              <div class="asientos">
+                <span>{{ licencia.ocupados }} / {{ licencia.asientos_comprados }}</span>
+                <div class="barra">
+                  <span [style.width.%]="porcentaje(licencia)"></span>
+                </div>
+                <small>{{ licencia.libres }} libres</small>
+              </div>
+            </td>
+            <td>{{ licencia.fecha_renovacion || "—" }}</td>
+            <td>
+              <span [class]="claseEstado(licencia.estado)">
+                {{ licencia.estado_label }}
+              </span>
+            </td>
+            <td class="col-actions">
+              <button class="btn-detalle" (click)="verDetalle(licencia.activo_id)">
+                Ver
+                <iconify-icon icon="ph:arrow-right"></iconify-icon>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (pagination.totalPages > 1) {
+      <div class="paginacion">
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === 1"
+          (click)="cambiarPagina(paginaActual - 1)"
+        >
+          <iconify-icon icon="ph:caret-left"></iconify-icon>
+          Anterior
+        </button>
+        <span>Página {{ paginaActual }} de {{ pagination.totalPages }}</span>
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === pagination.totalPages"
+          (click)="cambiarPagina(paginaActual + 1)"
+        >
+          Siguiente
+          <iconify-icon icon="ph:caret-right"></iconify-icon>
+        </button>
+      </div>
+    }
+  </section>
+</main>

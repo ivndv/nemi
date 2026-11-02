@@ -1,0 +1,23 @@
+main {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+main > .volver {
+	align-self: flex-start;
+}
+
+.acciones {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.tabla-seccion {
+	overflow: hidden;
+}
+
+.tabla-seccion .card-body {
+	overflow-x: auto;
+}

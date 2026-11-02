@@ -1,0 +1,148 @@
+<main>
+  <button class="volver" (click)="volver()">← Volver a licencias</button>
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  @if (cargando) {
+    <p class="vacio">Cargando licencia...</p>
+  }
+
+  @if (licencia) {
+    <section class="detalle-cabecera">
+      <div>
+        <h1>{{ licencia.nombre }}</h1>
+        <p class="subtitulo">
+          {{ licencia.tipo }} · {{ licencia.proveedor }}
+        </p>
+      </div>
+      <div class="acciones">
+        @if (puedeOperar()) {
+          <button class="btn-primary" (click)="asignarAsiento()">
+            Asignar asiento
+          </button>
+        }
+        @if (puedeRenovar()) {
+          <button class="btn-secondary" (click)="renovar()">Renovar</button>
+        }
+      </div>
+    </section>
+
+    <section class="resumen">
+      <article>
+        <span>Estado</span>
+        <strong [class]="'chip chip-' + licencia.estado">
+          {{ licencia.estado_label }}
+        </strong>
+      </article>
+      <article>
+        <span>Modalidad</span>
+        <strong>{{ licencia.modalidad_label }}</strong>
+      </article>
+      <article>
+        <span>Tipo de uso</span>
+        <strong>{{ licencia.tipo_uso_label }}</strong>
+      </article>
+      <article>
+        <span>Asientos</span>
+        <strong>{{ licencia.ocupados }} / {{ licencia.asientos_comprados }}</strong>
+        <small>{{ licencia.libres }} libres</small>
+      </article>
+      <article>
+        <span>Costo</span>
+        <strong>{{ licencia.costo || "—" }}</strong>
+        <small>{{ licencia.periodicidad_costo_label }}</small>
+      </article>
+      <article>
+        <span>Renovación</span>
+        <strong>{{ licencia.fecha_renovacion || "—" }}</strong>
+        <small>{{ licencia.renovacion_automatica ? "Automática" : "Manual" }}</small>
+      </article>
+    </section>
+
+    <section class="tabla-seccion">
+      <header class="card-head">
+        <div class="card-head-text">
+          <h2>Asientos</h2>
+          <p>{{ licencia.ocupados }} de {{ licencia.asientos_comprados }} en uso · {{ licencia.libres }} libres</p>
+        </div>
+      </header>
+      <div class="card-body card-body--flush">
+        <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Destino</th>
+            <th>Asignado a</th>
+            <th>Fecha</th>
+            <th>Liberado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (licencia.asientos.length === 0) {
+            <tr>
+              <td colspan="6" class="vacio">Sin asientos asignados</td>
+            </tr>
+          }
+          @for (asiento of licencia.asientos; track trackAsiento($index, asiento)) {
+            <tr>
+              <td>{{ asiento.asiento }}</td>
+              <td>{{ asiento.destino_tipo_label }}</td>
+              <td>{{ asiento.persona ?? asiento.activo ?? "—" }}</td>
+              <td>{{ asiento.fecha_asignacion }}</td>
+              <td>{{ asiento.fecha_liberacion ?? "—" }}</td>
+              <td>
+                @if (!asiento.fecha_liberacion && puedeOperar()) {
+                  <button class="btn-link" (click)="liberar(asiento)">
+                    Liberar
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section class="tabla-seccion">
+      <header class="card-head">
+        <div class="card-head-text">
+          <h2>Renovaciones</h2>
+          <p>Historial de renovaciones de la licencia.</p>
+        </div>
+      </header>
+      <div class="card-body card-body--flush">
+        <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Asientos</th>
+            <th>Costo</th>
+            <th>Adjunto</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (licencia.renovaciones.length === 0) {
+            <tr>
+              <td colspan="4" class="vacio">Sin renovaciones registradas</td>
+            </tr>
+          }
+          @for (renovacion of licencia.renovaciones; track renovacion.id) {
+            <tr>
+              <td>{{ renovacion.fecha }}</td>
+              <td>{{ renovacion.asientos }}</td>
+              <td>{{ renovacion.costo || "—" }}</td>
+              <td>{{ renovacion.adjunto || "—" }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <app-adjuntos entidad="licencia" [entidadId]="licencia.activo_id"></app-adjuntos>
+  }
+</main>
