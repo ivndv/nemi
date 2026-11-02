@@ -14,8 +14,10 @@ export interface PerfilResponse {
 		nombre: string;
 		foto_url?: string;
 		rol: string;
+		rol_slug?: string;
 		departamento?: string;
-		readonly fecha_creacion: string;
+		fecha_ingreso?: string;
+		readonly fecha_creacion?: string;
 	};
 }
 
@@ -24,6 +26,11 @@ export interface ConfiguracionAplicacionResponse {
 		idioma: string;
 		zona_horaria: string;
 		formato_fecha: string;
-		formato_moneda: string;
+		moneda: string;
+		formato_moneda?: string;
+		dias_alerta_licencia: number;
+		dias_alerta_garantia: number;
+		dias_alerta_devolucion: number;
+		dias_alerta_mantenimiento: number;
 	};
 }

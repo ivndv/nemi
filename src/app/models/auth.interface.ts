@@ -3,6 +3,7 @@ export interface UserData {
 	readonly email: string;
 	nombre: string;
 	rol: string;
+	rol_slug: string;
 	foto_url?: string;
 	departamento?: string;
 }

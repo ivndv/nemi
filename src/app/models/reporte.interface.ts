@@ -15,6 +15,7 @@ export interface GenerarReporteRequest {
 export interface ReporteResponse {
 	data: {
 		tipo_reporte?: string;
+		alcance?: "global" | "propio";
 		descripcion?: string;
 		filtros?: {
 			tipo_activo: string;
@@ -38,8 +39,10 @@ export interface TiposReporteResponse {
 
 export interface TipoReporte {
 	readonly id: number;
+	slug?: string;
 	nombre: string;
 	descripcion: string;
+	alcance?: "global" | "propio";
 	activo: boolean;
 }
 

@@ -52,6 +52,7 @@ export interface ActivoDetalleResponse {
 		nombre: string;
 		tipo: { readonly id: number; nombre: string };
 		estado: string;
+		estado_label?: string;
 		fecha_adquisicion: string;
 		valor_compra: number;
 		valor_actual: number;
@@ -82,6 +83,7 @@ export interface ActivoListItem {
 	nombre: string;
 	foto_url: string;
 	estado: string;
+	estado_label?: string;
 	tipo: string;
 	ubicacion: string;
 	usuario_asignado?: string;
