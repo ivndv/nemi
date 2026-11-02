@@ -1,0 +1,38 @@
+// ==========================================================================
+// Mixins · utilidades reutilizables
+// ==========================================================================
+
+@mixin focus-ring($color: var(--ring)) {
+	outline: none;
+	border-color: var(--primary);
+	box-shadow: $color;
+}
+
+@mixin card($radius: var(--radius-lg)) {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: $radius;
+	box-shadow: var(--shadow-xs);
+}
+
+@mixin truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@mixin respond($breakpoint) {
+	@if $breakpoint == sm {
+		@media (max-width: 640px) {
+			@content;
+		}
+	} @else if $breakpoint == md {
+		@media (max-width: 900px) {
+			@content;
+		}
+	} @else if $breakpoint == lg {
+		@media (max-width: 1180px) {
+			@content;
+		}
+	}
+}
