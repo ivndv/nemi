@@ -1,161 +1,457 @@
-<main>
-  <div class="container">
-    <div class="config-grid">
+<main class="page config-page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Configuración</h2>
+      <p class="page-subtitle">Administra tu cuenta y las preferencias del sistema.</p>
+    </div>
+  </header>
 
-      <!-- Panel Izquierdo: Ajustes Generales -->
-      <section class="config-card">
-        <header class="card-header">
-          <iconify-icon icon="lucide:settings-2"></iconify-icon>
-          <h3>Ajustes del Sistema</h3>
-        </header>
+  <div class="settings-layout">
+    <nav class="settings-rail" aria-label="Secciones de configuración">
+      @for (tab of tabsVisibles(); track tab.id) {
+        <button
+          type="button"
+          class="rail-item"
+          [class.active]="tabActiva() === tab.id"
+          (click)="seleccionarTab(tab.id)"
+        >
+          <span class="rail-icon"><iconify-icon [icon]="tab.icon"></iconify-icon></span>
+          <span class="rail-text">
+            <strong>{{ tab.label }}</strong>
+            <small>{{ tab.description }}</small>
+          </span>
+        </button>
+      }
+    </nav>
 
-        <form [formGroup]="configuracionForm">
-          <div class="form-grid">
-            <!-- Idioma -->
-            <div class="form-group full-width">
-              <label>Idioma del Sistema</label>
-              <ng-select
-                formControlName="idioma"
-                [items]="idiomasDisponibles"
-                bindLabel="nombre"
-                bindValue="codigo"
-                placeholder="Selecciona idioma"
-              ></ng-select>
-            </div>
+    <section class="settings-panel">
+      @switch (tabActiva()) {
+        @case ("perfil") {
+          <article class="card settings-card">
+            <header class="card-head">
+              <span class="card-head-icon"><iconify-icon icon="ph:user-circle"></iconify-icon></span>
+              <div class="card-head-text">
+                <h2>Mi perfil</h2>
+                <p>Datos personales y foto de la cuenta.</p>
+              </div>
+              <div class="card-head-actions">
+                <span class="role-chip">{{ rolPerfil || "Usuario" }}</span>
+              </div>
+            </header>
 
-            <!-- Zona Horaria -->
-            <div class="form-group full-width">
-              <label>Zona Horaria</label>
-              <ng-select
-                formControlName="zona_horaria"
-                [items]="zonasHorariasDisponibles"
-                bindLabel="nombre"
-                bindValue="codigo"
-                placeholder="Selecciona zona"
-              ></ng-select>
-            </div>
+            <form [formGroup]="perfilForm" (ngSubmit)="guardarPerfil()">
+              <div class="card-body">
+                <div class="profile-hero">
+                  <label class="avatar-container" title="Cambiar foto">
+                    @if (previewUrl(); as foto) {
+                      <img [src]="foto" alt="Foto de perfil" width="88" height="88" loading="lazy" />
+                    } @else {
+                      <span class="avatar-placeholder"><iconify-icon icon="ph:user"></iconify-icon></span>
+                    }
+                    <span class="avatar-overlay">
+                      <iconify-icon icon="ph:camera"></iconify-icon>
+                      <span>Cambiar</span>
+                    </span>
+                    <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+                  </label>
 
-            <!-- Formato de Fecha -->
-            <div class="form-group">
-              <label>Formato de Fecha</label>
-              <ng-select
-                formControlName="formato_fecha"
-                [items]="formatosFechaDisponibles"
-                bindLabel="nombre"
-                bindValue="codigo"
-                placeholder="DD/MM/YYYY"
-              ></ng-select>
-            </div>
-
-            <!-- Moneda -->
-            <div class="form-group">
-              <label>Moneda Local</label>
-              <ng-select
-                formControlName="formato_moneda"
-                [items]="monedasDisponibles"
-                bindLabel="nombre"
-                bindValue="codigo"
-                placeholder="MXN, USD..."
-              ></ng-select>
-            </div>
-          </div>
-
-          <div class="actions-row">
-            <button type="button" class="btn-cancelar" (click)="cancelarConfiguracion()">Cancelar</button>
-            <button type="button" class="btn-guardar" (click)="guardarConfiguracion()">Guardar Cambios</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- Panel Derecho: Perfil de Usuario -->
-      <section class="config-card">
-        <header class="card-header">
-          <iconify-icon icon="lucide:user-circle"></iconify-icon>
-          <h3>Perfil y Seguridad</h3>
-        </header>
-
-        <form [formGroup]="perfilForm">
-          <!-- Avatar Section -->
-          <div class="avatar-section">
-            <div class="avatar-wrapper">
-              <div class="avatar-container" (click)="fileInput.click()">
-                @if (previewUrl()) {
-                  <img [src]="previewUrl()" alt="Avatar">
-                }
-                @if (!previewUrl()) {
-                  <div class="avatar-placeholder">
-                    <iconify-icon icon="lucide:user" style="font-size: 48px; color: #cbd5e0;"></iconify-icon>
+                  <div class="profile-hero-text">
+                    <strong>{{ perfilForm.get("nombre")?.value || "Mi cuenta" }}</strong>
+                    <span>{{ perfilForm.get("email")?.value }}</span>
+                    <small>
+                      {{ subiendoFoto() ? "Subiendo imagen..." : "JPG, PNG o WebP · máx. 5 MB" }}
+                    </small>
                   </div>
-                }
-                <div class="avatar-overlay">
-                  <iconify-icon icon="lucide:camera" style="font-size: 24px;"></iconify-icon>
-                  <span>Cambiar</span>
+                </div>
+
+                <div class="form-grid">
+                  <div class="form-group full-width">
+                    <label for="perfil-nombre">Nombre completo</label>
+                    <input id="perfil-nombre" type="text" formControlName="nombre" placeholder="Tu nombre" />
+                    @if (perfilForm.get("nombre")?.touched && perfilForm.get("nombre")?.invalid) {
+                      <small class="error-text">El nombre es obligatorio.</small>
+                    }
+                  </div>
+
+                  <div class="form-group">
+                    <label for="perfil-email">Correo electrónico</label>
+                    <input id="perfil-email" type="email" formControlName="email" placeholder="correo@empresa.com" />
+                    @if (perfilForm.get("email")?.touched && perfilForm.get("email")?.invalid) {
+                      <small class="error-text">Escribe un correo válido.</small>
+                    }
+                  </div>
+
+                  <div class="form-group">
+                    <label for="perfil-departamento">Departamento</label>
+                    <input id="perfil-departamento" type="text" formControlName="departamento" placeholder="Área" />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="perfil-rol">Rol</label>
+                    <input id="perfil-rol" type="text" [value]="rolPerfil" readonly />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="perfil-ingreso">Fecha de ingreso</label>
+                    <input id="perfil-ingreso" type="text" [value]="fechaIngreso" readonly />
+                  </div>
                 </div>
               </div>
-              <label for="imagen" class="avatar-edit-badge" title="Cambiar foto">
-                <iconify-icon icon="lucide:plus"></iconify-icon>
-              </label>
-            </div>
-            <p class="avatar-hint">JPG o PNG. Máximo 2MB.</p>
-            <input
-              #fileInput
-              type="file"
-              id="imagen"
-              style="display: none;"
-              accept="image/*"
-              (change)="onFileSelected($event)"
-              />
-          </div>
 
-          <div class="form-grid">
-            <!-- Nombre -->
-            <div class="form-group full-width">
-              <label>Nombre Completo</label>
-              <input type="text" formControlName="nombre" placeholder="Tu nombre">
-            </div>
+              <footer class="card-foot settings-actions">
+                <span class="foot-hint">Tu nombre y foto se muestran en el header.</span>
+                <div class="settings-actions-right">
+                  <button type="button" class="btn-secondary" (click)="restaurarPerfil()">
+                    Restaurar
+                  </button>
+                  <button type="submit" class="btn-primary" [disabled]="guardandoPerfil()">
+                    {{ guardandoPerfil() ? "Guardando..." : "Guardar cambios" }}
+                  </button>
+                </div>
+              </footer>
+            </form>
+          </article>
+        }
 
-            <!-- Correo -->
-            <div class="form-group">
-              <label>Correo Electrónico</label>
-              <input type="email" formControlName="email" placeholder="correo@empresa.com">
-            </div>
-
-            <!-- Departamento -->
-            <div class="form-group">
-              <label>Departamento</label>
-              <input type="text" formControlName="departamento" placeholder="Área">
-            </div>
-          </div>
-
-          <!-- Caja de Seguridad -->
-          <div class="security-box">
-            <h4>
-              <iconify-icon icon="lucide:lock" style="font-size: 16px;"></iconify-icon>
-              Cambiar Contraseña
-            </h4>
-            <div class="form-group">
-              <label>Contraseña Actual</label>
-              <input type="password" formControlName="contrasena_actual" placeholder="••••••••">
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Nueva Contraseña</label>
-                <input type="password" formControlName="nueva_contrasena" placeholder="Nueva">
+        @case ("apariencia") {
+          <article class="card settings-card">
+            <header class="card-head">
+              <span class="card-head-icon"><iconify-icon icon="ph:palette"></iconify-icon></span>
+              <div class="card-head-text">
+                <h2>Apariencia</h2>
+                <p>Elige cómo se ve la aplicación en este dispositivo.</p>
               </div>
-              <div class="form-group">
-                <label>Confirmar</label>
-                <input type="password" formControlName="confirmar_nueva_contrasena" placeholder="Repetir">
+            </header>
+
+            <div class="card-body">
+              <div class="theme-options">
+                @for (option of themeOptions; track option.value) {
+                  <button
+                    type="button"
+                    class="theme-option"
+                    [class.active]="themeService.theme() === option.value"
+                    [attr.aria-pressed]="themeService.theme() === option.value"
+                    (click)="cambiarTema(option.value)"
+                  >
+                    <span class="theme-preview" [ngClass]="'theme-preview--' + option.value">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                    <span class="theme-option-text">
+                      <strong>{{ option.label }}</strong>
+                      <small>{{ option.description }}</small>
+                    </span>
+                    @if (themeService.theme() === option.value) {
+                      <iconify-icon icon="ph:check-circle" class="theme-check"></iconify-icon>
+                    }
+                  </button>
+                }
               </div>
             </div>
-          </div>
 
-          <div class="actions-row">
-            <button type="button" class="btn-cancelar" (click)="cancelarPerfil()">Cancelar</button>
-            <button type="button" class="btn-guardar" (click)="guardarPerfil()">Actualizar Perfil</button>
-          </div>
-        </form>
-      </section>
+            <footer class="card-foot">
+              <span class="foot-hint">El tema se guarda en este dispositivo.</span>
+            </footer>
+          </article>
+        }
 
-    </div>
+        @case ("idioma") {
+          <article class="card settings-card">
+            <header class="card-head">
+              <span class="card-head-icon"><iconify-icon icon="ph:translate"></iconify-icon></span>
+              <div class="card-head-text">
+                <h2>Idioma</h2>
+                <p>Preferencia de idioma de la interfaz.</p>
+              </div>
+              <div class="card-head-actions">
+                <span class="soon-badge">Próximamente</span>
+              </div>
+            </header>
+
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-row-text">
+                  <strong>Idioma de la interfaz</strong>
+                  <p>La aplicación está en español por ahora. La traducción se habilitará más adelante.</p>
+                </div>
+                <select class="setting-select" disabled aria-label="Idioma de la interfaz">
+                  <option>Español</option>
+                </select>
+              </div>
+            </div>
+          </article>
+        }
+
+        @case ("seguridad") {
+          <article class="card settings-card">
+            <header class="card-head">
+              <span class="card-head-icon card-head-icon--warning"><iconify-icon icon="ph:lock-simple"></iconify-icon></span>
+              <div class="card-head-text">
+                <h2>Seguridad</h2>
+                <p>Cambia la contraseña de tu cuenta.</p>
+              </div>
+            </header>
+
+            <form [formGroup]="passwordForm" (ngSubmit)="guardarPassword()">
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="form-group full-width">
+                    <label for="pass-actual">Contraseña actual</label>
+                    <input id="pass-actual" type="password" formControlName="contrasena_actual" placeholder="••••••••" autocomplete="current-password" />
+                    @if (passwordForm.get("contrasena_actual")?.touched && passwordForm.get("contrasena_actual")?.invalid) {
+                      <small class="error-text">Escribe tu contraseña actual.</small>
+                    }
+                  </div>
+
+                  <div class="form-group">
+                    <label for="pass-nueva">Nueva contraseña</label>
+                    <input id="pass-nueva" type="password" formControlName="nueva_contrasena" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+                    @if (passwordForm.get("nueva_contrasena")?.touched && passwordForm.get("nueva_contrasena")?.invalid) {
+                      <small class="error-text">Debe tener al menos 8 caracteres.</small>
+                    }
+                  </div>
+
+                  <div class="form-group">
+                    <label for="pass-confirmar">Confirmar contraseña</label>
+                    <input id="pass-confirmar" type="password" formControlName="confirmar_nueva_contrasena" placeholder="Repite la contraseña" autocomplete="new-password" />
+                    @if (passwordForm.get("confirmar_nueva_contrasena")?.touched && passwordForm.hasError("noCoinciden")) {
+                      <small class="error-text">Las contraseñas no coinciden.</small>
+                    }
+                  </div>
+                </div>
+
+                <p class="settings-note">
+                  La contraseña actual es obligatoria para confirmar el cambio.
+                </p>
+              </div>
+
+              <footer class="card-foot settings-actions">
+                <span class="foot-hint">Usa una contraseña que no reutilices.</span>
+                <button type="submit" class="btn-primary" [disabled]="guardandoPassword()">
+                  {{ guardandoPassword() ? "Actualizando..." : "Actualizar contraseña" }}
+                </button>
+              </footer>
+            </form>
+          </article>
+
+          <article class="card settings-card">
+            <header class="card-head">
+              <span class="card-head-icon card-head-icon--danger"><iconify-icon icon="ph:devices"></iconify-icon></span>
+              <div class="card-head-text">
+                <h2>Sesiones activas</h2>
+                <p>Cierra la sesión en todos los dispositivos donde hayas entrado.</p>
+              </div>
+            </header>
+
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-row-text">
+                  <strong>Cerrar todas las sesiones</strong>
+                  <p>Se cerrará también esta sesión. Tendrás que iniciar sesión de nuevo.</p>
+                </div>
+                <button type="button" class="btn-danger" (click)="cerrarTodasLasSesiones()">
+                  Cerrar todas
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+
+        @case ("localizacion") {
+          <article class="card settings-card">
+            <header class="card-head">
+              <span class="card-head-icon card-head-icon--info"><iconify-icon icon="ph:globe-hemisphere-west"></iconify-icon></span>
+              <div class="card-head-text">
+                <h2>Localización</h2>
+                <p>Zona horaria y formatos que usa el sistema.</p>
+              </div>
+            </header>
+
+            <form [formGroup]="localizacionForm" (ngSubmit)="guardarLocalizacion()">
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="form-group full-width">
+                    <label for="zona-horaria">Zona horaria</label>
+                    <ng-select
+                      id="zona-horaria"
+                      formControlName="zona_horaria"
+                      [items]="zonasHorarias"
+                      bindLabel="nombre"
+                      bindValue="codigo"
+                      placeholder="Selecciona una zona"
+                    ></ng-select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="formato-fecha">Formato de fecha</label>
+                    <ng-select
+                      id="formato-fecha"
+                      formControlName="formato_fecha"
+                      [items]="formatosFecha"
+                      bindLabel="nombre"
+                      bindValue="codigo"
+                      placeholder="DD/MM/YYYY"
+                    ></ng-select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="formato-moneda">Moneda</label>
+                    <ng-select
+                      id="formato-moneda"
+                      formControlName="formato_moneda"
+                      [items]="monedas"
+                      bindLabel="nombre"
+                      bindValue="codigo"
+                      placeholder="Selecciona una moneda"
+                    ></ng-select>
+                  </div>
+                </div>
+              </div>
+
+              <footer class="card-foot settings-actions">
+                <span class="foot-hint">Afecta a fechas y importes de todo el sistema.</span>
+                <button type="submit" class="btn-primary" [disabled]="guardandoConfig()">
+                  {{ guardandoConfig() ? "Guardando..." : "Guardar cambios" }}
+                </button>
+              </footer>
+            </form>
+          </article>
+        }
+
+        @case ("alertas") {
+          <article class="card settings-card">
+            <header class="card-head">
+              <span class="card-head-icon card-head-icon--warning"><iconify-icon icon="ph:bell-ringing"></iconify-icon></span>
+              <div class="card-head-text">
+                <h2>Alertas</h2>
+                <p>Cuántos días antes se avisa de cada vencimiento.</p>
+              </div>
+            </header>
+
+            <form [formGroup]="alertasForm" (ngSubmit)="guardarAlertas()">
+              <div class="card-body">
+                <div class="alert-grid">
+                  <div class="alert-setting">
+                    <div class="alert-setting-text">
+                      <strong>Licencias</strong>
+                      <small>Antes del vencimiento de la licencia.</small>
+                    </div>
+                    <div class="input-suffix">
+                      <input id="alerta-licencia" type="number" min="1" max="365" formControlName="dias_alerta_licencia" />
+                      <span>días</span>
+                    </div>
+                  </div>
+
+                  <div class="alert-setting">
+                    <div class="alert-setting-text">
+                      <strong>Garantías</strong>
+                      <small>Antes de que expire la garantía.</small>
+                    </div>
+                    <div class="input-suffix">
+                      <input id="alerta-garantia" type="number" min="1" max="365" formControlName="dias_alerta_garantia" />
+                      <span>días</span>
+                    </div>
+                  </div>
+
+                  <div class="alert-setting">
+                    <div class="alert-setting-text">
+                      <strong>Devoluciones</strong>
+                      <small>Antes de la fecha de devolución.</small>
+                    </div>
+                    <div class="input-suffix">
+                      <input id="alerta-devolucion" type="number" min="1" max="365" formControlName="dias_alerta_devolucion" />
+                      <span>días</span>
+                    </div>
+                  </div>
+
+                  <div class="alert-setting">
+                    <div class="alert-setting-text">
+                      <strong>Mantenimiento</strong>
+                      <small>Antes del próximo mantenimiento.</small>
+                    </div>
+                    <div class="input-suffix">
+                      <input id="alerta-mantenimiento" type="number" min="1" max="365" formControlName="dias_alerta_mantenimiento" />
+                      <span>días</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <footer class="card-foot settings-actions">
+                <span class="foot-hint">Los cambios aplican al dashboard y a las notificaciones.</span>
+                <button type="submit" class="btn-primary" [disabled]="guardandoAlertas()">
+                  {{ guardandoAlertas() ? "Guardando..." : "Guardar cambios" }}
+                </button>
+              </footer>
+            </form>
+          </article>
+        }
+
+        @case ("sistema") {
+          <article class="card settings-card">
+            <header class="card-head">
+              <span class="card-head-icon"><iconify-icon icon="ph:desktop-tower"></iconify-icon></span>
+              <div class="card-head-text">
+                <h2>Sistema</h2>
+                <p>Información del entorno y estado del servicio.</p>
+              </div>
+            </header>
+
+            <div class="card-body">
+              <dl class="system-list">
+                <div class="system-row">
+                  <dt>Estado del API</dt>
+                  <dd>
+                    @switch (apiEstado()) {
+                      @case ("ok") {
+                        <span class="system-badge system-badge--ok">
+                          <span class="system-dot"></span>
+                          Operativo
+                        </span>
+                      }
+                      @case ("error") {
+                        <span class="system-badge system-badge--error">
+                          <span class="system-dot"></span>
+                          Sin conexión
+                        </span>
+                      }
+                      @default {
+                        <span class="system-badge">
+                          <span class="system-dot"></span>
+                          Comprobando...
+                        </span>
+                      }
+                    }
+                  </dd>
+                </div>
+
+                <div class="system-row">
+                  <dt>Entorno</dt>
+                  <dd>{{ entorno }}</dd>
+                </div>
+
+                <div class="system-row">
+                  <dt>API</dt>
+                  <dd class="system-mono">{{ apiUrl }}</dd>
+                </div>
+
+                <div class="system-row">
+                  <dt>Tu rol</dt>
+                  <dd>{{ rolPerfil || "Usuario" }}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <footer class="card-foot settings-actions">
+              <span class="foot-hint">Comprobación en vivo del servicio.</span>
+              <button type="button" class="btn-secondary" (click)="comprobarApi()">
+                Comprobar de nuevo
+              </button>
+            </footer>
+          </article>
+        }
+      }
+    </section>
   </div>
 </main>
