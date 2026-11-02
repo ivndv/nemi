@@ -1,0 +1,133 @@
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Usuarios</h2>
+      <p class="page-subtitle">
+        {{ pagination.total }} {{ pagination.total === 1 ? 'persona registrada' : 'personas registradas' }}
+      </p>
+    </div>
+
+    <button class="btn-primary" (click)="crear()">
+      <iconify-icon icon="ph:plus"></iconify-icon>
+      Nuevo usuario
+    </button>
+  </header>
+
+  <section class="busqueda">
+    <div class="toolbar-container">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Buscar por nombre o correo..."
+          (input)="onSearchInput($event)"
+        />
+      </div>
+
+      <div class="filters-group">
+        <select (change)="aplicarRol($event)">
+          <option value="">Rol: todos</option>
+          @for (rol of roles; track rol.id) {
+            <option [value]="rol.id">{{ rol.nombre }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabla-usuarios">
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+
+    <table aria-label="Lista de usuarios">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Rol</th>
+          <th>Departamento</th>
+          <th>Sede</th>
+          <th>Ingreso</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando) {
+          <tr>
+            <td colspan="7"><div class="vacio">Cargando usuarios...</div></td>
+          </tr>
+        }
+        @if (!cargando && personas.length === 0) {
+          <tr>
+            <td colspan="7">
+              <div class="vacio">
+                <iconify-icon icon="ph:users" style="font-size: 26px; margin-bottom: 8px;"></iconify-icon>
+                <p>No hay usuarios para mostrar</p>
+              </div>
+            </td>
+          </tr>
+        }
+        @for (persona of personas; track trackById($index, persona)) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">{{ persona.nombre.substring(0, 2) | uppercase }}</div>
+                <div class="user-name">
+                  <strong>{{ persona.nombre }}</strong>
+                  @if (estaBloqueada(persona)) {
+                    <span
+                      class="chip-bloqueada"
+                      [title]="persona.intentos_fallidos + ' intentos fallidos'"
+                    >
+                      <iconify-icon icon="ph:lock-simple"></iconify-icon>
+                      Bloqueada
+                    </span>
+                  }
+                </div>
+              </div>
+            </td>
+            <td>{{ persona.email }}</td>
+            <td><span class="chip">{{ persona.rol }}</span></td>
+            <td>{{ persona.departamento || "—" }}</td>
+            <td>{{ persona.sede || "—" }}</td>
+            <td>{{ persona.fecha_ingreso }}</td>
+            <td class="col-actions">
+              @if (estaBloqueada(persona)) {
+                <button class="btn-desbloquear" (click)="desbloquear(persona)">
+                  Desbloquear
+                </button>
+              }
+              <button class="btn-editar" (click)="editar(persona)">Editar</button>
+              <button class="btn-password" (click)="cambiarPassword(persona)">
+                Contraseña
+              </button>
+              <button class="btn-baja" (click)="darDeBaja(persona)">Baja</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (pagination.totalPages > 1) {
+      <div class="paginacion">
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === 1"
+          (click)="cambiarPagina(paginaActual - 1)"
+        >
+          <iconify-icon icon="ph:caret-left"></iconify-icon>
+          Anterior
+        </button>
+        <span>Página {{ paginaActual }} de {{ pagination.totalPages }}</span>
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === pagination.totalPages"
+          (click)="cambiarPagina(paginaActual + 1)"
+        >
+          Siguiente
+          <iconify-icon icon="ph:caret-right"></iconify-icon>
+        </button>
+      </div>
+    }
+  </section>
+</main>
