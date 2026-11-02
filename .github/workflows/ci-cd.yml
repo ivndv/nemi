@@ -1,5 +1,7 @@
+# Nemi Frontend CI/CD: lint y tests en paralelo, deploy solo en push a main
 name: Gestor Activos Frontend CI/CD
 
+# Disparadores: pushes y pull requests a las ramas principales
 on:
   push:
     branches:
@@ -10,102 +12,61 @@ on:
       - main
       - develop
 
-env:
-  NODE_VERSION: "24.19.0"
-  BUN_VERSION: "1.3.14"
+# Cancela ejecuciones previas del mismo ref, excepto deploys en main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Permisos mínimos: solo lectura del repositorio
+permissions:
+  contents: read
 
 jobs:
+  # Job 1: lint y verificación de formato con Biome (read-only, falla si hay problemas)
   lint:
+    name: Lint & Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+      # Node + Bun + caché de dependencias
+      - name: Setup Bun env
+        uses: ./.github/actions/setup
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
+      # Biome en modo CI: no escribe archivos, solo reporta
+      - name: Format & lint check
+        run: bunx biome ci .
 
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Lint
-        run: bun run lint
-
-      - name: Format check
-        run: bun run check
-
+  # Job 2: pruebas unitarias con Jest (en paralelo a lint)
   test:
+    name: Unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+      - name: Setup Bun env
+        uses: ./.github/actions/setup
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Run tests
+      - name: Run unit tests
         run: bun run test
 
+  # Job 3: build y despliegue a Cloudflare Pages (solo push a main y con todo verde)
   deploy:
+    name: Deploy to Cloudflare Pages
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [lint, test]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Setup Bun env
+        uses: ./.github/actions/setup
 
       - name: Build
         run: bun run build
