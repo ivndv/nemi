@@ -32,6 +32,15 @@ export class AlertasComponent implements OnInit, OnDestroy {
 		private router: Router,
 	) {}
 
+	get totalAlertas(): number {
+		return (
+			this.licenciasProximasAVencer +
+			this.garantiasProximasAExpirar +
+			this.activosEnMantenimiento +
+			this.activosProximosADevolver
+		);
+	}
+
 	ngOnInit(): void {
 		this.cargarDatosBackend(); // Cargar datos al inicializar el componente
 	}
@@ -47,8 +56,6 @@ export class AlertasComponent implements OnInit, OnDestroy {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe({
 				next: (response) => {
-					console.log("Datos recibidos del backend:", response); // Log para verificar los datos
-
 					// Asignar los datos recibidos a las variables
 					this.licenciasProximasAVencer =
 						response.data.licencias_proximas_a_vencer || 0;
@@ -59,14 +66,6 @@ export class AlertasComponent implements OnInit, OnDestroy {
 					this.activosProximosADevolver =
 						response.data.activos_proximos_a_devolver || 0;
 					this.cdr.markForCheck();
-
-					// Log para confirmar que los datos se han asignado correctamente
-					console.log("Datos asignados:", {
-						licenciasProximasAVencer: this.licenciasProximasAVencer,
-						garantiasProximasAExpirar: this.garantiasProximasAExpirar,
-						activosEnMantenimiento: this.activosEnMantenimiento,
-						activosProximosADevolver: this.activosProximosADevolver,
-					});
 				},
 				error: (error) => {
 					// Ejem. Si el backend devuelve { mensaje: "Error al actualizar la asignación" }
@@ -75,11 +74,10 @@ export class AlertasComponent implements OnInit, OnDestroy {
 
 					// Mostrar el mensaje
 					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
 					Swal.fire({
 						icon: "error",
 						text: errorMessage,
-						confirmButtonColor: "#1e293b",
+						confirmButtonColor: "#0f766e",
 					});
 				},
 			});

@@ -1,48 +1,108 @@
 <div class="resumen-activos">
-  <!-- Sección 1: Badges de Resumen -->
-  <section class="container-badges">
-    <div class="badge">
-      <span class="badge--titulo">Total Activos</span>
-      <span class="badge--numero">{{ totalActivos }}</span>
-    </div>
+  @if (errorMessage) {
+    <p class="dash-error" role="alert">{{ errorMessage }}</p>
+  }
 
-    <div class="badge">
-      <span class="badge--titulo">Activos Asignados</span>
-      <span class="badge--numero">{{ activosAsignados }}</span>
-    </div>
+  <section class="kpi-grid">
+    <article class="kpi-card">
+      <div class="kpi-head">
+        <span class="card-head-icon"><iconify-icon icon="ph:cube"></iconify-icon></span>
+        <span class="stat-label">Total</span>
+      </div>
+      <span class="stat-value">{{ totalActivos }}</span>
+      <span class="stat-meta">Activos registrados</span>
+    </article>
 
-    <div class="badge">
-      <span class="badge--titulo">Activos Disponibles</span>
-      <span class="badge--numero">{{ activosDisponibles }}</span>
-    </div>
+    <article class="kpi-card">
+      <div class="kpi-head">
+        <span class="card-head-icon card-head-icon--info"><iconify-icon icon="ph:user-check"></iconify-icon></span>
+        <span class="stat-label">Asignados</span>
+      </div>
+      <span class="stat-value">{{ activosAsignados }}</span>
+      <span class="stat-meta">{{ porcentajeDelTotal(activosAsignados) }}% del inventario</span>
+    </article>
 
-    <div class="badge">
-      <span class="badge--titulo">En Mantenimiento</span>
-      <span class="badge--numero">{{ activosEnMantenimiento }}</span>
-    </div>
+    <article class="kpi-card">
+      <div class="kpi-head">
+        <span class="card-head-icon card-head-icon--success"><iconify-icon icon="ph:package"></iconify-icon></span>
+        <span class="stat-label">Disponibles</span>
+      </div>
+      <span class="stat-value">{{ activosDisponibles }}</span>
+      <span class="stat-meta">{{ porcentajeDelTotal(activosDisponibles) }}% del inventario</span>
+    </article>
 
-    <div class="badge">
-      <span class="badge--titulo">Dados de Baja</span>
-      <span class="badge--numero">{{ activosDadosDeBaja }}</span>
-    </div>
+    <article class="kpi-card">
+      <div class="kpi-head">
+        <span class="card-head-icon card-head-icon--warning"><iconify-icon icon="ph:wrench"></iconify-icon></span>
+        <span class="stat-label">Mantenimiento</span>
+      </div>
+      <span class="stat-value">{{ activosEnMantenimiento }}</span>
+      <span class="stat-meta">{{ porcentajeDelTotal(activosEnMantenimiento) }}% en revisión</span>
+    </article>
+
+    <article class="kpi-card">
+      <div class="kpi-head">
+        <span class="card-head-icon card-head-icon--danger"><iconify-icon icon="ph:archive"></iconify-icon></span>
+        <span class="stat-label">Baja</span>
+      </div>
+      <span class="stat-value">{{ activosDadosDeBaja }}</span>
+      <span class="stat-meta">{{ porcentajeDelTotal(activosDadosDeBaja) }}% fuera de servicio</span>
+    </article>
   </section>
 
-  <!-- Sección 2: Gráficas -->
-  <section class="container-graficas">
-    <!-- Gráfica de Dona -->
-    <div class="grafica-card asignados-vs-disponibles">
-      <h2 class="grafica-titulo">Asignados vs Disponibles</h2>
-      <div class="chart-container">
-        <canvas #activosVsDisponibles role="img" aria-label="Gráfico de dona mostrando la distribución de activos asignados vs disponibles"></canvas>
-      </div>
-    </div>
+  <section class="charts-grid">
+    <article class="grafica-card">
+      <header class="card-head">
+        <div class="card-head-text">
+          <h2>Asignados vs disponibles</h2>
+          <p>Distribución actual del inventario</p>
+        </div>
+        <div class="card-head-actions">
+          <span class="chart-chip">{{ totalActivos }} activos</span>
+        </div>
+      </header>
 
-    <!-- Gráfica de Tendencia -->
-    <div class="grafica-card tendencia-mensual">
-      <h2 class="grafica-titulo">Tendencia Mensual (Últimos 12 meses)</h2>
-      <div class="chart-container">
-        <canvas #tendenciaMensual role="img" aria-label="Gráfico de línea mostrando la tendencia mensual de activos en los últimos 12 meses"></canvas>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas
+            #activosVsDisponibles
+            role="img"
+            aria-label="Gráfico de dona mostrando la distribución de activos asignados vs disponibles"
+          ></canvas>
+        </div>
       </div>
-    </div>
+
+      <footer class="card-foot">
+        <span>Distribución por estado</span>
+        <strong>{{ activosAsignados }} asignados · {{ activosDisponibles }} disponibles</strong>
+      </footer>
+    </article>
+
+    <article class="grafica-card">
+      <header class="card-head">
+        <div class="card-head-text">
+          <h2>Tendencia mensual</h2>
+          <p>Últimos 12 meses</p>
+        </div>
+        <div class="card-head-actions">
+          <span class="chart-chip">{{ anoTendencia }}</span>
+        </div>
+      </header>
+
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas
+            #tendenciaMensual
+            role="img"
+            aria-label="Gráfico de línea mostrando la tendencia mensual de activos en los últimos 12 meses"
+          ></canvas>
+        </div>
+      </div>
+
+      <footer class="card-foot">
+        <span>Altas registradas en el año</span>
+        <strong>{{ totalTendencia }} activos</strong>
+      </footer>
+    </article>
   </section>
 </div>

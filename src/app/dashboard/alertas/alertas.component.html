@@ -1,101 +1,106 @@
-<section class="wrapper">
-  <!-- Alerta 1: Licencias -->
-  <div class="alert-row">
-    <div class="alert-left-section">
-      <div class="alert-icon-container">
-        <img src="https://assets.mgdc.site/nemi/icono-licencia-proxima-a-vencer.png" alt="Licencia" />
-      </div>
-      <div class="alert-info">
-        <span class="alert-description">Licencias próximas a vencer</span>
-        <span class="alert-status-text text-naranja">Atención Requerida</span>
-      </div>
+<section class="card alerts">
+  <header class="card-head">
+    <span class="card-head-icon card-head-icon--warning">
+      <iconify-icon icon="ph:bell-ringing"></iconify-icon>
+    </span>
+    <div class="card-head-text">
+      <h2>Alertas del inventario</h2>
+      <p>Elementos que necesitan seguimiento</p>
     </div>
-    <div class="alert-right-section">
-      <div class="count-badge" [class.has-items]="licenciasProximasAVencer > 0">
-        {{ licenciasProximasAVencer }}
-      </div>
-      <button 
-        class="btn-alert-action"
-        [disabled]="licenciasProximasAVencer === 0"
-        (click)="navegarAFiltro('licencia_proxima')"
-      >
-        Gestionar
-      </button>
+    <div class="card-head-actions">
+      <span class="alert-total" [class.alert-total--active]="totalAlertas > 0">
+        {{ totalAlertas }} pendientes
+      </span>
     </div>
-  </div>
+  </header>
 
-  <!-- Alerta 2: Garantías -->
-  <div class="alert-row">
-    <div class="alert-left-section">
-      <div class="alert-icon-container">
-        <img src="https://assets.mgdc.site/nemi/icono-garantias-proxximas-a-expirar.png" alt="Garantía" />
+  <ul class="alert-list">
+    <li class="alert-row">
+      <span class="alert-icon alert-icon--warning">
+        <iconify-icon icon="ph:certificate"></iconify-icon>
+      </span>
+      <div class="alert-text">
+        <span class="alert-title">Licencias próximas a vencer</span>
+        <span class="alert-sub alert-sub--warning">Requiere atención</span>
       </div>
-      <div class="alert-info">
-        <span class="alert-description">Garantías próximas a expirar</span>
-        <span class="alert-status-text text-amarillo">Próximo Vencimiento</span>
+      <div class="alert-side">
+        <span class="alert-count" [class.alert-count--active]="licenciasProximasAVencer > 0">
+          {{ licenciasProximasAVencer }}
+        </span>
+        <button
+          class="btn-secondary alert-action"
+          [disabled]="licenciasProximasAVencer === 0"
+          (click)="navegarAFiltro('licencia_proxima')"
+        >
+          Gestionar
+        </button>
       </div>
-    </div>
-    <div class="alert-right-section">
-      <div class="count-badge" [class.has-items]="garantiasProximasAExpirar > 0">
-        {{ garantiasProximasAExpirar }}
-      </div>
-      <button 
-        class="btn-alert-action"
-        [disabled]="garantiasProximasAExpirar === 0"
-        (click)="navegarAFiltro('garantia_proxima')"
-      >
-        Gestionar
-      </button>
-    </div>
-  </div>
+    </li>
 
-  <!-- Alerta 3: Mantenimiento -->
-  <div class="alert-row">
-    <div class="alert-left-section">
-      <div class="alert-icon-container">
-        <img src="https://assets.mgdc.site/nemi/icono-activos-en-mantenimiento.png" alt="Mantenimiento" />
+    <li class="alert-row">
+      <span class="alert-icon alert-icon--warning">
+        <iconify-icon icon="ph:shield-check"></iconify-icon>
+      </span>
+      <div class="alert-text">
+        <span class="alert-title">Garantías próximas a expirar</span>
+        <span class="alert-sub alert-sub--warning">Próximo vencimiento</span>
       </div>
-      <div class="alert-info">
-        <span class="alert-description">Activos en mantenimiento</span>
-        <span class="alert-status-text text-gris">En Proceso</span>
+      <div class="alert-side">
+        <span class="alert-count" [class.alert-count--active]="garantiasProximasAExpirar > 0">
+          {{ garantiasProximasAExpirar }}
+        </span>
+        <button
+          class="btn-secondary alert-action"
+          [disabled]="garantiasProximasAExpirar === 0"
+          (click)="navegarAFiltro('garantia_proxima')"
+        >
+          Gestionar
+        </button>
       </div>
-    </div>
-    <div class="alert-right-section">
-      <div class="count-badge" [class.has-items]="activosEnMantenimiento > 0">
-        {{ activosEnMantenimiento }}
-      </div>
-      <button 
-        class="btn-alert-action"
-        [disabled]="activosEnMantenimiento === 0"
-        (click)="navegarAFiltro('estado')"
-      >
-        Ver Estado
-      </button>
-    </div>
-  </div>
+    </li>
 
-  <!-- Alerta 4: Devoluciones -->
-  <div class="alert-row">
-    <div class="alert-left-section">
-      <div class="alert-icon-container">
-        <img src="https://assets.mgdc.site/nemi/icono-activos-proximos-a-devolver.png" alt="Devolución" />
+    <li class="alert-row">
+      <span class="alert-icon alert-icon--info">
+        <iconify-icon icon="ph:wrench"></iconify-icon>
+      </span>
+      <div class="alert-text">
+        <span class="alert-title">Activos en mantenimiento</span>
+        <span class="alert-sub alert-sub--info">En proceso</span>
       </div>
-      <div class="alert-info">
-        <span class="alert-description">Activos próximos a devolver</span>
-        <span class="alert-status-text text-verde">Por Devolver</span>
+      <div class="alert-side">
+        <span class="alert-count" [class.alert-count--active]="activosEnMantenimiento > 0">
+          {{ activosEnMantenimiento }}
+        </span>
+        <button
+          class="btn-secondary alert-action"
+          [disabled]="activosEnMantenimiento === 0"
+          (click)="navegarAFiltro('estado')"
+        >
+          Ver estado
+        </button>
       </div>
-    </div>
-    <div class="alert-right-section">
-      <div class="count-badge" [class.has-items]="activosProximosADevolver > 0">
-        {{ activosProximosADevolver }}
+    </li>
+
+    <li class="alert-row">
+      <span class="alert-icon alert-icon--success">
+        <iconify-icon icon="ph:arrow-u-up-left"></iconify-icon>
+      </span>
+      <div class="alert-text">
+        <span class="alert-title">Activos próximos a devolver</span>
+        <span class="alert-sub alert-sub--success">Por devolver</span>
       </div>
-      <button 
-        class="btn-alert-action"
-        [disabled]="activosProximosADevolver === 0"
-        (click)="navegarAFiltro('fecha_devolucion_proxima')"
-      >
-        Ver Detalles
-      </button>
-    </div>
-  </div>
+      <div class="alert-side">
+        <span class="alert-count" [class.alert-count--active]="activosProximosADevolver > 0">
+          {{ activosProximosADevolver }}
+        </span>
+        <button
+          class="btn-secondary alert-action"
+          [disabled]="activosProximosADevolver === 0"
+          (click)="navegarAFiltro('fecha_devolucion_proxima')"
+        >
+          Ver detalles
+        </button>
+      </div>
+    </li>
+  </ul>
 </section>

@@ -19,6 +19,14 @@ import {
 	Tooltip,
 } from "chart.js";
 import { Subject, takeUntil } from "rxjs";
+import {
+	applyChartDefaults,
+	barChartOptions,
+	CHART_PALETTE,
+	getChartTheme,
+	pieChartOptions,
+	withAlpha,
+} from "../../utils/chartTheme";
 import { DashboardService } from "../services/dashboard.service";
 
 // Registrar componentes necesarios de Chart.js
@@ -65,7 +73,20 @@ export class ResumenActivosComponent implements OnInit, OnDestroy {
 		private dashboardService: DashboardService,
 	) {}
 
+	porcentajeDelTotal(valor: number): string {
+		if (!this.totalActivos) return "0";
+		return ((valor / this.totalActivos) * 100).toFixed(0);
+	}
+
+	get totalTendencia(): number {
+		return this.tendenciaMensualData.data.reduce(
+			(total, valor) => total + valor,
+			0,
+		);
+	}
+
 	ngOnInit(): void {
+		applyChartDefaults();
 		this.cargarDatosBackend();
 	}
 
@@ -103,9 +124,14 @@ export class ResumenActivosComponent implements OnInit, OnDestroy {
 					const errorMessage =
 						error.error?.mensaje || "Error al cargar datos del dashboard";
 					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
+					this.cdr.markForCheck();
 				},
 			});
+	}
+
+	private porcentajeConDecimales(valor: number): string {
+		if (!this.totalActivos) return "0.0";
+		return ((valor / this.totalActivos) * 100).toFixed(1);
 	}
 
 	private initGraficoActivosVsDisponibles(): void {
@@ -118,10 +144,12 @@ export class ResumenActivosComponent implements OnInit, OnDestroy {
 			this.chartPie.destroy();
 		}
 
-		const porcentajeAsignados =
-			((this.activosAsignados / this.totalActivos) * 100).toFixed(1) || "0.0";
-		const porcentajeDisponibles =
-			((this.activosDisponibles / this.totalActivos) * 100).toFixed(1) || "0.0";
+		const porcentajeAsignados = this.porcentajeConDecimales(
+			this.activosAsignados,
+		);
+		const porcentajeDisponibles = this.porcentajeConDecimales(
+			this.activosDisponibles,
+		);
 
 		this.chartPie = new Chart(ctx, {
 			type: "pie",
@@ -133,23 +161,14 @@ export class ResumenActivosComponent implements OnInit, OnDestroy {
 				datasets: [
 					{
 						data: [this.activosAsignados, this.activosDisponibles],
-						backgroundColor: ["#3182ce", "#38a169"],
-						borderColor: ["#ffffff", "#ffffff"],
-						borderWidth: 2,
+						backgroundColor: [CHART_PALETTE[1], CHART_PALETTE[5]],
+						borderColor: getChartTheme().surface,
+						borderWidth: 3,
+						hoverOffset: 4,
 					},
 				],
 			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				plugins: {
-					legend: {
-						position: "bottom",
-						labels: { boxWidth: 12, padding: 20, font: { size: 11 } },
-					},
-					tooltip: { padding: 12, bodyFont: { size: 13 } },
-				},
-			},
+			options: pieChartOptions(),
 		});
 	}
 
@@ -169,31 +188,17 @@ export class ResumenActivosComponent implements OnInit, OnDestroy {
 				labels: this.tendenciaMensualData.labels,
 				datasets: [
 					{
-						label: "Activos Registrados",
+						label: "Activos registrados",
 						data: this.tendenciaMensualData.data,
-						backgroundColor: "rgba(49, 130, 206, 0.7)",
-						borderColor: "#3182ce",
+						backgroundColor: withAlpha(CHART_PALETTE[0], 0.72),
+						borderColor: CHART_PALETTE[0],
 						borderWidth: 1,
-						borderRadius: 4,
+						borderRadius: 6,
+						maxBarThickness: 34,
 					},
 				],
 			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				plugins: {
-					legend: { display: false },
-					tooltip: { padding: 12 },
-				},
-				scales: {
-					y: {
-						beginAtZero: true,
-						grid: { display: true, color: "#edf2f7" },
-						ticks: { stepSize: 1 },
-					},
-					x: { grid: { display: false } },
-				},
-			},
+			options: barChartOptions(),
 		});
 	}
 
