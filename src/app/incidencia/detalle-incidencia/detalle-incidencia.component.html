@@ -1,0 +1,63 @@
+<main>
+  <button class="volver" (click)="volver()">← Volver a incidencias</button>
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  @if (cargando) {
+    <p class="vacio">Cargando incidencia...</p>
+  }
+
+  @if (incidencia) {
+    <section class="detalle-cabecera">
+      <div>
+        <h1>Incidencia #{{ incidencia.id }}</h1>
+        <p class="subtitulo">{{ incidencia.activo }}</p>
+      </div>
+      <span [class]="'chip estado-' + incidencia.estado">
+        {{ incidencia.estado_label }}
+      </span>
+    </section>
+
+    <section class="resumen">
+      <article>
+        <span>Prioridad</span>
+        <strong [class]="'chip prioridad-' + incidencia.prioridad">
+          {{ incidencia.prioridad_label }}
+        </strong>
+      </article>
+      <article>
+        <span>Reportante</span>
+        <strong>{{ incidencia.reportante || "—" }}</strong>
+      </article>
+      <article>
+        <span>Reportada</span>
+        <strong>{{ incidencia.created_at | fechaApp:'fechaHora' }}</strong>
+      </article>
+      <article>
+        <span>Resuelta</span>
+        <strong>{{ incidencia.fecha_resolucion || "—" }}</strong>
+      </article>
+      <article>
+        <span>Mantenimiento</span>
+        <strong>{{ incidencia.mantenimiento_id ?? "—" }}</strong>
+      </article>
+    </section>
+
+    <section class="detalle-bloque">
+      <header class="card-head">
+        <span class="card-head-icon"><iconify-icon icon="ph:note-pencil"></iconify-icon></span>
+        <div class="card-head-text">
+          <h2>Descripción</h2>
+          <p>Detalle del problema reportado.</p>
+        </div>
+      </header>
+      <div class="card-body">
+        <p>{{ incidencia.descripcion }}</p>
+      </div>
+    </section>
+
+    <app-adjuntos entidad="incidencia" [entidadId]="incidencia.id"></app-adjuntos>
+  }
+</main>

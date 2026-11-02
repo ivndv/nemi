@@ -1,0 +1,48 @@
+<app-modal-shell
+  title="Reportar incidencia"
+  subtitle="Cuéntanos qué está fallando en el activo."
+  (closed)="cancelar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label for="activo_id">Activo</label>
+        <select id="activo_id" formControlName="activo_id">
+          <option [ngValue]="null" disabled>Selecciona un activo</option>
+          @for (activo of data.activos; track activo.id) {
+            <option [ngValue]="activo.id">{{ activo.nombre }}</option>
+          }
+        </select>
+        @if (form.get("activo_id")?.touched && form.get("activo_id")?.invalid) {
+          <small class="error-text">Selecciona un activo</small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="prioridad">Prioridad</label>
+        <select id="prioridad" formControlName="prioridad">
+          <option value="baja">Baja</option>
+          <option value="media">Media</option>
+          <option value="alta">Alta</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="descripcion">Descripción</label>
+        <textarea
+          id="descripcion"
+          formControlName="descripcion"
+          placeholder="Describe la falla con el mayor detalle posible..."
+        ></textarea>
+        @if (form.get("descripcion")?.touched && form.get("descripcion")?.invalid) {
+          <small class="error-text">Describe la falla (mínimo 5 caracteres)</small>
+        }
+      </div>
+    </div>
+
+    <footer class="actions-row">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary">Reportar incidencia</button>
+    </footer>
+  </form>
+</app-modal-shell>

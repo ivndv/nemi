@@ -1,0 +1,131 @@
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Incidencias</h2>
+      <p class="page-subtitle">
+        {{ pagination.total }} {{ pagination.total === 1 ? 'incidencia' : 'incidencias' }}
+      </p>
+    </div>
+
+    <button class="btn-primary" (click)="reportar()">
+      <iconify-icon icon="ph:plus"></iconify-icon>
+      Reportar incidencia
+    </button>
+  </header>
+
+  <section class="busqueda">
+    <div class="toolbar-container">
+      <div class="filters-group">
+        <select (change)="aplicarFiltro('estado', $event)">
+          <option value="">Estado: todos</option>
+          <option value="abierta">Abierta</option>
+          <option value="en_revision">En revisión</option>
+          <option value="resuelta">Resuelta</option>
+          <option value="cerrada">Cerrada</option>
+        </select>
+
+        <select (change)="aplicarFiltro('prioridad', $event)">
+          <option value="">Prioridad: todas</option>
+          <option value="alta">Alta</option>
+          <option value="media">Media</option>
+          <option value="baja">Baja</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabla-incidencias">
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+
+    <table aria-label="Lista de incidencias">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Activo</th>
+          <th>Descripción</th>
+          <th>Prioridad</th>
+          <th>Reportante</th>
+          <th>Estado</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando) {
+          <tr>
+            <td colspan="7"><div class="vacio">Cargando incidencias...</div></td>
+          </tr>
+        }
+        @if (!cargando && incidencias.length === 0) {
+          <tr>
+            <td colspan="7">
+              <div class="vacio">
+                <iconify-icon icon="ph:warning" style="font-size: 26px; margin-bottom: 8px;"></iconify-icon>
+                <p>No hay incidencias para mostrar</p>
+              </div>
+            </td>
+          </tr>
+        }
+        @for (incidencia of incidencias; track trackById($index, incidencia)) {
+          <tr>
+            <td class="id-cell">#{{ incidencia.id }}</td>
+            <td><strong>{{ incidencia.activo }}</strong></td>
+            <td class="descripcion-cell">{{ incidencia.descripcion }}</td>
+            <td>
+              <span [class]="'chip prioridad-' + incidencia.prioridad">
+                {{ incidencia.prioridad_label }}
+              </span>
+            </td>
+            <td>{{ incidencia.reportante || "—" }}</td>
+            <td>
+              <span [class]="'chip estado-' + incidencia.estado">
+                {{ incidencia.estado_label }}
+              </span>
+            </td>
+            <td class="col-actions">
+              <button class="btn-detalle" (click)="verDetalle(incidencia.id)">
+                Ver
+              </button>
+              @if (puedeAtender()) {
+                <button class="btn-estado" (click)="cambiarEstado(incidencia)">
+                  Estado
+                </button>
+                @if (!incidencia.mantenimiento_id) {
+                  <button
+                    class="btn-mantenimiento"
+                    (click)="abrirMantenimiento(incidencia)"
+                  >
+                    Mantenimiento
+                  </button>
+                }
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (pagination.totalPages > 1) {
+      <div class="paginacion">
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === 1"
+          (click)="cambiarPagina(paginaActual - 1)"
+        >
+          <iconify-icon icon="ph:caret-left"></iconify-icon>
+          Anterior
+        </button>
+        <span>Página {{ paginaActual }} de {{ pagination.totalPages }}</span>
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === pagination.totalPages"
+          (click)="cambiarPagina(paginaActual + 1)"
+        >
+          Siguiente
+          <iconify-icon icon="ph:caret-right"></iconify-icon>
+        </button>
+      </div>
+    }
+  </section>
+</main>
