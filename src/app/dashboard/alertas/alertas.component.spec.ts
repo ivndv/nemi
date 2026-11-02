@@ -1,3 +1,4 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { Router } from "@angular/router";
 import { of, throwError } from "rxjs";
@@ -33,6 +34,7 @@ describe("AlertasComponent", () => {
 				{ provide: DashboardService, useClass: MockDashboardService },
 				{ provide: Router, useClass: MockRouter },
 			],
+			schemas: [CUSTOM_ELEMENTS_SCHEMA],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(AlertasComponent);
@@ -86,7 +88,7 @@ describe("AlertasComponent", () => {
 		expect(Swal.fire).toHaveBeenCalledWith({
 			icon: "error",
 			text: "Error al obtener alertas",
-			confirmButtonColor: "#1e293b",
+			confirmButtonColor: "#0f766e",
 		});
 	});
 
@@ -136,7 +138,7 @@ describe("AlertasComponent", () => {
 
 		fixture.detectChanges();
 
-		const buttons = fixture.nativeElement.querySelectorAll(".btn-alert-action");
+		const buttons = fixture.nativeElement.querySelectorAll(".alert-action");
 		buttons.forEach((btn: HTMLButtonElement) => {
 			expect(btn.disabled).toBe(true);
 		});
@@ -156,7 +158,7 @@ describe("AlertasComponent", () => {
 
 		fixture.detectChanges();
 
-		const buttons = fixture.nativeElement.querySelectorAll(".btn-alert-action");
+		const buttons = fixture.nativeElement.querySelectorAll(".alert-action");
 		buttons.forEach((btn: HTMLButtonElement) => {
 			expect(btn.disabled).toBe(false);
 		});
@@ -176,7 +178,7 @@ describe("AlertasComponent", () => {
 
 		fixture.detectChanges();
 
-		const badges = fixture.nativeElement.querySelectorAll(".count-badge");
+		const badges = fixture.nativeElement.querySelectorAll(".alert-count");
 		expect(badges.length).toBe(4);
 		expect(badges[0].textContent).toContain("3");
 		expect(badges[1].textContent).toContain("5");

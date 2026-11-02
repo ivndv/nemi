@@ -2,7 +2,9 @@ import { HttpClientTestingModule } from "@angular/common/http/testing";
 import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { ActivatedRoute, provideRouter } from "@angular/router";
 import { NgSelectModule } from "@ng-select/ng-select";
+import { of } from "rxjs";
 
 import { ConfiguracionAplicacionComponent } from "./configuracion-aplicacion.component";
 
@@ -18,6 +20,17 @@ describe("ConfiguracionAplicacionComponent", () => {
 				FormsModule,
 				ReactiveFormsModule,
 				NgSelectModule,
+			],
+			providers: [
+				{
+					provide: ActivatedRoute,
+					useValue: {
+						params: of({}),
+						queryParamMap: of({ get: () => null }),
+						snapshot: { paramMap: { get: () => null } },
+					},
+				},
+				provideRouter([]),
 			],
 			schemas: [CUSTOM_ELEMENTS_SCHEMA],
 		}).compileComponents();

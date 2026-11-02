@@ -1,3 +1,4 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { of, throwError } from "rxjs";
 import { DashboardResumen } from "../../models/dashboard.interface";
@@ -19,6 +20,7 @@ describe("ResumenActivosComponent", () => {
 			providers: [
 				{ provide: DashboardService, useClass: MockDashboardService },
 			],
+			schemas: [CUSTOM_ELEMENTS_SCHEMA],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(ResumenActivosComponent);
@@ -83,7 +85,7 @@ describe("ResumenActivosComponent", () => {
 
 		fixture.detectChanges();
 
-		const badges = fixture.nativeElement.querySelectorAll(".badge");
+		const badges = fixture.nativeElement.querySelectorAll(".kpi-card");
 		expect(badges.length).toBe(5);
 	});
 
@@ -106,7 +108,7 @@ describe("ResumenActivosComponent", () => {
 
 		fixture.detectChanges();
 
-		const numeros = fixture.nativeElement.querySelectorAll(".badge--numero");
+		const numeros = fixture.nativeElement.querySelectorAll(".stat-value");
 		expect(numeros.length).toBe(5);
 		expect(numeros[0].textContent).toContain("15"); // Total
 		expect(numeros[1].textContent).toContain("7"); // Asignados
@@ -134,13 +136,13 @@ describe("ResumenActivosComponent", () => {
 
 		fixture.detectChanges();
 
-		const titulos = fixture.nativeElement.querySelectorAll(".badge--titulo");
+		const titulos = fixture.nativeElement.querySelectorAll(".stat-label");
 		expect(titulos.length).toBe(5);
-		expect(titulos[0].textContent).toContain("Total Activos");
-		expect(titulos[1].textContent).toContain("Activos Asignados");
-		expect(titulos[2].textContent).toContain("Activos Disponibles");
-		expect(titulos[3].textContent).toContain("En Mantenimiento");
-		expect(titulos[4].textContent).toContain("Dados de Baja");
+		expect(titulos[0].textContent).toContain("Total");
+		expect(titulos[1].textContent).toContain("Asignados");
+		expect(titulos[2].textContent).toContain("Disponibles");
+		expect(titulos[3].textContent).toContain("Mantenimiento");
+		expect(titulos[4].textContent).toContain("Baja");
 	});
 
 	it("should handle zeros when response has null values", () => {

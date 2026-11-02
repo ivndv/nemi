@@ -1,7 +1,11 @@
 import { HttpClientTestingModule } from "@angular/common/http/testing";
+import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { ActivatedRoute } from "@angular/router";
+import { ReactiveFormsModule } from "@angular/forms";
+import { ActivatedRoute, provideRouter } from "@angular/router";
+import { NgSelectModule } from "@ng-select/ng-select";
 import { of } from "rxjs";
+import { provideQueryClientTesting } from "../../../testing/test-providers";
 
 import { EditarAsignacionComponent } from "./editar-asignacion.component";
 
@@ -12,7 +16,7 @@ describe("EditarAsignacionComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [EditarAsignacionComponent],
-			imports: [HttpClientTestingModule],
+			imports: [HttpClientTestingModule, ReactiveFormsModule, NgSelectModule],
 			providers: [
 				{
 					provide: ActivatedRoute,
@@ -23,7 +27,10 @@ describe("EditarAsignacionComponent", () => {
 						},
 					},
 				},
+				provideQueryClientTesting(),
+				provideRouter([]),
 			],
+			schemas: [CUSTOM_ELEMENTS_SCHEMA],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(EditarAsignacionComponent);
