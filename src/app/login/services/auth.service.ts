@@ -1,13 +1,22 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-import { Observable, Subject } from "rxjs";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { environment } from "../../../environments/environment";
 import {
 	LoginResponse,
 	TokenPayload,
 	UserData,
 } from "../../models/auth.interface";
+
+// Normaliza un rol para compararlo sin acentos ni mayúsculas
+function normalizarRol(valor: string): string {
+	return valor
+		.trim()
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "");
+}
 
 @Injectable({
 	providedIn: "root",
@@ -18,8 +27,14 @@ export class AuthService {
 	// Claves para almacenar el token y datos del usuario en localStorage
 	private tokenKey = "authToken";
 	private userKey = "user";
+	private readonly messageKey = "authMessage";
 	// Sujeto para manejar el evento de logout
 	private logoutSubject = new Subject<void>();
+	// Datos del usuario en memoria para actualizaciones reactivas
+	private readonly userSubject = new BehaviorSubject<UserData | null>(
+		this.getUserData(),
+	);
+	readonly user$ = this.userSubject.asObservable();
 
 	constructor(
 		private http: HttpClient,
@@ -51,6 +66,7 @@ export class AuthService {
 		localStorage.setItem(this.tokenKey, token); // Guarda el token
 		if (userData) {
 			localStorage.setItem(this.userKey, JSON.stringify(userData)); // Guarda datos del usuario
+			this.userSubject.next(userData);
 		}
 	}
 
@@ -61,11 +77,29 @@ export class AuthService {
 	/**
 	 * Cierra sesión eliminando el token y los datos del usuario, y redirige al login.
 	 */
-	logout(): void {
+	logout(motivo?: string): void {
 		localStorage.removeItem(this.tokenKey); // Elimina el token
 		localStorage.removeItem(this.userKey); // Elimina los datos del usuario
+		if (motivo) sessionStorage.setItem(this.messageKey, motivo);
+		this.userSubject.next(null);
 		this.logoutSubject.next(); // Notificar a los componentes
 		this.router.navigate(["/login"]); // Redirige al login
+	}
+
+	/**
+	 * Cierra la sesión en todos los dispositivos del usuario.
+	 */
+	logoutAll(): Observable<{ message: string }> {
+		return this.http.post<{ message: string }>(`${this.apiUrl}/logout-all`, {});
+	}
+
+	/**
+	 * Lee y limpia el mensaje que se muestra en el login tras un cierre de sesión.
+	 */
+	consumirMensaje(): string {
+		const mensaje = sessionStorage.getItem(this.messageKey) ?? "";
+		if (mensaje) sessionStorage.removeItem(this.messageKey);
+		return mensaje;
 	}
 
 	/**
@@ -120,22 +154,89 @@ export class AuthService {
 	}
 
 	/**
+	 * Actualiza parcialmente los datos del usuario guardados en sesión.
+	 */
+	updateStoredUser(partial: Partial<UserData>): void {
+		const actual = this.getUserData();
+		if (!actual) return;
+
+		const actualizado = { ...actual, ...partial };
+		localStorage.setItem(this.userKey, JSON.stringify(actualizado));
+		this.userSubject.next(actualizado);
+	}
+
+	/**
 	 * Verifica si el usuario tiene un rol específico.
 	 * @param role - Rol a verificar.
 	 * @returns `true` si el usuario tiene el rol, `false` en caso contrario.
 	 */
 	hasRole(role: string): boolean {
 		const user = this.getUserData();
-		if (!user || !user.rol) return false;
-		return user.rol.toLowerCase() === role.toLowerCase();
+		if (!user) return false;
+
+		const buscado = normalizarRol(role);
+		const actuales = [user.rol, user.rol_slug]
+			.filter(Boolean)
+			.map((valor) => normalizarRol(valor as string));
+
+		return actuales.includes(buscado);
+	}
+
+	/**
+	 * Verifica si el usuario tiene alguno de los roles indicados.
+	 */
+	hasAnyRole(roles: string[]): boolean {
+		return roles.some((rol) => this.hasRole(rol));
+	}
+
+	/**
+	 * Slug del rol actual (administrador, tecnico, almacen, empleado).
+	 */
+	getRolSlug(): string | null {
+		const user = this.getUserData();
+		return user?.rol_slug ?? null;
 	}
 
 	/**
 	 * Verifica si el usuario es administrador.
-	 * @returns `true` si es administrador.
 	 */
 	isAdmin(): boolean {
 		return this.hasRole("Administrador");
+	}
+
+	/**
+	 * Verifica si el usuario es técnico.
+	 */
+	isTecnico(): boolean {
+		return this.hasRole("Técnico");
+	}
+
+	/**
+	 * Verifica si el usuario es de almacén.
+	 */
+	isAlmacen(): boolean {
+		return this.hasRole("Almacén");
+	}
+
+	/**
+	 * Verifica si el usuario es empleado.
+	 */
+	isEmpleado(): boolean {
+		return this.hasRole("Empleado");
+	}
+
+	/**
+	 * Puede gestionar mantenimientos.
+	 */
+	puedeMantenimiento(): boolean {
+		return this.isAdmin() || this.isTecnico();
+	}
+
+	/**
+	 * Puede gestionar inventario y asignaciones.
+	 */
+	puedeOperar(): boolean {
+		return this.hasAnyRole(["Administrador", "Técnico", "Almacén"]);
 	}
 
 	/**

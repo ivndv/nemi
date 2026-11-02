@@ -1,22 +1,37 @@
 <main class="login-page">
-  <!-- Sección Izquierda: Ilustración y Branding -->
   <section class="login-visual">
-    <div class="overlay"></div>
     <div class="visual-content">
       <div class="logo-container">
-        <img src="https://assets.mgdc.site/nemi/logo.png" alt="Logo" class="main-logo" />
-        <span class="brand-name">Gestor de Activos</span>
+        <img src="https://assets.mgdc.site/nemi/logo.png" alt="Nemi" class="main-logo" width="512" height="512" loading="eager" />
+        <span class="brand-name">Nemi</span>
       </div>
+
       <div class="visual-text">
-        <h2>Control Total de tu Inventario</h2>
-        <p>Optimiza la vida útil de tus equipos y mantén el control total de tu inventario corporativo con precisión y seguridad.</p>
+        <h2>Todo tu inventario, en un solo lugar.</h2>
+        <p>
+          Controla equipos, licencias, garantías y mantenimientos con una
+          trazabilidad clara para todo tu equipo.
+        </p>
+      </div>
+
+      <div class="visual-points">
+        <div class="visual-point">
+          <iconify-icon icon="ph:cube"></iconify-icon>
+          <span>Inventario y estados en tiempo real</span>
+        </div>
+        <div class="visual-point">
+          <iconify-icon icon="ph:arrows-left-right"></iconify-icon>
+          <span>Asignaciones y devoluciones sin fricción</span>
+        </div>
+        <div class="visual-point">
+          <iconify-icon icon="ph:chart-line"></iconify-icon>
+          <span>Reportes claros para tomar decisiones</span>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Sección Derecha: Formulario de Login -->
   <section class="login-form-section">
-    <!-- Theme Switcher Flotante -->
     <aside class="theme-toggle-wrapper">
       <button
         type="button"
@@ -24,7 +39,7 @@
         (click)="toggleTheme()"
         [attr.aria-label]="isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
         [title]="isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-        >
+      >
         <iconify-icon [icon]="themeIcon" class="theme-icon"></iconify-icon>
         <span class="theme-label">{{ isDarkMode ? 'Modo claro' : 'Modo oscuro' }}</span>
       </button>
@@ -33,33 +48,31 @@
     <div class="login-card">
       <div class="card-header">
         <div class="mobile-branding">
-          <img src="https://assets.mgdc.site/nemi/logo.png" alt="Logo" class="mobile-logo" />
-          <span class="mobile-brand-name">Gestor de Activos</span>
+          <img src="https://assets.mgdc.site/nemi/logo.png" alt="Nemi" class="mobile-logo" width="512" height="512" loading="eager" />
+          <span class="mobile-brand-name">Nemi</span>
         </div>
         <h1>Iniciar sesión</h1>
-        <p>Ingresa tus credenciales para acceder al panel administrativo.</p>
+        <p>Ingresa tus credenciales para continuar.</p>
       </div>
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="modern-form">
-        <!-- Campo Email -->
         <div class="form-group">
-          <label for="email">Correo Electrónico</label>
+          <label for="email">Correo electrónico</label>
           <div class="input-wrapper">
-            <iconify-icon icon="ph:envelope-simple-light" class="input-icon"></iconify-icon>
+            <iconify-icon icon="ph:envelope-simple" class="input-icon"></iconify-icon>
             <input
               id="email"
               type="email"
               formControlName="email"
               placeholder="nombre@empresa.com"
-              />
+            />
           </div>
         </div>
 
-        <!-- Campo Password -->
         <div class="form-group">
           <label for="password">Contraseña</label>
           <div class="input-wrapper">
-            <iconify-icon icon="ph:lock-simple-light" class="input-icon"></iconify-icon>
+            <iconify-icon icon="ph:lock-simple" class="input-icon"></iconify-icon>
             <input
               #passwordInput
               id="password"
@@ -67,34 +80,39 @@
               formControlName="password"
               placeholder="••••••••"
               autocomplete="off"
-              />
+            />
             <button
               class="toggle-password"
               type="button"
               (click)="togglePasswordVisibility()"
               [attr.aria-label]="isPasswordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-              >
-              <iconify-icon [icon]="isPasswordVisible() ? 'ph:eye-slash-light' : 'ph:eye-light'"></iconify-icon>
+            >
+              <iconify-icon [icon]="isPasswordVisible() ? 'ph:eye-slash' : 'ph:eye'"></iconify-icon>
             </button>
           </div>
         </div>
 
-        <!-- Mensaje de Error -->
+        @if (noticeMessage) {
+          <div class="notice-container" role="status">
+            <iconify-icon icon="ph:info"></iconify-icon>
+            <span>{{ noticeMessage }}</span>
+          </div>
+        }
+
         @if (errorMessage) {
           <div class="error-container" role="alert">
-            <iconify-icon icon="ph:warning-circle-light"></iconify-icon>
+            <iconify-icon icon="ph:warning-circle"></iconify-icon>
             <span>{{ errorMessage }}</span>
           </div>
         }
 
-        <!-- Botón Submit -->
         <button
           class="btn-submit"
           type="submit"
           [disabled]="loginForm.invalid || isLoading()"
-          >
+        >
           @if (!isLoading()) {
-            <span>Entrar al Sistema</span>
+            <span>Entrar</span>
           }
           @if (isLoading()) {
             <div class="loader"></div>
@@ -103,7 +121,7 @@
       </form>
 
       <footer class="login-footer">
-        <p>&copy; 2026 Gestor de Activos. Todos los derechos reservados.</p>
+        <p>&copy; 2026 Nemi. Todos los derechos reservados.</p>
       </footer>
     </div>
   </section>

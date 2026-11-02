@@ -25,6 +25,7 @@ import { AuthService } from "../../services/auth.service";
 export class LoginComponent implements OnInit, OnDestroy {
 	loginForm: FormGroup;
 	errorMessage: string = "";
+	noticeMessage: string = "";
 	isPasswordVisible = signal(false);
 	timeoutRef: ReturnType<typeof setTimeout> | null = null;
 	isLoading = signal(false);
@@ -47,7 +48,10 @@ export class LoginComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	ngOnInit() {}
+	ngOnInit(): void {
+		this.noticeMessage = this.authService.consumirMensaje();
+		if (this.noticeMessage) this.cdr.markForCheck();
+	}
 
 	toggleTheme(): void {
 		this.themeService.toggle();
@@ -55,11 +59,11 @@ export class LoginComponent implements OnInit, OnDestroy {
 	}
 
 	get isDarkMode(): boolean {
-		return this.themeService.current === "dark";
+		return this.themeService.isDark();
 	}
 
 	get themeIcon(): string {
-		return this.isDarkMode ? "ph:sun-bold" : "ph:moon-bold";
+		return this.isDarkMode ? "ph:sun" : "ph:moon";
 	}
 
 	// Alterna visibilidad de contraseña
@@ -90,6 +94,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 		if (this.loginForm.valid) {
 			this.isLoading.set(true);
 			this.errorMessage = "";
+			this.noticeMessage = "";
 			const { email, password } = this.loginForm.value;
 
 			this.authService
@@ -97,7 +102,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 				.pipe(takeUntil(this.destroy$))
 				.subscribe({
 					next: (response) => {
-						console.log("Login response:", response);
 						this.isLoading.set(false);
 						this.cdr.markForCheck();
 						// Guarda el token y datos del usuario
@@ -105,14 +109,14 @@ export class LoginComponent implements OnInit, OnDestroy {
 							response.data.token,
 							response.data.userData,
 						);
-						this.router.navigate(["/dashboard"]); // Redirige a dashboard
+						this.router.navigate([
+							this.authService.isEmpleado() ? "/gestion-activos" : "/dashboard",
+						]);
 					},
 					error: (error) => {
 						this.isLoading.set(false);
 						this.errorMessage = error.error?.error || "Error al iniciar sesión";
-						setTimeout(() => {
-							this.errorMessage = "";
-						}, 5000); // Limpia error después de 5s
+						this.cdr.markForCheck();
 					},
 				});
 		}
