@@ -1,0 +1,63 @@
+<section class="adjuntos">
+  <div class="cabecera">
+    <div class="cabecera-titulo">
+      <span class="cabecera-icono"><iconify-icon icon="ph:paperclip"></iconify-icon></span>
+      <div>
+        <h3>Documentos</h3>
+        <p>Facturas, pólizas y actas del activo.</p>
+      </div>
+    </div>
+
+    @if (permiteEditar()) {
+      <button
+        type="button"
+        class="btn-primary"
+        [disabled]="subiendo"
+        (click)="abrirSubida()"
+      >
+        <iconify-icon icon="ph:upload-simple"></iconify-icon>
+        {{ subiendo ? "Subiendo..." : "Agregar documento" }}
+      </button>
+    }
+  </div>
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  @if (cargando) {
+    <p class="vacio">Cargando archivos...</p>
+  }
+
+  @if (!cargando && adjuntos.length === 0) {
+    <div class="vacio">
+      <iconify-icon icon="ph:files" style="font-size: 24px; margin-bottom: 6px;"></iconify-icon>
+      <p>Sin documentos adjuntos</p>
+    </div>
+  }
+
+  @if (adjuntos.length > 0) {
+    <ul class="lista">
+      @for (adjunto of adjuntos; track adjunto.id) {
+        <li>
+          <div class="info">
+            <span class="file-icon"><iconify-icon icon="ph:file-text"></iconify-icon></span>
+            <div class="file-meta">
+              <strong>{{ adjunto.nombre }}</strong>
+              <span>
+                {{ adjunto.tipo_label }} · {{ tamano(adjunto.tamano) }} ·
+                {{ adjunto.created_at | fechaApp }}
+              </span>
+            </div>
+          </div>
+          <div class="acciones">
+            <a [href]="adjunto.url" target="_blank" rel="noopener noreferrer">Abrir</a>
+            @if (permiteEditar()) {
+              <button type="button" (click)="eliminar(adjunto)">Eliminar</button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

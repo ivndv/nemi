@@ -1,0 +1,62 @@
+<app-modal-shell
+  title="Agregar documento"
+  [subtitle]="'Adjunto para ' + data.entidad"
+  (closed)="cancelar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label for="tipo">Tipo de documento</label>
+        <select id="tipo" formControlName="tipo">
+          <option value="factura">Factura</option>
+          <option value="poliza">Póliza</option>
+          <option value="acta">Acta</option>
+          <option value="foto">Foto</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="archivo">Archivo</label>
+        <label
+          class="dropzone"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event)"
+        >
+          <input
+            id="archivo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml,application/pdf"
+            (change)="onFileSelected($event)"
+            hidden
+          />
+
+          @if (archivo(); as file) {
+            <iconify-icon icon="ph:file-text"></iconify-icon>
+            <strong>{{ file.name }}</strong>
+            <span>{{ tamano(file.size) }}</span>
+          } @else {
+            <iconify-icon icon="ph:upload-simple"></iconify-icon>
+            <strong>Arrastra un archivo o haz clic aquí</strong>
+            <span>JPG, PNG, WEBP, SVG o PDF · máx. 10 MB</span>
+          }
+        </label>
+
+        @if (archivo()) {
+          <button type="button" class="btn-secondary" (click)="quitarArchivo()">
+            Quitar archivo
+          </button>
+        }
+
+        @if (error()) {
+          <small class="error-text">{{ error() }}</small>
+        }
+      </div>
+    </div>
+
+    <footer class="actions-row">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary">Subir documento</button>
+    </footer>
+  </form>
+</app-modal-shell>
