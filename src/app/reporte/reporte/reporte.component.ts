@@ -14,16 +14,27 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
+import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
+import { PreferenciasService } from "../../core/preferencias/preferencias.service";
+import { AuthService } from "../../login/services/auth.service";
 import { SelectItem } from "../../models/datos-auxiliares.interface";
 import {
-	DatosAuxiliaresResponse,
 	ReporteFiltros,
 	ReporteResponse,
 	TipoReporte,
 	TiposReporteResponse,
 } from "../../models/reporte.interface";
-import { DatosAuxiliaresService } from "../service/datos-auxiliares.service";
+import {
+	applyChartDefaults,
+	barChartOptions,
+	CHART_PALETTE,
+	getChartTheme,
+	pieChartOptions,
+	withAlpha,
+} from "../../utils/chartTheme";
 import { ReporteService } from "../service/reporte.service";
+
+const EMPTY_ITEMS: SelectItem[] = [];
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,10 +47,21 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 	today: Date = new Date();
 	reportForm!: FormGroup;
 
-	tiposActivo: SelectItem[] = [];
-	usuarios: SelectItem[] = [];
-	ubicaciones: SelectItem[] = [];
-	proveedores: SelectItem[] = [];
+	get tiposActivo(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.tiposActivos ?? EMPTY_ITEMS;
+	}
+
+	get usuarios(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.usuarios ?? EMPTY_ITEMS;
+	}
+
+	get ubicaciones(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.ubicaciones ?? EMPTY_ITEMS;
+	}
+
+	get proveedores(): SelectItem[] {
+		return this.catalogosFacade.catalogos()?.proveedores ?? EMPTY_ITEMS;
+	}
 	tiposReporte: TipoReporte[] = [];
 	errorMessage: string | null = null;
 	private destroy$ = new Subject<void>();
@@ -63,20 +85,33 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	@ViewChild("graficaPastel") graficaPastel!: ElementRef;
 	@ViewChild("graficaBarras") graficaBarras!: ElementRef;
+	@ViewChild("pdfContent") pdfContent?: ElementRef<HTMLElement>;
 
 	constructor(
 		private reporteService: ReporteService,
-		private datosAuxiliaresService: DatosAuxiliaresService,
+		private catalogosFacade: CatalogosFacade,
+		private authService: AuthService,
 		private fb: FormBuilder,
 		private cdr: ChangeDetectorRef,
+		private preferencias: PreferenciasService,
 	) {}
 
 	ngOnInit(): void {
+		applyChartDefaults();
 		this.initForm();
 		this.fetchTiposReporte();
-		this.fetchDatosAuxiliares();
 	}
 	ngAfterViewInit(): void {}
+
+	/** Roles que pueden usar filtros avanzados y ver datos globales. */
+	puedeOperar(): boolean {
+		return this.authService.puedeOperar();
+	}
+
+	/** El empleado solo genera reportes propios. */
+	esEmpleado(): boolean {
+		return this.authService.isEmpleado();
+	}
 
 	initForm(): void {
 		this.reportForm = this.fb.group({
@@ -119,35 +154,6 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 			});
 	}
 
-	fetchDatosAuxiliares(): void {
-		this.datosAuxiliaresService
-			.getDatosAuxiliares()
-			.pipe(takeUntil(this.destroy$))
-			.subscribe({
-				next: (response: DatosAuxiliaresResponse) => {
-					console.log("[DEBUG] Datos auxiliares recibidos:", response);
-
-					this.tiposActivo = response.data.tiposActivo || [];
-					this.usuarios = response.data.usuarios || [];
-					this.ubicaciones = response.data.ubicaciones || [];
-					this.proveedores = response.data.proveedores || [];
-
-					console.log("[INFO] Datos auxiliares asignados correctamente.");
-				},
-				error: (error) => {
-					const errorMessage =
-						error.error?.message || "Error al cargar los tipos de reporte.";
-					this.errorMessage = errorMessage;
-					console.error("Error del backend:", errorMessage);
-					Swal.fire({
-						icon: "error",
-						text: errorMessage,
-						confirmButtonColor: "#1e293b",
-					});
-				},
-			});
-	}
-
 	actualizarDescripcion(tipoId: number): void {
 		if (!tipoId) {
 			this.reportForm.get("descripcion")?.setValue(""); // Limpia si no hay selección
@@ -168,7 +174,6 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe({
 				next: (response: ReporteResponse) => {
-					console.log("[INFO] Datos del reporte generados:", response);
 					this.reporte = { ...this.reporte, ...response.data };
 					this.cdr.detectChanges();
 					this.initGraficaPastel();
@@ -192,9 +197,6 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	onSubmit(): void {
-		console.log("[DEBUG] Estado del formulario:", this.reportForm.status);
-		console.log("[DEBUG] Valores del formulario:", this.reportForm.value);
-
 		if (this.reportForm.valid) {
 			const formValues = this.reportForm.value;
 			const { tipo_reporte, ...filtrosRaw } = formValues;
@@ -206,16 +208,9 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 				}
 			}
 
-			console.log("[DEBUG] Filtros generados:", filtros);
-
 			this.generarReporte(tipo_reporte, filtros);
 		} else {
 			console.error("[ERROR] El formulario no es válido.");
-			console.log("[DEBUG] Errores del formulario:", this.reportForm.errors);
-			console.log(
-				"[DEBUG] Errores de los controles:",
-				this.reportForm.controls,
-			);
 		}
 	}
 	getColumnas(): string[] {
@@ -254,7 +249,6 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		const resumen = this.getResumenEntries();
 		if (resumen.length === 0) {
-			console.warn("[WARN] No hay datos para generar la gráfica de pastel.");
 			return;
 		}
 
@@ -268,17 +262,14 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 				datasets: [
 					{
 						data: data,
-						backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+						backgroundColor: CHART_PALETTE,
+						borderColor: getChartTheme().surface,
+						borderWidth: 2,
+						hoverOffset: 4,
 					},
 				],
 			},
-			options: {
-				responsive: true,
-				plugins: {
-					legend: { position: "top" },
-					title: { display: true, text: "Distribución por Categoría" },
-				},
-			},
+			options: pieChartOptions(),
 		});
 	}
 
@@ -305,17 +296,15 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 					{
 						label: "Cantidad",
 						data: data,
-						backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+						backgroundColor: withAlpha(CHART_PALETTE[0], 0.72),
+						borderColor: CHART_PALETTE[0],
+						borderWidth: 1,
+						borderRadius: 6,
+						maxBarThickness: 36,
 					},
 				],
 			},
-			options: {
-				responsive: true,
-				plugins: {
-					legend: { position: "top" },
-					title: { display: true, text: "Cantidad por Categoría" },
-				},
-			},
+			options: barChartOptions(),
 		});
 	}
 
@@ -326,10 +315,10 @@ export class ReporteComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 
 		const doc = new jsPDF("p", "mm", "a4");
-		const date = new Date().toLocaleDateString();
+		const date = this.preferencias.fechaHoyFormateada();
 
 		try {
-			const element = document.getElementById("pdf-export-content");
+			const element = this.pdfContent?.nativeElement;
 
 			if (!element) {
 				throw new Error("No se encontró el elemento a exportar");

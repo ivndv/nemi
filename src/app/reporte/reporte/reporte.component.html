@@ -1,43 +1,41 @@
-<main>
-  <div class="container">
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Reportes</h2>
+      <p class="page-subtitle">Genera análisis del inventario y expórtalos en PDF.</p>
+    </div>
+  </header>
 
-    <!-- Hero Header -->
-    <header class="reports-hero">
-      <div class="hero-text">
-        <h1>Generación de Reportes</h1>
-        <p>Selecciona los filtros para generar un análisis detallado de tu inventario.</p>
+  <section class="filter-card">
+    <div class="section-header">
+      <span class="section-icon"><iconify-icon icon="ph:funnel"></iconify-icon></span>
+      <div>
+        <h3>Filtros del reporte</h3>
+        <p>Selecciona el tipo y el rango de fechas.</p>
       </div>
-      <div class="hero-icon">
-        <iconify-icon icon="lucide:file-bar-chart"></iconify-icon>
-      </div>
-    </header>
+    </div>
 
-    <!-- Card de Filtros -->
-    <div class="filter-card">
-      <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
-        <div class="filter-grid">
+    <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
+      <div class="filter-grid">
+        <div class="form-group">
+          <label>
+            <iconify-icon icon="ph:file-text"></iconify-icon>
+            Tipo de reporte
+          </label>
+          <ng-select
+            formControlName="tipo_reporte"
+            [items]="tiposReporte"
+            bindLabel="nombre"
+            bindValue="id"
+            placeholder="Selecciona el reporte..."
+          ></ng-select>
+        </div>
 
+        @if (puedeOperar()) {
           <div class="form-group">
             <label>
-              <iconify-icon icon="lucide:file-text"></iconify-icon>
-              Tipo de Reporte
-            </label>
-            <ng-select
-              formControlName="tipo_reporte"
-              [items]="tiposReporte"
-              bindLabel="nombre"
-              bindValue="id"
-              placeholder="Selecciona el reporte..."
-              >
-            </ng-select>
-          </div>
-
-
-
-          <div class="form-group">
-            <label>
-              <iconify-icon icon="lucide:box"></iconify-icon>
-              Tipo de Activo
+              <iconify-icon icon="ph:cube"></iconify-icon>
+              Tipo de activo
             </label>
             <ng-select
               formControlName="tipo_activo_id"
@@ -45,29 +43,28 @@
               bindLabel="nombre"
               bindValue="id"
               placeholder="Todos los tipos"
-              >
-            </ng-select>
+            ></ng-select>
           </div>
 
           <div class="form-group">
             <label>
-              <iconify-icon icon="lucide:calendar-range"></iconify-icon>
-              Fecha Desde
+              <iconify-icon icon="ph:calendar"></iconify-icon>
+              Fecha desde
             </label>
             <input type="date" formControlName="fecha_inicio" />
           </div>
 
           <div class="form-group">
             <label>
-              <iconify-icon icon="lucide:calendar-check"></iconify-icon>
-              Fecha Hasta
+              <iconify-icon icon="ph:calendar-check"></iconify-icon>
+              Fecha hasta
             </label>
             <input type="date" formControlName="fecha_fin" />
           </div>
 
           <div class="form-group">
             <label>
-              <iconify-icon icon="lucide:user"></iconify-icon>
+              <iconify-icon icon="ph:user"></iconify-icon>
               Responsable
             </label>
             <ng-select
@@ -76,13 +73,12 @@
               bindLabel="nombre"
               bindValue="id"
               placeholder="Cualquier usuario"
-              >
-            </ng-select>
+            ></ng-select>
           </div>
 
           <div class="form-group">
             <label>
-              <iconify-icon icon="lucide:map-pin"></iconify-icon>
+              <iconify-icon icon="ph:map-pin"></iconify-icon>
               Ubicación
             </label>
             <ng-select
@@ -91,13 +87,12 @@
               bindLabel="nombre"
               bindValue="id"
               placeholder="Cualquier ubicación"
-              >
-            </ng-select>
+            ></ng-select>
           </div>
 
           <div class="form-group">
             <label>
-              <iconify-icon icon="lucide:truck"></iconify-icon>
+              <iconify-icon icon="ph:truck"></iconify-icon>
               Proveedor
             </label>
             <ng-select
@@ -106,97 +101,97 @@
               bindLabel="nombre"
               bindValue="id"
               placeholder="Cualquier proveedor"
-              >
-            </ng-select>
+            ></ng-select>
           </div>
+        }
 
+        @if (esEmpleado()) {
+          <p class="nota-propio">
+            Estos reportes muestran únicamente tus datos.
+          </p>
+        }
+      </div>
+
+      <div class="actions-row">
+        <button type="button" class="btn-secondary" (click)="onLimpiar()">
+          <iconify-icon icon="ph:eraser"></iconify-icon>
+          Limpiar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="!reportForm.valid">
+          <iconify-icon icon="ph:play"></iconify-icon>
+          Generar reporte
+        </button>
+      </div>
+    </form>
+  </section>
+
+  @if (reporte.tipo_reporte) {
+    <section class="results-card">
+      <div #pdfContent id="pdf-export-content">
+        <div class="results-header">
+          <div>
+            <h2>Resultados del análisis</h2>
+            <span>Generado el {{ today | fechaApp:'fechaHora' }}</span>
+          </div>
         </div>
 
-        <div class="actions-row">
-          <button type="button" class="btn-limpiar" (click)="onLimpiar()">
-            <iconify-icon icon="lucide:eraser" style="margin-right: 5px;"></iconify-icon>
-            Limpiar
-          </button>
-          <button type="submit" class="btn-generar" [disabled]="!reportForm.valid">
-            <iconify-icon icon="lucide:play" style="font-size: 16px;"></iconify-icon>
-            Generar Reporte
-          </button>
+        <div class="report-meta">
+          <div class="meta-item">
+            <span>Reporte</span>
+            <strong>{{ reporte.tipo_reporte }}</strong>
+          </div>
+          <div class="meta-item">
+            <span>Periodo</span>
+            <strong>{{ reporte.filtros.fecha_inicio || 'Inicio' }} – {{ reporte.filtros.fecha_fin || 'Presente' }}</strong>
+          </div>
+          <div class="meta-item">
+            <span>Filtros activos</span>
+            <strong>{{ reporte.filtros.tipo_activo || 'Todos' }} · {{ reporte.filtros.ubicacion || 'Cualquier lugar' }}</strong>
+          </div>
         </div>
-      </form>
-    </div>
 
-    <!-- Contenedor de Resultados (Solo se muestra si hay un reporte) -->
-    @if (reporte.tipo_reporte) {
-      <div class="results-card">
-        <div id="pdf-export-content">
-          <div class="results-header">
-            <h2>Resultados del Análisis</h2>
-            <span style="font-size: 12px; color: #a0aec0; font-weight: 600;">GENERADO EL {{ today | date:'dd/MM/yyyy HH:mm' }}</span>
+        <div class="charts-grid">
+          <div class="chart-item">
+            <h3>Distribución de activos</h3>
+            <canvas #graficaPastel></canvas>
           </div>
-          <!-- Meta Info del Reporte -->
-          <div class="report-meta">
-            <div class="meta-item">
-              <span>Reporte</span>
-              <span>{{ reporte.tipo_reporte }}</span>
-            </div>
-            <div class="meta-item">
-              <span>Periodo</span>
-              <span>{{ reporte.filtros.fecha_inicio || 'Inicio' }} ➔ {{ reporte.filtros.fecha_fin || 'Presente' }}</span>
-            </div>
-            <div class="meta-item">
-              <span>Filtros Activos</span>
-              <span style="font-size: 12px; color: #718096;">
-                {{ reporte.filtros.tipo_activo || 'Todos' }} | {{ reporte.filtros.ubicacion || 'Cualquier lugar' }}
-              </span>
-            </div>
+          <div class="chart-item">
+            <h3>Tendencia / volúmenes</h3>
+            <canvas #graficaBarras></canvas>
           </div>
-          <!-- Gráficos -->
-          <div class="charts-grid">
-            <div class="chart-item">
-              <h3>Distribución de Activos</h3>
-              <canvas #graficaPastel></canvas>
-            </div>
-            <div class="chart-item">
-              <h3>Tendencia / Volúmenes</h3>
-              <canvas #graficaBarras></canvas>
-            </div>
-          </div>
-          <!-- Tabla Detallada -->
-          <div class="table-section">
-            <h3 style="margin-bottom: 20px; font-size: 18px; color: #141b4d;">Detalle de Registros</h3>
-            <div class="table-wrapper">
-              <table>
-                <thead>
+        </div>
+
+        <div class="table-section">
+          <h3>Detalle de registros</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  @for (columna of getColumnas(); track $index) {
+                    <th>{{ columna }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (fila of reporte.resultados.detalles; track $index) {
                   <tr>
-                    @for (columna of getColumnas(); track $index) {
-                      <th>{{ columna }}</th>
+                    @for (columna of getColumnas(); track columna) {
+                      <td>{{ fila[columna] }}</td>
                     }
                   </tr>
-                </thead>
-                <tbody>
-                  @for (fila of reporte.resultados.detalles; track $index) {
-                    <tr>
-                      @for (columna of getColumnas(); track columna) {
-                        <td>
-                          {{ fila[columna] }}
-                        </td>
-                      }
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                }
+              </tbody>
+            </table>
           </div>
         </div>
-        <!-- Acciones de Exportación -->
-        <div class="actions-row" style="border: none; margin-top: 40px;">
-          <button class="btn-exportar" (click)="exportToPDF()">
-            <iconify-icon icon="lucide:file-down"></iconify-icon>
-            Descargar Reporte (PDF)
-          </button>
-        </div>
       </div>
-    }
 
-  </div>
+      <div class="actions-row">
+        <button class="btn-primary" (click)="exportToPDF()">
+          <iconify-icon icon="ph:file-arrow-down"></iconify-icon>
+          Descargar PDF
+        </button>
+      </div>
+    </section>
+  }
 </main>
