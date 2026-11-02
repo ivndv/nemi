@@ -1,0 +1,70 @@
+<main>
+  <button class="volver" (click)="volver()">← Volver a mantenimientos</button>
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  @if (cargando) {
+    <p class="vacio">Cargando mantenimiento...</p>
+  }
+
+  @if (mantenimiento) {
+    <section class="detalle-cabecera">
+      <div>
+        <h1>Mantenimiento #{{ mantenimiento.id }}</h1>
+        <p class="subtitulo">{{ mantenimiento.activo }}</p>
+      </div>
+      <div class="acciones">
+        @if (mantenimiento.estado === "abierto") {
+          <button class="btn-primary" (click)="cerrar()">Cerrar mantenimiento</button>
+        }
+      </div>
+    </section>
+
+    <section class="resumen">
+      <article>
+        <span>Estado</span>
+        <strong [class]="'chip chip-' + mantenimiento.estado">
+          {{ mantenimiento.estado_label }}
+        </strong>
+      </article>
+      <article>
+        <span>Tipo</span>
+        <strong>{{ mantenimiento.tipo_label }}</strong>
+      </article>
+      <article>
+        <span>Responsable</span>
+        <strong>{{ mantenimiento.responsable_label }}</strong>
+        <small>{{ mantenimiento.tecnico ?? mantenimiento.proveedor ?? "—" }}</small>
+      </article>
+      <article>
+        <span>Salida</span>
+        <strong>{{ mantenimiento.fecha_salida }}</strong>
+      </article>
+      <article>
+        <span>Retorno</span>
+        <strong>{{ mantenimiento.fecha_retorno || "—" }}</strong>
+      </article>
+      <article>
+        <span>Costo</span>
+        <strong>{{ mantenimiento.costo || "—" }}</strong>
+      </article>
+    </section>
+
+    <section class="detalle-bloque">
+      <header class="card-head">
+        <span class="card-head-icon"><iconify-icon icon="ph:stethoscope"></iconify-icon></span>
+        <div class="card-head-text">
+          <h2>Diagnóstico</h2>
+          <p>Hallazgos y trabajo realizado por el técnico.</p>
+        </div>
+      </header>
+      <div class="card-body">
+        <p>{{ mantenimiento.diagnostico || "Sin diagnóstico registrado" }}</p>
+      </div>
+    </section>
+
+    <app-adjuntos entidad="mantenimiento" [entidadId]="mantenimiento.id"></app-adjuntos>
+  }
+</main>

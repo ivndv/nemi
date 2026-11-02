@@ -1,0 +1,32 @@
+<app-modal-shell
+  [title]="'Cerrar mantenimiento #' + data.mantenimiento.id"
+  [subtitle]="data.mantenimiento.activo"
+  (closed)="cancelar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="fecha_retorno">Fecha de retorno</label>
+        <input id="fecha_retorno" type="date" formControlName="fecha_retorno" />
+        @if (form.get("fecha_retorno")?.touched && form.get("fecha_retorno")?.invalid) {
+          <small class="error-text">La fecha es obligatoria</small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="costo">Costo final</label>
+        <input id="costo" type="number" min="0" step="0.01" formControlName="costo" placeholder="0.00" />
+      </div>
+
+      <div class="form-group full-width">
+        <label for="diagnostico">Diagnóstico final</label>
+        <textarea id="diagnostico" formControlName="diagnostico" placeholder="Resultado del mantenimiento..."></textarea>
+      </div>
+    </div>
+
+    <footer class="actions-row">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary">Cerrar mantenimiento</button>
+    </footer>
+  </form>
+</app-modal-shell>

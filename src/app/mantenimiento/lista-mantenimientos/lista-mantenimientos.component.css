@@ -1,0 +1,24 @@
+main {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+.col-actions {
+	text-align: right;
+	white-space: nowrap;
+}
+
+.id-cell {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-placeholder);
+}
+
+.tabla-mantenimientos .paginacion {
+	border: none;
+	border-top: 1px solid var(--border-soft);
+	border-radius: 0;
+	box-shadow: none;
+	justify-content: center;
+}

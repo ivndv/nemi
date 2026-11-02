@@ -1,0 +1,123 @@
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Mantenimientos</h2>
+      <p class="page-subtitle">
+        {{ pagination.total }} {{ pagination.total === 1 ? 'registro' : 'registros' }}
+      </p>
+    </div>
+
+    <button class="btn-primary" (click)="abrir()">
+      <iconify-icon icon="ph:plus"></iconify-icon>
+      Abrir mantenimiento
+    </button>
+  </header>
+
+  <section class="busqueda">
+    <div class="toolbar-container">
+      <div class="filters-group">
+        <select (change)="aplicarFiltro('estado', $event)">
+          <option value="">Estado: todos</option>
+          <option value="abierto">Abierto</option>
+          <option value="cerrado">Cerrado</option>
+        </select>
+
+        <select (change)="aplicarFiltro('responsable', $event)">
+          <option value="">Responsable: todos</option>
+          <option value="interno">Interno</option>
+          <option value="externo">Externo</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabla-mantenimientos">
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+
+    <table aria-label="Lista de mantenimientos">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Activo</th>
+          <th>Tipo</th>
+          <th>Responsable</th>
+          <th>Salida</th>
+          <th>Días</th>
+          <th>Estado</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando) {
+          <tr>
+            <td colspan="8"><div class="vacio">Cargando mantenimientos...</div></td>
+          </tr>
+        }
+        @if (!cargando && mantenimientos.length === 0) {
+          <tr>
+            <td colspan="8">
+              <div class="vacio">
+                <iconify-icon icon="ph:wrench" style="font-size: 26px; margin-bottom: 8px;"></iconify-icon>
+                <p>No hay mantenimientos para mostrar</p>
+              </div>
+            </td>
+          </tr>
+        }
+        @for (mantenimiento of mantenimientos; track trackById($index, mantenimiento)) {
+          <tr>
+            <td class="id-cell">#{{ mantenimiento.id }}</td>
+            <td><strong>{{ mantenimiento.activo }}</strong></td>
+            <td>{{ mantenimiento.tipo_label }}</td>
+            <td>
+              {{ mantenimiento.responsable_label }}
+              <span class="detalle">
+                {{ mantenimiento.tecnico ?? mantenimiento.proveedor ?? "—" }}
+              </span>
+            </td>
+            <td>{{ mantenimiento.fecha_salida }}</td>
+            <td>{{ diasAbierto(mantenimiento) }}</td>
+            <td>
+              <span [class]="'chip chip-' + mantenimiento.estado">
+                {{ mantenimiento.estado_label }}
+              </span>
+            </td>
+            <td class="col-actions">
+              <button class="btn-detalle" (click)="verDetalle(mantenimiento.id)">
+                Ver
+              </button>
+              @if (mantenimiento.estado === "abierto") {
+                <button class="btn-cerrar" (click)="cerrar(mantenimiento)">
+                  Cerrar
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (pagination.totalPages > 1) {
+      <div class="paginacion">
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === 1"
+          (click)="cambiarPagina(paginaActual - 1)"
+        >
+          <iconify-icon icon="ph:caret-left"></iconify-icon>
+          Anterior
+        </button>
+        <span>Página {{ paginaActual }} de {{ pagination.totalPages }}</span>
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === pagination.totalPages"
+          (click)="cambiarPagina(paginaActual + 1)"
+        >
+          Siguiente
+          <iconify-icon icon="ph:caret-right"></iconify-icon>
+        </button>
+      </div>
+    }
+  </section>
+</main>
