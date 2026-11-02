@@ -17,6 +17,24 @@ export class NavbarComponent {
 	}
 
 	/**
+	 * Roles que operan inventario, asignaciones o mantenimiento.
+	 */
+	puedeOperar(): boolean {
+		return this.authService.puedeOperar();
+	}
+
+	puedeMantenimiento(): boolean {
+		return this.authService.puedeMantenimiento();
+	}
+
+	/**
+	 * El empleado solo consulta lo suyo.
+	 */
+	isEmpleado(): boolean {
+		return this.authService.isEmpleado();
+	}
+
+	/**
 	 * Cierra la sesión del usuario.
 	 */
 	cerrarSesion(): void {

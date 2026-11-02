@@ -1,5 +1,6 @@
 import {
 	ChangeDetectionStrategy,
+	ChangeDetectorRef,
 	Component,
 	CUSTOM_ELEMENTS_SCHEMA,
 	HostListener,
@@ -7,14 +8,17 @@ import {
 } from "@angular/core";
 import { Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
+import Swal from "sweetalert2";
 import { environment } from "../../../environments/environment";
+import { getHttpErrorMessage } from "../../core/http/http-error";
 import { AuthService } from "../../login/services/auth.service";
+import type { UserData } from "../../models/auth.interface";
 import { getCloudflareImage } from "../../utils/images";
 import {
 	AlertaItem,
 	NotificationService,
 } from "../services/notification.service";
-import { ThemeService } from "../services/theme.service";
+import { type Theme, ThemeService } from "../services/theme.service";
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,8 +32,11 @@ export class HeaderComponent implements OnDestroy {
 	apiUrl = environment.apiUrl;
 
 	private destroy$ = new Subject<void>();
-	fotoUrl: string = "";
+	usuario: UserData | null = null;
 	showNotifications = false;
+	showProfileMenu = false;
+	menuTemaAbierto = false;
+	menuIdiomaAbierto = false;
 	alertasList: AlertaItem[] = [];
 	totalAlertas = 0;
 
@@ -40,8 +47,17 @@ export class HeaderComponent implements OnDestroy {
 		private authService: AuthService,
 		private notificationService: NotificationService,
 		private themeSvc: ThemeService,
+		private cdr: ChangeDetectorRef,
 	) {
 		this.themeService = themeSvc;
+		this.usuario = this.authService.getUserData();
+
+		this.authService.user$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((usuario) => {
+				this.usuario = usuario;
+				this.cdr.markForCheck();
+			});
 		this.authService
 			.onLogout()
 			.pipe(takeUntil(this.destroy$))
@@ -70,6 +86,9 @@ export class HeaderComponent implements OnDestroy {
 		if (this.showNotifications && !target.closest(".notification-wrapper")) {
 			this.showNotifications = false;
 		}
+		if (this.showProfileMenu && !target.closest(".profile-wrapper")) {
+			this.cerrarMenuPerfil();
+		}
 	}
 
 	isLoginRoute(): boolean {
@@ -81,8 +100,7 @@ export class HeaderComponent implements OnDestroy {
 	}
 
 	getUserPhoto(): string {
-		const userData = this.authService.getUserData();
-		const fotoUrl = userData?.foto_url || "";
+		const fotoUrl = this.usuario?.foto_url || "";
 
 		return (
 			getCloudflareImage(fotoUrl, { width: 50 }) ||
@@ -107,13 +125,146 @@ export class HeaderComponent implements OnDestroy {
 			});
 		} else if (filtro === "estado") {
 			this.router.navigate(["/gestion-activos"], {
-				queryParams: { estado: "En mantenimiento" },
+				queryParams: { estado: "mantenimiento" },
 			});
 		} else if (filtro === "fecha_devolucion_proxima") {
 			this.router.navigate(["/gestion-activos"], {
 				queryParams: { fecha_devolucion_proxima: "true" },
 			});
+		} else if (filtro === "incidencia") {
+			this.router.navigate(["/incidencias"]);
+		} else if (filtro === "mantenimiento") {
+			this.router.navigate(["/mantenimientos"]);
+		} else if (filtro === "solicitud") {
+			this.router.navigate(["/solicitudes"]);
 		}
+	}
+
+	toggleProfileMenu(): void {
+		this.showProfileMenu = !this.showProfileMenu;
+		this.menuTemaAbierto = false;
+		this.menuIdiomaAbierto = false;
+	}
+
+	cerrarMenuPerfil(): void {
+		this.showProfileMenu = false;
+		this.menuTemaAbierto = false;
+		this.menuIdiomaAbierto = false;
+	}
+
+	toggleSubmenu(menu: "tema" | "idioma"): void {
+		if (menu === "tema") {
+			this.menuTemaAbierto = !this.menuTemaAbierto;
+			this.menuIdiomaAbierto = false;
+		} else {
+			this.menuIdiomaAbierto = !this.menuIdiomaAbierto;
+			this.menuTemaAbierto = false;
+		}
+	}
+
+	get temaActualLabel(): string {
+		const tema = this.themeService.theme();
+		if (tema === "dark") return "Oscuro";
+		if (tema === "light") return "Claro";
+		return "Sistema";
+	}
+
+	cambiarTema(theme: Theme): void {
+		this.themeService.setTheme(theme);
+		this.menuTemaAbierto = false;
+	}
+
+	irATab(tab: string): void {
+		this.cerrarMenuPerfil();
+		this.router.navigate(["/configuracion"], { queryParams: { tab } });
+	}
+
+	irAPerfil(): void {
+		this.irATab("perfil");
+	}
+
+	irAConfiguracion(): void {
+		this.irATab(this.authService.isAdmin() ? "localizacion" : "perfil");
+	}
+
+	cerrarSesionEnTodos(): void {
+		this.cerrarMenuPerfil();
+		Swal.fire({
+			title: "¿Cerrar sesión en todos?",
+			text: "Se cerrarán todas las sesiones activas de tu cuenta.",
+			icon: "question",
+			showCancelButton: true,
+			confirmButtonText: "Sí, cerrar todas",
+			cancelButtonText: "Cancelar",
+			reverseButtons: true,
+			buttonsStyling: false,
+			customClass: {
+				popup: "premium-swal-popup",
+				title: "premium-swal-title",
+				htmlContainer: "premium-swal-html",
+				confirmButton: "premium-swal-confirm",
+				cancelButton: "premium-swal-cancel",
+			},
+		}).then((result) => {
+			if (!result.isConfirmed) return;
+
+			this.authService.logoutAll().subscribe({
+				next: () =>
+					this.authService.logout("Cerraste sesión en todos los dispositivos."),
+				error: (error) => {
+					Swal.fire({
+						title: "Error",
+						text: getHttpErrorMessage(
+							error,
+							"No se pudieron cerrar las sesiones.",
+						),
+						icon: "error",
+						buttonsStyling: false,
+						customClass: {
+							popup: "premium-swal-popup",
+							title: "premium-swal-title",
+							htmlContainer: "premium-swal-html",
+							confirmButton: "premium-swal-confirm",
+						},
+					});
+				},
+			});
+		});
+	}
+
+	cerrarSesion(): void {
+		this.cerrarMenuPerfil();
+		Swal.fire({
+			title: "¿Cerrar sesión?",
+			text: "¿Estás seguro de que deseas salir del sistema?",
+			icon: "question",
+			showCancelButton: true,
+			confirmButtonText: "Sí, salir",
+			cancelButtonText: "Cancelar",
+			reverseButtons: true,
+			buttonsStyling: false,
+			customClass: {
+				popup: "premium-swal-popup",
+				title: "premium-swal-title",
+				htmlContainer: "premium-swal-html",
+				confirmButton: "premium-swal-confirm",
+				cancelButton: "premium-swal-cancel",
+			},
+		}).then((result) => {
+			if (result.isConfirmed) this.authService.logout();
+		});
+	}
+
+	getUserName(): string {
+		return this.usuario?.nombre || "Mi cuenta";
+	}
+
+	getUserRole(): string {
+		return this.usuario?.rol || "Usuario";
+	}
+
+	getUserEmail(): string {
+		return this.usuario?.email || "";
 	}
 
 	irAlDashboard(): void {
@@ -126,7 +277,7 @@ export class HeaderComponent implements OnDestroy {
 	}
 
 	get themeIcon(): string {
-		return this.themeSvc.current === "dark" ? "ph:sun" : "ph:moon";
+		return this.themeSvc.isDark() ? "ph:sun" : "ph:moon";
 	}
 
 	ngOnDestroy(): void {
@@ -135,23 +286,25 @@ export class HeaderComponent implements OnDestroy {
 	}
 
 	getTitle(): string {
-		const currentRoute = this.router.url;
+		const currentRoute = this.router.url.split("?")[0];
 
-		switch (currentRoute) {
-			case "/login":
-				return "Gestor de Activos";
-			case "/dashboard":
-				return "Dashboard";
-			case "/gestion-activos":
-				return "Gestión de Activos";
-			case "/asignaciones":
-				return "Asignaciones";
-			case "/reportes":
-				return "Reportes";
-			case "/configuracion":
-				return "Configuración";
-			default:
-				return "Gestor de Activos";
-		}
+		if (currentRoute.startsWith("/gestion-activos/agregar"))
+			return "Nuevo activo";
+		if (currentRoute.startsWith("/gestion-activos/editar"))
+			return "Editar activo";
+		if (currentRoute.startsWith("/gestion-activos/"))
+			return "Detalle de activo";
+		if (currentRoute.startsWith("/gestion-activos")) return "Activos";
+		if (currentRoute.startsWith("/licencias")) return "Licencias";
+		if (currentRoute.startsWith("/mantenimientos")) return "Mantenimientos";
+		if (currentRoute.startsWith("/incidencias")) return "Incidencias";
+		if (currentRoute.startsWith("/solicitudes")) return "Solicitudes";
+		if (currentRoute.startsWith("/asignaciones")) return "Asignaciones";
+		if (currentRoute.startsWith("/usuarios")) return "Usuarios";
+		if (currentRoute.startsWith("/reportes")) return "Reportes";
+		if (currentRoute.startsWith("/configuracion")) return "Configuración";
+		if (currentRoute.startsWith("/dashboard")) return "Dashboard";
+
+		return "Nemi";
 	}
 }

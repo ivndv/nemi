@@ -1,54 +1,76 @@
-import { Injectable, Renderer2, RendererFactory2 } from "@angular/core";
-import { BehaviorSubject, Observable } from "rxjs";
+import {
+	computed,
+	effect,
+	Injectable,
+	inject,
+	RendererFactory2,
+	signal,
+} from "@angular/core";
 
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "system";
 
 @Injectable({
 	providedIn: "root",
 })
 export class ThemeService {
-	private renderer: Renderer2;
-	private themeSubject: BehaviorSubject<Theme>;
-	private readonly STORAGE_KEY = "nemi-theme";
+	private readonly renderer = inject(RendererFactory2).createRenderer(
+		null,
+		null,
+	);
+	private readonly storageKey = "nemi-theme";
+	private readonly media = window.matchMedia?.(
+		"(prefers-color-scheme: dark)",
+	) as MediaQueryList | null;
 
-	theme$: Observable<Theme>;
+	private readonly prefersDark = signal(this.media?.matches ?? false);
 
-	constructor(rendererFactory: RendererFactory2) {
-		this.renderer = rendererFactory.createRenderer(null, null);
+	readonly theme = signal<Theme>(this.resolveInitialTheme());
+	readonly resolvedTheme = computed<"light" | "dark">(() => {
+		const value = this.theme();
+		if (value === "system") {
+			return this.prefersDark() ? "dark" : "light";
+		}
+		return value;
+	});
+	readonly isDark = computed(() => this.resolvedTheme() === "dark");
 
-		const saved = localStorage.getItem(this.STORAGE_KEY) as Theme | null;
-		const prefersDark =
-			window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
-		const initial: Theme = saved ?? (prefersDark ? "dark" : "light");
-
-		this.themeSubject = new BehaviorSubject<Theme>(initial);
-		this.theme$ = this.themeSubject.asObservable();
-
-		this.applyTheme(initial);
+	/** Compatibilidad con consumidores que leen el tema actual. */
+	get current(): "light" | "dark" {
+		return this.resolvedTheme();
 	}
 
-	get current(): Theme {
-		return this.themeSubject.value;
+	constructor() {
+		this.media?.addEventListener("change", (event) => {
+			this.prefersDark.set(event.matches);
+		});
+
+		effect(() => {
+			this.applyTheme(this.resolvedTheme());
+			localStorage.setItem(this.storageKey, this.theme());
+		});
 	}
 
 	toggle(): void {
-		const next = this.current === "light" ? "dark" : "light";
-		this.themeSubject.next(next);
-		this.applyTheme(next);
-		localStorage.setItem(this.STORAGE_KEY, next);
+		this.theme.set(this.isDark() ? "light" : "dark");
 	}
 
 	setTheme(theme: Theme): void {
-		this.themeSubject.next(theme);
-		this.applyTheme(theme);
-		localStorage.setItem(this.STORAGE_KEY, theme);
+		this.theme.set(theme);
 	}
 
-	private applyTheme(theme: Theme): void {
-		if (theme === "dark") {
-			this.renderer.addClass(document.body, "dark-mode");
-		} else {
-			this.renderer.removeClass(document.body, "dark-mode");
+	private resolveInitialTheme(): Theme {
+		const saved = localStorage.getItem(this.storageKey) as Theme | null;
+		if (saved === "light" || saved === "dark" || saved === "system") {
+			return saved;
 		}
+
+		return "system";
+	}
+
+	private applyTheme(theme: "light" | "dark"): void {
+		this.renderer[theme === "dark" ? "addClass" : "removeClass"](
+			document.body,
+			"dark-mode",
+		);
 	}
 }

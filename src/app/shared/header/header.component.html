@@ -1,76 +1,209 @@
-<header [class.login-header]="isLoginRoute()">
-  <div class="header-container">
-    <div class="container-lytle">
-      <div class="container-logo">
-        <img class="logo" src="https://assets.mgdc.site/nemi/logo.png" alt="logo" />
-      </div>
-      <h1>{{ getTitle() }}</h1>
-    </div>
+<header class="topbar">
+  <div class="topbar-title">
+    <h1>{{ getTitle() }}</h1>
+    <span>Gestión de activos</span>
+  </div>
 
-    @if (!isLoginRoute() && isLoggedIn()) {
-    <div class="header-actions">
-      <!-- Notificaciones -->
+  @if (!isLoginRoute() && isLoggedIn()) {
+    <div class="topbar-actions">
       <div class="notification-wrapper">
-        <iconify-icon 
-          icon="ph:bell-light" 
-          class="icon-notification"
+        <button
+          type="button"
+          class="icon-button"
           (click)="toggleNotifications()"
-          title="Notificaciones">
-        </iconify-icon>
+          title="Notificaciones"
+          aria-label="Notificaciones"
+        >
+          <iconify-icon icon="ph:bell"></iconify-icon>
+        </button>
 
         @if (totalAlertas > 0) {
           <span class="notification-badge">{{ totalAlertas }}</span>
         }
 
         @if (showNotifications) {
-        <div class="notification-dropdown" (click)="$event.stopPropagation()">
-          <div class="dropdown-header">
-            Notificaciones
-          </div>
+          <div class="notification-dropdown" (click)="$event.stopPropagation()">
+            <div class="dropdown-header">Notificaciones</div>
 
-          <div class="dropdown-body">
-            @if (totalAlertas === 0) {
-              <div class="empty-state">No hay notificaciones</div>
-            } @else {
-              @for (alerta of alertasList; track alerta.key) {
-                @if (alerta.count > 0) {
-                <div class="notification-item" (click)="navigateTo(alerta.filtro)">
-                  <iconify-icon [icon]="alerta.icon" class="notification-item-icon"></iconify-icon>
-                  <span class="notification-item-title">{{ alerta.label }}</span>
-                  <span class="notification-item-count">{{ alerta.count }}</span>
-                </div>
+            <div class="dropdown-body">
+              @if (totalAlertas === 0) {
+                <div class="empty-state">No hay notificaciones</div>
+              } @else {
+                @for (alerta of alertasList; track alerta.key) {
+                  @if (alerta.count > 0) {
+                    <div class="notification-item" (click)="navigateTo(alerta.filtro)">
+                      <iconify-icon [icon]="alerta.icon" class="notification-item-icon"></iconify-icon>
+                      <span class="notification-item-title">{{ alerta.label }}</span>
+                      <span class="notification-item-count">{{ alerta.count }}</span>
+                    </div>
+                  }
                 }
               }
+            </div>
+
+            @if (totalAlertas > 0) {
+              <div class="dropdown-footer">
+                <button (click)="irAlDashboard()">Ir al dashboard</button>
+              </div>
             }
           </div>
-
-          @if (totalAlertas > 0) {
-          <div class="dropdown-footer">
-            <button (click)="irAlDashboard()">Ir al Dashboard</button>
-          </div>
-          }
-        </div>
         }
       </div>
 
-      <!-- Selector de tema -->
-      <iconify-icon 
-        [icon]="themeIcon"
-        class="icon-theme-toggle"
+      <button
+        type="button"
+        class="icon-button"
         (click)="toggleTheme()"
-        [title]="themeService.current === 'dark' ? 'Modo claro' : 'Modo oscuro'">
-      </iconify-icon>
+        [title]="themeService.isDark() ? 'Modo claro' : 'Modo oscuro'"
+        [attr.aria-label]="themeService.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+      >
+        <iconify-icon [icon]="themeIcon"></iconify-icon>
+      </button>
 
-      <!-- Foto de perfil con datos del usuario -->
-      <div class="profile-circle">
-        <img
-          [src]="getUserPhoto()"
-          alt="Foto de perfil"
-          class="profile-image"
-        />
+      <div class="profile-wrapper">
+        <button
+          type="button"
+          class="profile-chip"
+          (click)="toggleProfileMenu()"
+          [attr.aria-expanded]="showProfileMenu"
+          aria-haspopup="menu"
+          title="Mi cuenta"
+        >
+          <img [src]="getUserPhoto()" alt="Foto de perfil" class="profile-image" width="30" height="30" loading="eager" />
+          <div class="profile-meta">
+            <strong>{{ getUserName() }}</strong>
+            <span>{{ getUserRole() }}</span>
+          </div>
+          <iconify-icon
+            icon="ph:caret-down"
+            class="profile-caret"
+            [class.profile-caret--open]="showProfileMenu"
+          ></iconify-icon>
+        </button>
+
+        @if (showProfileMenu) {
+          <div class="profile-dropdown" role="menu" (click)="$event.stopPropagation()">
+            <div class="profile-summary">
+              <img [src]="getUserPhoto()" alt="Foto de perfil" width="40" height="40" loading="eager" />
+              <div>
+                <strong>{{ getUserName() }}</strong>
+                <span>{{ getUserEmail() }}</span>
+                <small>{{ getUserRole() }}</small>
+              </div>
+            </div>
+
+            <div class="profile-menu">
+              <button type="button" class="profile-menu-item" role="menuitem" (click)="irAPerfil()">
+                <iconify-icon icon="ph:user-circle"></iconify-icon>
+                <span>Mi perfil</span>
+                <iconify-icon icon="ph:caret-right" class="profile-menu-chevron"></iconify-icon>
+              </button>
+
+              <div class="profile-menu-group">
+                <button
+                  type="button"
+                  class="profile-menu-item"
+                  [attr.aria-expanded]="menuTemaAbierto"
+                  (click)="toggleSubmenu('tema')"
+                >
+                  <iconify-icon icon="ph:palette"></iconify-icon>
+                  <span>Tema</span>
+                  <span class="profile-menu-value">{{ temaActualLabel }}</span>
+                  <iconify-icon
+                    [icon]="menuTemaAbierto ? 'ph:caret-up' : 'ph:caret-down'"
+                    class="profile-menu-chevron"
+                  ></iconify-icon>
+                </button>
+
+                @if (menuTemaAbierto) {
+                  <div class="profile-sublist">
+                    <button
+                      type="button"
+                      class="profile-subitem"
+                      [class.active]="themeService.theme() === 'light'"
+                      (click)="cambiarTema('light')"
+                    >
+                      <span class="theme-dot theme-dot--light"></span>
+                      Claro
+                      @if (themeService.theme() === "light") {
+                        <iconify-icon icon="ph:check"></iconify-icon>
+                      }
+                    </button>
+                    <button
+                      type="button"
+                      class="profile-subitem"
+                      [class.active]="themeService.theme() === 'dark'"
+                      (click)="cambiarTema('dark')"
+                    >
+                      <span class="theme-dot theme-dot--dark"></span>
+                      Oscuro
+                      @if (themeService.theme() === "dark") {
+                        <iconify-icon icon="ph:check"></iconify-icon>
+                      }
+                    </button>
+                    <button
+                      type="button"
+                      class="profile-subitem"
+                      [class.active]="themeService.theme() === 'system'"
+                      (click)="cambiarTema('system')"
+                    >
+                      <span class="theme-dot theme-dot--system"></span>
+                      Sistema
+                      @if (themeService.theme() === "system") {
+                        <iconify-icon icon="ph:check"></iconify-icon>
+                      }
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <div class="profile-menu-group">
+                <button
+                  type="button"
+                  class="profile-menu-item"
+                  [attr.aria-expanded]="menuIdiomaAbierto"
+                  (click)="toggleSubmenu('idioma')"
+                >
+                  <iconify-icon icon="ph:translate"></iconify-icon>
+                  <span>Idioma</span>
+                  <span class="profile-menu-value">Español</span>
+                  <iconify-icon
+                    [icon]="menuIdiomaAbierto ? 'ph:caret-up' : 'ph:caret-down'"
+                    class="profile-menu-chevron"
+                  ></iconify-icon>
+                </button>
+
+                @if (menuIdiomaAbierto) {
+                  <div class="profile-sublist">
+                    <button type="button" class="profile-subitem active" disabled>
+                      Español
+                      <span class="soon-badge">Próximamente</span>
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <button type="button" class="profile-menu-item" role="menuitem" (click)="irAConfiguracion()">
+                <iconify-icon icon="ph:gear-six"></iconify-icon>
+                <span>Configuración</span>
+                <iconify-icon icon="ph:caret-right" class="profile-menu-chevron"></iconify-icon>
+              </button>
+            </div>
+
+            <div class="profile-menu-footer">
+              <button type="button" class="profile-menu-item" role="menuitem" (click)="cerrarSesionEnTodos()">
+                <iconify-icon icon="ph:devices"></iconify-icon>
+                <span>Cerrar sesión en todos</span>
+              </button>
+
+              <button type="button" class="profile-menu-item profile-menu-item--danger" role="menuitem" (click)="cerrarSesion()">
+                <iconify-icon icon="ph:sign-out"></iconify-icon>
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
+          </div>
+        }
       </div>
     </div>
-    }
-  </div>
+  }
 </header>
-

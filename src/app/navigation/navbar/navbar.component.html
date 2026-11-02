@@ -1,55 +1,123 @@
-<nav>
-  <!-- Contenedor principal de la barra de navegación -->
-  <div class="navbar-container">
-    <!-- Enlace a la página de inicio -->
-    <app-caja-nav
-      label="Inicio"
-      route="/dashboard"
-      icon="https://assets.mgdc.site/nemi/icono-inicio.png"
-      routerLinkActive="active"
-    ></app-caja-nav>
-
-    <!-- Enlace a la gestión de activos -->
-    <app-caja-nav
-      label="Gestión de Activos"
-      route="/gestion-activos"
-      icon="https://assets.mgdc.site/nemi/icono-gestion-activos.png"
-      routerLinkActive="active"
-    ></app-caja-nav>
-
-    <!-- Enlace a las asignaciones -->
-    <app-caja-nav
-      label="Asignaciones"
-      route="/asignaciones"
-      icon="https://assets.mgdc.site/nemi/icono-asignaciones.png"
-      routerLinkActive="active"
-    ></app-caja-nav>
-
-    <!-- Enlace a los reportes -->
-    @if (isAdmin()) {
-      <app-caja-nav
-        label="Reportes"
-        route="/reportes"
-        icon="https://assets.mgdc.site/nemi/icono-reportes.png"
-        routerLinkActive="active"
-      ></app-caja-nav>
-    }
-
-    <!-- Enlace a la configuración -->
-    @if (isAdmin()) {
-      <app-caja-nav
-        label="Configuración"
-        route="/configuracion"
-        icon="https://assets.mgdc.site/nemi/icono-configuracion.png"
-        routerLinkActive="active"
-      ></app-caja-nav>
-    }
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">
+      <img src="https://assets.mgdc.site/nemi/logo.png" alt="Nemi" width="20" height="20" loading="eager" />
+    </div>
+    <div class="sidebar-brand-text">
+      <strong>Nemi</strong>
+      <span>Gestor de activos</span>
+    </div>
   </div>
-  <!-- Botón de Cerrar Sesión -->
-  <div class="logout-button-container">
+
+  <div class="sidebar-nav">
+    @if (!isEmpleado()) {
+      <span class="sidebar-section">Panel</span>
+      <app-caja-nav
+        label="Inicio"
+        route="/dashboard"
+        iconify="ph:squares-four"
+        routerLinkActive="active"
+      ></app-caja-nav>
+    }
+
+    <span class="sidebar-section">Inventario</span>
+    <app-caja-nav
+      [label]="isEmpleado() ? 'Mis activos' : 'Activos'"
+      route="/gestion-activos"
+      iconify="ph:cube"
+      routerLinkActive="active"
+    ></app-caja-nav>
+
+    @if (puedeOperar()) {
+      <app-caja-nav
+        label="Licencias"
+        route="/licencias"
+        iconify="ph:certificate"
+        routerLinkActive="active"
+      ></app-caja-nav>
+    }
+
+    @if (puedeOperar()) {
+      <span class="sidebar-section">Operación</span>
+      <app-caja-nav
+        label="Asignaciones"
+        route="/asignaciones"
+        iconify="ph:arrows-left-right"
+        routerLinkActive="active"
+      ></app-caja-nav>
+
+      @if (puedeMantenimiento()) {
+        <app-caja-nav
+          label="Mantenimientos"
+          route="/mantenimientos"
+          iconify="ph:wrench"
+          routerLinkActive="active"
+        ></app-caja-nav>
+
+        <app-caja-nav
+          label="Incidencias"
+          route="/incidencias"
+          iconify="ph:warning"
+          routerLinkActive="active"
+        ></app-caja-nav>
+
+        <app-caja-nav
+          label="Solicitudes"
+          route="/solicitudes"
+          iconify="ph:clipboard-text"
+          routerLinkActive="active"
+        ></app-caja-nav>
+      }
+    }
+
+    @if (isEmpleado()) {
+      <span class="sidebar-section">Mi espacio</span>
+      <app-caja-nav
+        label="Mis incidencias"
+        route="/incidencias"
+        iconify="ph:warning"
+        routerLinkActive="active"
+      ></app-caja-nav>
+
+      <app-caja-nav
+        label="Mis solicitudes"
+        route="/solicitudes"
+        iconify="ph:clipboard-text"
+        routerLinkActive="active"
+      ></app-caja-nav>
+    }
+
+    <span class="sidebar-section">Análisis</span>
+    <app-caja-nav
+      label="Reportes"
+      route="/reportes"
+      iconify="ph:chart-line"
+      routerLinkActive="active"
+    ></app-caja-nav>
+
+    @if (isAdmin()) {
+      <span class="sidebar-section">Administración</span>
+      <app-caja-nav
+        label="Usuarios"
+        route="/usuarios"
+        iconify="ph:users"
+        routerLinkActive="active"
+      ></app-caja-nav>
+    }
+
+    <span class="sidebar-section">Cuenta</span>
+    <app-caja-nav
+      label="Configuración"
+      route="/configuracion"
+      iconify="ph:gear-six"
+      routerLinkActive="active"
+    ></app-caja-nav>
+  </div>
+
+  <div class="sidebar-footer">
     <button class="logout-button" (click)="cerrarSesion()">
-      <img src="https://assets.mgdc.site/nemi/logout.png" alt="Cerrar Sesión" />
-      <p>Cerrar Sesión</p>
+      <iconify-icon icon="ph:sign-out"></iconify-icon>
+      <p>Cerrar sesión</p>
     </button>
   </div>
 </nav>

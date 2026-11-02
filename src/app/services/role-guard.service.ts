@@ -19,29 +19,39 @@ export class RoleGuard implements CanActivate {
 
 	canActivate(
 		route: ActivatedRouteSnapshot,
-		state: RouterStateSnapshot,
+		_state: RouterStateSnapshot,
 	): boolean {
-		// Obtenemos los roles esperados desde la configuración de la ruta
-		const expectedRole = route.data["expectedRole"];
+		// Roles esperados: expectedRoles (arreglo) o expectedRole (texto)
+		const configurados =
+			route.data["expectedRoles"] ?? route.data["expectedRole"];
+		const esperados: string[] = Array.isArray(configurados)
+			? configurados
+			: configurados
+				? [configurados]
+				: [];
 
 		if (
 			!this.authService.isLoggedIn() ||
-			!this.authService.hasRole(expectedRole)
+			(esperados.length > 0 && !this.authService.hasAnyRole(esperados))
 		) {
-			console.warn(
-				`[RoleGuard]: Acceso denegado a ${state.url}. Se requiere rol: ${expectedRole}`,
-			);
-
 			// Mostrar una alerta premium de acceso denegado
 			Swal.fire({
 				icon: "error",
-				title: "Acceso Denegado",
+				title: "Acceso denegado",
 				text: "No tienes permisos para acceder a esta sección.",
-				confirmButtonColor: "#1e293b",
 				confirmButtonText: "Entendido",
+				buttonsStyling: false,
+				customClass: {
+					popup: "premium-swal-popup",
+					title: "premium-swal-title",
+					htmlContainer: "premium-swal-html",
+					confirmButton: "premium-swal-confirm",
+				},
 			});
 
-			this.router.navigate(["/dashboard"]);
+			this.router.navigate([
+				this.authService.isEmpleado() ? "/gestion-activos" : "/dashboard",
+			]);
 			return false;
 		}
 

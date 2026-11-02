@@ -2,12 +2,12 @@
   [routerLink]="route"
   [routerLinkActive]="routerLinkActive"
   class="nav-button"
-  >
-  <!-- Muestra el ícono si existe -->
-  @if (icon) {
-    <img [src]="icon" [alt]="label + ' icono'" class="nav-button-icon" />
+>
+  @if (iconify) {
+    <iconify-icon [icon]="iconify" class="nav-button-icon"></iconify-icon>
+  } @else if (icon) {
+    <img [src]="icon" [alt]="label + ' icono'" class="nav-button-icon" width="18" height="18" loading="eager" />
   }
 
-  <!-- Muestra el texto del enlace -->
   <p>{{ label }}</p>
 </a>
