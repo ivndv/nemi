@@ -1,0 +1,30 @@
+main {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+.col-actions {
+	text-align: right;
+	white-space: nowrap;
+}
+
+.id-cell {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-placeholder);
+}
+
+.motivo-cell {
+	max-width: 300px;
+	color: var(--text-secondary);
+	line-height: 1.45;
+}
+
+.tabla-solicitudes .paginacion {
+	border: none;
+	border-top: 1px solid var(--border-soft);
+	border-radius: 0;
+	box-shadow: none;
+	justify-content: center;
+}

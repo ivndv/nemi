@@ -1,0 +1,67 @@
+<main>
+  <button class="volver" (click)="volver()">← Volver a solicitudes</button>
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  @if (cargando) {
+    <p class="vacio">Cargando solicitud...</p>
+  }
+
+  @if (solicitud) {
+    <section class="detalle-cabecera">
+      <div>
+        <h1>Solicitud #{{ solicitud.id }}</h1>
+        <p class="subtitulo">{{ solicitud.solicitante }}</p>
+      </div>
+      <span [class]="'chip estado-' + solicitud.estado">
+        {{ solicitud.estado_label }}
+      </span>
+    </section>
+
+    <section class="resumen">
+      <article>
+        <span>Tipo</span>
+        <strong>{{ solicitud.tipo_label }}</strong>
+      </article>
+      <article>
+        <span>Tipo de activo</span>
+        <strong>{{ solicitud.tipo_activo || "Cualquiera" }}</strong>
+      </article>
+      <article>
+        <span>Prioridad</span>
+        <strong [class]="'chip prioridad-' + solicitud.prioridad">
+          {{ solicitud.prioridad_label }}
+        </strong>
+      </article>
+      <article>
+        <span>Creada</span>
+        <strong>{{ solicitud.created_at | fechaApp:'fechaHora' }}</strong>
+      </article>
+      <article>
+        <span>Resuelta</span>
+        <strong>{{ solicitud.fecha_resolucion || "—" }}</strong>
+      </article>
+      <article>
+        <span>Activo entregado</span>
+        <strong>{{ solicitud.activo_id ?? "—" }}</strong>
+      </article>
+    </section>
+
+    <section class="detalle-bloque">
+      <header class="card-head">
+        <span class="card-head-icon"><iconify-icon icon="ph:chat-centered-text"></iconify-icon></span>
+        <div class="card-head-text">
+          <h2>Motivo</h2>
+          <p>Razón de la solicitud.</p>
+        </div>
+      </header>
+      <div class="card-body">
+        <p>{{ solicitud.motivo }}</p>
+      </div>
+    </section>
+
+    <app-adjuntos entidad="solicitud" [entidadId]="solicitud.id"></app-adjuntos>
+  }
+</main>

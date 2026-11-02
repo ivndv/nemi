@@ -1,0 +1,136 @@
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Solicitudes</h2>
+      <p class="page-subtitle">
+        {{ pagination.total }} {{ pagination.total === 1 ? 'solicitud' : 'solicitudes' }}
+      </p>
+    </div>
+
+    <button class="btn-primary" (click)="crear()">
+      <iconify-icon icon="ph:plus"></iconify-icon>
+      Nueva solicitud
+    </button>
+  </header>
+
+  <section class="busqueda">
+    <div class="toolbar-container">
+      <div class="filters-group">
+        <select (change)="aplicarFiltro('estado', $event)">
+          <option value="">Estado: todos</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="aprobada">Aprobada</option>
+          <option value="rechazada">Rechazada</option>
+          <option value="entregada">Entregada</option>
+        </select>
+
+        <select (change)="aplicarFiltro('tipo', $event)">
+          <option value="">Tipo: todos</option>
+          <option value="equipo">Equipo</option>
+          <option value="licencia">Licencia</option>
+          <option value="accesorio">Accesorio</option>
+          <option value="reemplazo">Reemplazo</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabla-solicitudes">
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+
+    <table aria-label="Lista de solicitudes">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Solicitante</th>
+          <th>Tipo</th>
+          <th>Motivo</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando) {
+          <tr>
+            <td colspan="8"><div class="vacio">Cargando solicitudes...</div></td>
+          </tr>
+        }
+        @if (!cargando && solicitudes.length === 0) {
+          <tr>
+            <td colspan="8">
+              <div class="vacio">
+                <iconify-icon icon="ph:clipboard-text" style="font-size: 26px; margin-bottom: 8px;"></iconify-icon>
+                <p>No hay solicitudes para mostrar</p>
+              </div>
+            </td>
+          </tr>
+        }
+        @for (solicitud of solicitudes; track trackById($index, solicitud)) {
+          <tr>
+            <td class="id-cell">#{{ solicitud.id }}</td>
+            <td><strong>{{ solicitud.solicitante }}</strong></td>
+            <td>{{ solicitud.tipo_label }}</td>
+            <td class="motivo-cell">{{ solicitud.motivo }}</td>
+            <td>
+              <span [class]="'chip prioridad-' + solicitud.prioridad">
+                {{ solicitud.prioridad_label }}
+              </span>
+            </td>
+            <td>
+              <span [class]="'chip estado-' + solicitud.estado">
+                {{ solicitud.estado_label }}
+              </span>
+            </td>
+            <td>{{ solicitud.created_at | fechaApp }}</td>
+            <td class="col-actions">
+              <button class="btn-detalle" (click)="verDetalle(solicitud.id)">
+                Ver
+              </button>
+
+              @if (solicitud.estado === "pendiente" && puedeAprobar()) {
+                <button class="btn-aprobar" (click)="aprobar(solicitud)">
+                  Aprobar
+                </button>
+                <button class="btn-rechazar" (click)="rechazar(solicitud)">
+                  Rechazar
+                </button>
+              }
+
+              @if (solicitud.estado === "aprobada" && puedeEntregar()) {
+                <button class="btn-entregar" (click)="entregar(solicitud)">
+                  Entregar
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (pagination.totalPages > 1) {
+      <div class="paginacion">
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === 1"
+          (click)="cambiarPagina(paginaActual - 1)"
+        >
+          <iconify-icon icon="ph:caret-left"></iconify-icon>
+          Anterior
+        </button>
+        <span>Página {{ paginaActual }} de {{ pagination.totalPages }}</span>
+        <button
+          class="btn-pagina"
+          [disabled]="paginaActual === pagination.totalPages"
+          (click)="cambiarPagina(paginaActual + 1)"
+        >
+          Siguiente
+          <iconify-icon icon="ph:caret-right"></iconify-icon>
+        </button>
+      </div>
+    }
+  </section>
+</main>

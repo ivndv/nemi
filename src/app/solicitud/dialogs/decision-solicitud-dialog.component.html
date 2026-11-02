@@ -1,0 +1,29 @@
+<app-modal-shell
+  [title]="(esAprobar ? 'Aprobar' : 'Rechazar') + ' solicitud #' + data.solicitud.id"
+  [subtitle]="data.solicitud.solicitante"
+  (closed)="cancelar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label for="comentario">Comentario (opcional)</label>
+        <textarea
+          id="comentario"
+          formControlName="comentario"
+          [placeholder]="esAprobar ? 'Comentario para el solicitante...' : 'Motivo del rechazo...'"
+        ></textarea>
+      </div>
+    </div>
+
+    <p class="dialog-note">
+      {{ esAprobar ? "La solicitud quedará aprobada y lista para entregar." : "La solicitud quedará rechazada." }}
+    </p>
+
+    <footer class="actions-row">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" [class]="esAprobar ? 'btn-primary' : 'btn-danger'">
+        {{ esAprobar ? "Aprobar" : "Rechazar" }}
+      </button>
+    </footer>
+  </form>
+</app-modal-shell>
