@@ -24,7 +24,7 @@ permissions:
 jobs:
   # Job 1: lint y verificación de formato con Biome (read-only, falla si hay problemas)
   lint:
-    name: Lint & Format Check
+    name: Biome
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -72,8 +72,7 @@ jobs:
         run: bun run build
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist/nemi/browser --project-name=nemi
+        run: bunx wrangler pages deploy dist/nemi/browser --project-name=nemi --branch=main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
