@@ -1,9 +1,10 @@
 // ==========================================================================
 // Nemi · hoja de estilos global
-// Orden: tokens → base → componentes → shell
+// Orden: tokens → base → movimiento → componentes → shell
 // ==========================================================================
 
 @use "tokens";
 @use "base";
+@use "motion";
 @use "components";
 @use "shell";

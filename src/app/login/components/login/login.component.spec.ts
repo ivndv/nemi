@@ -24,4 +24,19 @@ describe("LoginComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it("inicia en el paso de presentación", () => {
+		expect(component.step()).toBe("intro");
+	});
+
+	it("abre el formulario al pulsar el CTA", () => {
+		component.abrirLogin();
+		expect(component.step()).toBe("form");
+	});
+
+	it("vuelve a la presentación desde el formulario", () => {
+		component.abrirLogin();
+		component.volver();
+		expect(component.step()).toBe("intro");
+	});
 });

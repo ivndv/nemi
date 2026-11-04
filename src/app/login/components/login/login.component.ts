@@ -29,9 +29,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 	isPasswordVisible = signal(false);
 	timeoutRef: ReturnType<typeof setTimeout> | null = null;
 	isLoading = signal(false);
+	// Paso actual del escenario: intro de marca o formulario de acceso
+	readonly step = signal<"intro" | "form">("intro");
 	private destroy$ = new Subject<void>();
 
 	@ViewChild("passwordInput") passwordInput!: ElementRef;
+	@ViewChild("emailInput") emailInput?: ElementRef<HTMLInputElement>;
+	@ViewChild("introCta") introCta?: ElementRef<HTMLButtonElement>;
 
 	constructor(
 		private cdr: ChangeDetectorRef,
@@ -56,6 +60,20 @@ export class LoginComponent implements OnInit, OnDestroy {
 	toggleTheme(): void {
 		this.themeService.toggle();
 		this.cdr.markForCheck();
+	}
+
+	// Muestra el formulario y enfoca el correo cuando termina el render
+	abrirLogin(): void {
+		this.step.set("form");
+		this.cdr.markForCheck();
+		setTimeout(() => this.emailInput?.nativeElement.focus(), 0);
+	}
+
+	// Regresa a la intro y devuelve el foco al CTA
+	volver(): void {
+		this.step.set("intro");
+		this.cdr.markForCheck();
+		setTimeout(() => this.introCta?.nativeElement.focus(), 0);
 	}
 
 	get isDarkMode(): boolean {

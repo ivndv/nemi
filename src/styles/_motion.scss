@@ -1,0 +1,70 @@
+// ==========================================================================
+// Movimiento · keyframes y utilidades reutilizables
+// Las animaciones se desactivan con prefers-reduced-motion (ver _base.scss)
+// ==========================================================================
+
+@keyframes fadeUp {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes floatY {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-6px);
+	}
+}
+
+// Entrada escalonada de hijos directos
+.stagger > * {
+	animation: fadeUp 320ms var(--ease) both;
+}
+
+.stagger > *:nth-child(2) {
+	animation-delay: 40ms;
+}
+
+.stagger > *:nth-child(3) {
+	animation-delay: 80ms;
+}
+
+.stagger > *:nth-child(4) {
+	animation-delay: 120ms;
+}
+
+.stagger > *:nth-child(5) {
+	animation-delay: 160ms;
+}
+
+.stagger > *:nth-child(6) {
+	animation-delay: 200ms;
+}

@@ -59,7 +59,14 @@ app-footer {
 	justify-content: center;
 	min-height: 100vh;
 	max-width: none;
-	padding: 32px !important;
+	padding: 0 !important;
+}
+
+// El host del componente debe ocupar todo el ancho para que el fondo cubra la pantalla
+.full-height-login app-login {
+	display: block;
+	width: 100%;
+	min-height: 100vh;
 }
 
 .container-login {
@@ -770,116 +777,25 @@ app-header {
 // Login
 // --------------------------------------------------------------------------
 .login-page {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) 420px;
-	width: 100%;
-	max-width: 1080px;
-	min-height: 620px;
-	margin: 0 auto;
-	overflow: hidden;
-	background: var(--surface);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-xl);
-	box-shadow: var(--shadow-md);
-}
-
-.login-visual {
-	position: relative;
-	display: flex;
-	align-items: center;
-	padding: 48px;
-	background: var(--surface-muted);
-	border-right: 1px solid var(--border);
-	overflow: hidden;
-}
-
-.login-visual::after {
-	content: "";
-	position: absolute;
-	inset: auto -120px -160px auto;
-	width: 420px;
-	height: 420px;
-	border-radius: 50%;
-	background: var(--primary-soft);
-	filter: blur(10px);
-	pointer-events: none;
-}
-
-.visual-content {
-	position: relative;
-	z-index: 1;
-	max-width: 520px;
-}
-
-.logo-container {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin-bottom: 48px;
-}
-
-.logo-container .main-logo {
-	height: 30px;
-	width: auto;
-}
-
-.brand-name {
-	font-size: 17px;
-	font-weight: 600;
-	letter-spacing: -0.02em;
-	color: var(--text);
-}
-
-.visual-text h2 {
-	font-size: clamp(30px, 4vw, 44px);
-	font-weight: 600;
-	line-height: 1.12;
-	letter-spacing: -0.04em;
-	color: var(--text);
-	margin-bottom: 16px;
-}
-
-.visual-text p {
-	font-size: 14.5px;
-	line-height: 1.6;
-	color: var(--text-muted);
-	max-width: 420px;
-}
-
-.visual-points {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	margin-top: 36px;
-}
-
-.visual-point {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	font-size: 13px;
-	color: var(--text-secondary);
-}
-
-.visual-point iconify-icon {
-	font-size: 18px;
-	color: var(--primary);
-	flex-shrink: 0;
-}
-
-.login-form-section {
 	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 36px;
-	background: var(--surface);
+	width: 100%;
+	min-height: 100vh;
+	margin: 0;
+	padding: 72px 24px;
+	overflow: hidden;
+	background:
+		radial-gradient(900px 520px at 50% -10%, var(--primary-soft), transparent 70%),
+		radial-gradient(700px 500px at 100% 110%, var(--primary-alpha-5), transparent 70%),
+		var(--surface);
 }
 
 .theme-toggle-wrapper {
 	position: absolute;
-	top: 24px;
-	right: 24px;
+	top: 18px;
+	right: 18px;
 	z-index: 20;
 }
 
@@ -912,32 +828,220 @@ app-header {
 	align-items: center;
 }
 
+// Escenario: intro y formulario comparten espacio y se alternan
+.login-stage {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+.stage-row {
+	display: grid;
+	grid-template-rows: 0fr;
+	opacity: 0;
+	transition:
+		grid-template-rows 300ms var(--ease),
+		opacity 200ms var(--ease);
+}
+
+.stage-row > .stage-panel {
+	min-height: 0;
+	overflow: hidden;
+	transform: translateY(10px);
+	transition: transform 300ms var(--ease);
+}
+
+.login-stage:not(.is-form) .intro-row,
+.login-stage.is-form .form-row {
+	grid-template-rows: 1fr;
+	opacity: 1;
+}
+
+.login-stage:not(.is-form) .intro-panel,
+.login-stage.is-form .form-panel {
+	transform: translateY(0);
+}
+
+// --------------------------------------------------------------------------
+// Intro
+// --------------------------------------------------------------------------
+.intro-panel {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	width: 100%;
+	max-width: 440px;
+	margin: 0 auto;
+	padding: 8px 0;
+	gap: 24px;
+	text-align: left;
+}
+
+.intro-brand {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+// Tile de marca con el icono del producto
+.brand-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 46px;
+	height: 46px;
+	border-radius: 13px;
+	background: var(--primary-soft);
+	border: 1px solid var(--primary-alpha-10);
+	color: var(--primary);
+}
+
+.brand-mark iconify-icon {
+	font-size: 24px;
+}
+
+.intro-brand-name {
+	font-size: 30px;
+	line-height: 1;
+	font-weight: 700;
+	letter-spacing: -0.04em;
+	color: var(--text);
+}
+
+.intro-title {
+	font-size: clamp(30px, 4vw, 40px);
+	font-weight: 600;
+	line-height: 1.14;
+	letter-spacing: -0.04em;
+	color: var(--text);
+}
+
+.intro-text {
+	max-width: none;
+	font-size: 15px;
+	line-height: 1.65;
+	color: var(--text-muted);
+}
+
+.intro-points {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	width: 100%;
+	max-width: none;
+	margin-top: 0;
+	padding: 0;
+	list-style: none;
+	text-align: left;
+}
+
+.intro-point {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 13.5px;
+	color: var(--text-secondary);
+}
+
+.intro-point iconify-icon {
+	flex-shrink: 0;
+	font-size: 18px;
+	color: var(--primary);
+}
+
+.btn-intro {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	width: 100%;
+	height: 48px;
+	margin-top: 0;
+	border-radius: var(--radius-md);
+	background: var(--primary);
+	color: var(--primary-contrast);
+	font-size: 14.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		background-color var(--speed) var(--ease),
+		transform var(--speed) var(--ease);
+}
+
+.btn-intro:hover {
+	background: var(--primary-hover);
+	transform: translateY(-1px);
+}
+
+.btn-intro iconify-icon {
+	font-size: 17px;
+	transition: transform var(--speed) var(--ease);
+}
+
+.btn-intro:hover iconify-icon {
+	transform: translateX(3px);
+}
+
+// --------------------------------------------------------------------------
+// Formulario
+// --------------------------------------------------------------------------
+.form-panel {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
 .login-card {
 	width: 100%;
-	max-width: 360px;
+	max-width: 440px;
+	margin: 0 auto;
 }
 
 .login-card .card-header {
 	margin-bottom: 28px;
+	text-align: left;
 }
 
-.login-card .card-header h1 {
-	font-size: 26px;
+.login-card .card-header h2 {
+	font-size: 28px;
 	font-weight: 600;
 	letter-spacing: -0.03em;
 	color: var(--text);
-	margin-bottom: 6px;
+	margin-bottom: 7px;
 }
 
 .login-card .card-header p {
-	font-size: 13.5px;
+	font-size: 14px;
 	color: var(--text-muted);
 }
 
 .modern-form {
 	display: flex;
 	flex-direction: column;
-	gap: 18px;
+	gap: 20px;
+}
+
+// Entrada escalonada de los campos al abrir el formulario
+.login-stage.is-form .form-panel .modern-form > * {
+	animation: fadeUp 300ms var(--ease) both;
+}
+
+.login-stage.is-form .form-panel .modern-form > *:nth-child(2) {
+	animation-delay: 30ms;
+}
+
+.login-stage.is-form .form-panel .modern-form > *:nth-child(3) {
+	animation-delay: 60ms;
+}
+
+.login-stage.is-form .form-panel .modern-form > *:nth-child(4) {
+	animation-delay: 90ms;
+}
+
+.login-stage.is-form .form-panel .modern-form > *:nth-child(5) {
+	animation-delay: 120ms;
 }
 
 .modern-form .form-group {
@@ -969,9 +1073,9 @@ app-header {
 
 .input-wrapper input {
 	width: 100%;
-	height: 44px;
+	height: 46px;
 	padding: 0 44px 0 42px;
-	font-size: 13.5px;
+	font-size: 14px;
 }
 
 .input-wrapper:focus-within .input-icon {
@@ -1027,11 +1131,11 @@ app-header {
 	align-items: center;
 	justify-content: center;
 	width: 100%;
-	height: 42px;
+	height: 44px;
 	border-radius: var(--radius-md);
 	background: var(--primary);
 	color: var(--primary-contrast);
-	font-size: 13.5px;
+	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
 	transition: background-color var(--speed) var(--ease);
@@ -1061,6 +1165,33 @@ app-header {
 	}
 }
 
+.btn-back {
+	display: inline-flex;
+	align-items: center;
+	align-self: flex-start;
+	gap: 6px;
+	margin-top: 24px;
+	padding: 7px 12px;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-muted);
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		background-color var(--speed) var(--ease),
+		color var(--speed) var(--ease);
+}
+
+.btn-back:hover {
+	background: var(--surface-muted);
+	color: var(--text);
+}
+
+.btn-back iconify-icon {
+	font-size: 15px;
+}
+
 .login-footer {
 	margin-top: 32px;
 	text-align: center;
@@ -1069,24 +1200,6 @@ app-header {
 .login-footer p {
 	font-size: 11.5px;
 	color: var(--text-placeholder);
-}
-
-.mobile-branding {
-	display: none;
-	align-items: center;
-	gap: 10px;
-	margin-bottom: 24px;
-}
-
-.mobile-logo {
-	height: 28px;
-	width: auto;
-}
-
-.mobile-brand-name {
-	font-size: 15px;
-	font-weight: 600;
-	color: var(--text);
 }
 
 // --------------------------------------------------------------------------
@@ -1145,21 +1258,7 @@ app-header {
 	}
 
 	.login-page {
-		grid-template-columns: 1fr;
-		max-width: 430px;
-		min-height: auto;
-	}
-
-	.login-visual {
-		display: none;
-	}
-
-	.login-form-section {
-		padding: 32px 24px;
-	}
-
-	.mobile-branding {
-		display: flex;
+		padding: 60px 24px 32px;
 	}
 }
 
@@ -1185,9 +1284,8 @@ app-header {
 		flex-direction: column;
 		align-items: flex-start;
 	}
-}
 
-body.dark-mode .logo-container .main-logo,
-body.dark-mode .mobile-logo {
-	filter: brightness(0) invert(1);
+	.login-page {
+		padding: 48px 20px 24px;
+	}
 }
