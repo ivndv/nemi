@@ -22,22 +22,22 @@ Antes de modificar un servicio o componente, identifica con CodeGraph qué archi
 
 ## 3. Stack tecnológico
 
-| Capa | Tecnología | Versión / Detalle |
-| :--- | :--- | :--- |
-| **Framework SPA** | **Angular 22** | `@angular/core ^22.2.4`, Angular CLI `^22.2.5` (NgModule + lazy loading) |
-| **Runtime & gestor** | **Bun** | Bun `1.4.4` (`bun.lock`) |
-| **Lenguaje** | **TypeScript** | `typescript ~6.0.3` (modo estricto ESM) |
-| **UI & componentes** | **Angular Material + CDK** | `@angular/material ^22.2.5`, `@angular/cdk ^22.2.5` |
-| **Iconografía** | **Iconify** | `iconify-icon ^3.0.5` (Web Components con prefijo `ph:` de Phosphor Icons) |
-| **Selects avanzados** | **Ng-Select** | `@ng-select/ng-select ^24.2.1` |
-| **Estado del servidor** | **TanStack Query (Angular)** | `@tanstack/angular-query-experimental ^5.105.2` |
-| **Gráficas** | **Chart.js** | `chart.js ^4.6.1` (pastel y barras en reportes) |
-| **Generación de PDFs** | **jsPDF + html2canvas** | `jspdf ^4.2.1`, `jspdf-autotable ^5.0.9`, `html2canvas ^1.4.1` |
-| **Alertas modales** | **SweetAlert2** | `sweetalert2 ^11.26.25` (estilizado con clases corporativas premium) |
-| **Estilos** | **SCSS modular** | `src/styles/` (`_tokens`, `_base`, `_components`, `_shell`, `_mixins`) |
-| **Pruebas unitarias** | **Jest + Jest Preset Angular** | `jest ^30.5.2`, `jest-preset-angular ^17.0.3`, `ts-jest ^29.4.15` |
-| **Linter & formatter** | **Biome 2** | `@biomejs/biome ^2.6.4` (`biome.json`) |
-| **Despliegue** | **Cloudflare Pages** | `public/_headers` con CSP, cache inmutable y SSL estricto |
+| Capa                    | Tecnología                     | Versión / Detalle                                                          |
+| :---------------------- | :----------------------------- | :------------------------------------------------------------------------- |
+| **Framework SPA**       | **Angular 22**                 | `@angular/core ^22.2.4`, Angular CLI `^22.2.5` (NgModule + lazy loading)   |
+| **Runtime & gestor**    | **Bun**                        | Bun `1.4.4` (`bun.lock`)                                                   |
+| **Lenguaje**            | **TypeScript**                 | `typescript ~6.0.3` (modo estricto ESM)                                    |
+| **UI & componentes**    | **Angular Material + CDK**     | `@angular/material ^22.2.5`, `@angular/cdk ^22.2.5`                        |
+| **Iconografía**         | **Iconify**                    | `iconify-icon ^3.0.5` (Web Components con prefijo `ph:` de Phosphor Icons) |
+| **Selects avanzados**   | **Ng-Select**                  | `@ng-select/ng-select ^24.2.1`                                             |
+| **Estado del servidor** | **TanStack Query (Angular)**   | `@tanstack/angular-query-experimental ^5.105.2`                            |
+| **Gráficas**            | **Chart.js**                   | `chart.js ^4.6.1` (pastel y barras en reportes)                            |
+| **Generación de PDFs**  | **jsPDF + html2canvas**        | `jspdf ^4.2.1`, `jspdf-autotable ^5.0.9`, `html2canvas ^1.4.1`             |
+| **Alertas modales**     | **SweetAlert2**                | `sweetalert2 ^11.26.25` (estilizado con clases corporativas premium)       |
+| **Estilos**             | **SCSS modular**               | `src/styles/` (`_tokens`, `_base`, `_components`, `_shell`, `_mixins`)     |
+| **Pruebas unitarias**   | **Jest + Jest Preset Angular** | `jest ^30.5.2`, `jest-preset-angular ^17.0.3`, `ts-jest ^29.4.15`          |
+| **Linter & formatter**  | **Biome 2**                    | `@biomejs/biome ^2.6.4` (`biome.json`)                                     |
+| **Despliegue**          | **Cloudflare Pages**           | `public/_headers` con CSP, cache inmutable y SSL estricto                  |
 
 ## 4. Estructura del código
 
@@ -105,20 +105,20 @@ La aplicación usa carga perezosa (**lazy loading**) para optimizar el tiempo de
 
 ### 5.3 Servicios clave
 
-| Servicio | Ruta | Responsabilidad |
-| :--- | :--- | :--- |
-| `AuthService` | `src/app/login/services/auth.service.ts` | `authToken` y `user` en `localStorage`; `authMessage` en `sessionStorage`. Expone `user$` (BehaviorSubject) y `onLogout()` (Subject). Métodos: `login()`, `saveToken()`, `logout(motivo?)`, `logoutAll()`, `isLoggedIn()`, `hasRole()`, `hasAnyRole()`, `isAdmin()`, `isEmpleado()`. `AuthInterceptor` adjunta el JWT a las peticiones salientes. |
-| `ThemeService` | `src/app/shared/services/theme.service.ts` | Tipo `Theme = "light" \| "dark" \| "system"`. Signals `theme`, `resolvedTheme` e `isDark` (computed). Persiste en `localStorage` (`nemi-theme`) y escucha `prefers-color-scheme` cuando el tema es `system`. Aplica o remueve `dark-mode` en `document.body`; `current` se mantiene por compatibilidad. |
-| `NotificationService` | `src/app/shared/services/notification.service.ts` | Consulta alertas del backend (`licencia_proxima`, `garantia_proxima`, `devolucion_proxima`, incidencias, mantenimientos y solicitudes). Alimenta `alertasList$` y `totalAlerts$` para el badge y el menú del Header. |
-| `PreferenciasService` | `src/app/core/preferencias/preferencias.service.ts` | Obtiene la zona horaria de negocio desde `/configuracion/ajustes`; `fechaHoy()` devuelve `YYYY-MM-DD` en esa zona, no en la del navegador. |
-| `queryClient` | `src/app/core/query/query-client.ts` | `staleTime` 30s, `gcTime` 5min, `retry: 1`, sin refetch al enfocar; mutaciones sin retry. Se registra en `AppModule` con `provideTanStackQuery(queryClient)`. |
+| Servicio              | Ruta                                                | Responsabilidad                                                                                                                                                                                                                                                                                                                                   |
+| :-------------------- | :-------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AuthService`         | `src/app/login/services/auth.service.ts`            | `authToken` y `user` en `localStorage`; `authMessage` en `sessionStorage`. Expone `user$` (BehaviorSubject) y `onLogout()` (Subject). Métodos: `login()`, `saveToken()`, `logout(motivo?)`, `logoutAll()`, `isLoggedIn()`, `hasRole()`, `hasAnyRole()`, `isAdmin()`, `isEmpleado()`. `AuthInterceptor` adjunta el JWT a las peticiones salientes. |
+| `ThemeService`        | `src/app/shared/services/theme.service.ts`          | Tipo `Theme = "light" \| "dark" \| "system"`. Signals `theme`, `resolvedTheme` e `isDark` (computed). Persiste en `localStorage` (`nemi-theme`) y escucha `prefers-color-scheme` cuando el tema es `system`. Aplica o remueve `dark-mode` en `document.body`; `current` se mantiene por compatibilidad.                                           |
+| `NotificationService` | `src/app/shared/services/notification.service.ts`   | Consulta alertas del backend (`licencia_proxima`, `garantia_proxima`, `devolucion_proxima`, incidencias, mantenimientos y solicitudes). Alimenta `alertasList$` y `totalAlerts$` para el badge y el menú del Header.                                                                                                                              |
+| `PreferenciasService` | `src/app/core/preferencias/preferencias.service.ts` | Obtiene la zona horaria de negocio desde `/configuracion/ajustes`; `fechaHoy()` devuelve `YYYY-MM-DD` en esa zona, no en la del navegador.                                                                                                                                                                                                        |
+| `queryClient`         | `src/app/core/query/query-client.ts`                | `staleTime` 30s, `gcTime` 5min, `retry: 1`, sin refetch al enfocar; mutaciones sin retry. Se registra en `AppModule` con `provideTanStackQuery(queryClient)`.                                                                                                                                                                                     |
 
 ## 6. Variables de entorno
 
-| Archivo | `production` | `apiUrl` |
-| :--- | :--- | :--- |
-| `src/environments/environment.ts` | `false` | `http://localhost:3030/api` |
-| `src/environments/environment.prod.ts` | `true` | `https://nemi-api.fluxdv.icu/api` |
+| Archivo                                | `production` | `apiUrl`                          |
+| :------------------------------------- | :----------- | :-------------------------------- |
+| `src/environments/environment.ts`      | `false`      | `http://localhost:3030/api`       |
+| `src/environments/environment.prod.ts` | `true`       | `https://nemi-api.fluxdv.icu/api` |
 
 Los assets públicos (avatares, imágenes) se resuelven con `src/app/utils/images.ts` contra `https://assets.mgdc.site/nemi/`; ya no existe `r2PublicUrl` en los environments.
 
@@ -181,7 +181,7 @@ No relajes la CSP sin revisar qué recurso externo la necesita.
 
 - **Prohibido** ejecutar `git commit` o `git push` sin la aprobación explícita del usuario.
 - El desarrollo va en `develop`; el merge a `main` solo se hace con aprobación.
-- Mensajes de commit con *Conventional Commits*, en minúsculas y en español (`feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`).
+- Mensajes de commit con _Conventional Commits_, en minúsculas y en español (`feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`).
 
 ### 9.2 Despliegue y cache
 
