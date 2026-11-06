@@ -5,9 +5,9 @@
 **Nemi Frontend** es una Single Page Application (SPA) corporativa construida en **Angular 22** para la gestión, auditoría, asignación y rastreo de activos tecnológicos (hardware, software, licencias y garantías) en tiempo real.
 
 - **Propósito:** interfaz administrativa reactiva y segura con RBAC, modo claro/oscuro dinámico, reportes analíticos con gráficas interactivas y exportación en PDF.
-- **Dominio en producción:** [https://nemi.mgdc.site](https://nemi.mgdc.site)
-- **Backend API:** [https://nemi-api.fluxdv.icu](https://nemi-api.fluxdv.icu) (ver [AGENTS.md del backend](file:///home/ivan/software-dev/nemi-api/AGENTS.md))
-- **Assets en Cloudflare R2:** [https://assets.mgdc.site/nemi/](https://assets.mgdc.site/nemi/)
+- **Dominio en producción:** [https://nemi.liuma.app](https://nemi.liuma.app)
+- **Backend API:** [https://nemi-api.liuma.app](https://nemi-api.liuma.app) (ver [AGENTS.md del backend](file:///home/ivan/software-dev/nemi-api/AGENTS.md))
+- **Assets en Cloudflare R2:** [https://assets.liuma.app/nemi/](https://assets.liuma.app/nemi/)
 - **Repositorio:** [https://github.com/ivndv/nemi](https://github.com/ivndv/nemi)
 
 ## 2. Antes de tocar código
@@ -115,12 +115,12 @@ La aplicación usa carga perezosa (**lazy loading**) para optimizar el tiempo de
 
 ## 6. Variables de entorno
 
-| Archivo                                | `production` | `apiUrl`                          |
-| :------------------------------------- | :----------- | :-------------------------------- |
-| `src/environments/environment.ts`      | `false`      | `http://localhost:3030/api`       |
-| `src/environments/environment.prod.ts` | `true`       | `https://nemi-api.fluxdv.icu/api` |
+| Archivo                                | `production` | `apiUrl`                         |
+| :------------------------------------- | :----------- | :------------------------------- |
+| `src/environments/environment.ts`      | `false`      | `http://localhost:3030/api`      |
+| `src/environments/environment.prod.ts` | `true`       | `https://nemi-api.liuma.app/api` |
 
-Los assets públicos (avatares, imágenes) se resuelven con `src/app/utils/images.ts` contra `https://assets.mgdc.site/nemi/`; ya no existe `r2PublicUrl` en los environments.
+Los assets públicos (avatares, imágenes) se resuelven con `src/app/utils/images.ts` contra `https://assets.liuma.app/nemi/`; ya no existe `r2PublicUrl` en los environments.
 
 ## 7. Comandos
 
@@ -169,8 +169,8 @@ El archivo `public/_headers` se sincroniza con Cloudflare Pages en cada desplieg
 - `default-src 'self';`
 - Scripts: `self`, `'unsafe-inline'`, `'unsafe-eval'`, `static.cloudflareinsights.com`, `challenges.cloudflare.com`, `code.iconify.design`.
 - Estilos: `self`, `'unsafe-inline'`, `fonts.googleapis.com`, `challenges.cloudflare.com`.
-- Imágenes: `self`, `data:`, `https:`, `https://assets.mgdc.site`, `https://nemi-api.fluxdv.icu`.
-- Conexiones: `self`, `http://localhost:*`, `cloudflareinsights.com`, `challenges.cloudflare.com`, `nemi-api.fluxdv.icu`, `api.iconify.design`, `api.simplesvg.com`, `api.unisvg.com`.
+- Imágenes: `self`, `data:`, `https:`, `https://assets.liuma.app`, `https://nemi-api.liuma.app`.
+- Conexiones: `self`, `http://localhost:*`, `cloudflareinsights.com`, `challenges.cloudflare.com`, `nemi-api.liuma.app`, `api.iconify.design`, `api.simplesvg.com`, `api.unisvg.com`.
 - `frame-ancestors 'none'`, `object-src 'none'` y `upgrade-insecure-requests`.
 
 No relajes la CSP sin revisar qué recurso externo la necesita.

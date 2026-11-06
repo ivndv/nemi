@@ -104,7 +104,7 @@ export class HeaderComponent implements OnDestroy {
 
 		return (
 			getCloudflareImage(fotoUrl, { width: 50 }) ||
-			"https://assets.mgdc.site/nemi/img-perfil.jpg"
+			"https://assets.liuma.app/nemi/img-perfil.jpg"
 		);
 	}
 

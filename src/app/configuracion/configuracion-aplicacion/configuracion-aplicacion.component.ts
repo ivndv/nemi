@@ -560,7 +560,7 @@ export class ConfiguracionAplicacionComponent implements OnInit, OnDestroy {
 		if (!foto) return null;
 		return (
 			getCloudflareImage(foto, { width: 160 }) ||
-			"https://assets.mgdc.site/nemi/img-perfil.jpg"
+			"https://assets.liuma.app/nemi/img-perfil.jpg"
 		);
 	}
 

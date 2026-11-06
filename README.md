@@ -21,7 +21,7 @@ Esta es la interfaz gráfica del Gestor de Activos IT, una plataforma web donde 
 
 ## Uso
 
-- **Visualización del Proyecto:** El proyecto ya se encuentra en funcionamiento. Puedes explorarlo aquí: [Gestor de Activos](https://nemi.mgdc.site/).
+- **Visualización del Proyecto:** El proyecto ya se encuentra en funcionamiento. Puedes explorarlo aquí: [Gestor de Activos](https://nemi.liuma.app/).
 - **Inicio Rápido**: Inicia sesión mediante tus credenciales para acceder a la herramienta completa.
 - **Visualización y Búsqueda**: Usa el buscador interno o los filtros en la lista de gestión para aislar información (ej. buscar "laptops disponibles").
 - **Flujo de Asignación**: Da clic en asignar activo y selecciona a qué empleado o departamento va dirigido el equipo en cuestión.
@@ -44,7 +44,7 @@ Este proyecto administra la cara visual de las herramientas empresariales del ec
 
 ## Despliegue
 
-El sitio web está desplegado en Cloudflare Pages. Puedes visitarlo directamente aquí: [Nemi](https://nemi.mgdc.site/).
+El sitio web está desplegado en Cloudflare Pages. Puedes visitarlo directamente aquí: [Nemi](https://nemi.liuma.app/).
 
 ## Licencia
 
