@@ -18,7 +18,6 @@ import { getHttpErrorMessage } from "../../core/http/http-error";
 import { AuthService } from "../../login/services/auth.service";
 import { AsignacionData } from "../../models/asignacion.interface";
 import type { SelectItem } from "../../models/datos-auxiliares.interface";
-import { getCloudflareImage } from "../../utils/images";
 import { AsignacionService } from "../services/asignacion.service";
 
 const EMPTY_ITEMS: SelectItem[] = [];
@@ -250,7 +249,7 @@ export class ActivosAsignadosComponent implements OnDestroy {
 	}
 
 	getAssetPhoto(fotoUrl: string): string {
-		return getCloudflareImage(fotoUrl, { width: 150 });
+		return fotoUrl || "";
 	}
 
 	trackById(_index: number, item: AsignacionData): number {

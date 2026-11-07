@@ -23,7 +23,6 @@ import { getHttpErrorMessage } from "../../core/http/http-error";
 import { PreferenciasService } from "../../core/preferencias/preferencias.service";
 import { AuthService } from "../../login/services/auth.service";
 import { type Theme, ThemeService } from "../../shared/services/theme.service";
-import { getCloudflareImage } from "../../utils/images";
 import {
 	type CambioContrasenaPayload,
 	ConfiguracionService,
@@ -558,10 +557,7 @@ export class ConfiguracionAplicacionComponent implements OnInit, OnDestroy {
 	// ---------------------------------------------------------------
 	private resolverFoto(foto: string): string | null {
 		if (!foto) return null;
-		return (
-			getCloudflareImage(foto, { width: 160 }) ||
-			"https://assets.liuma.app/nemi/img-perfil.jpg"
-		);
+		return foto || "https://assets.liuma.app/nemi/img-perfil.jpg";
 	}
 
 	private formatearFecha(fecha: string): string {

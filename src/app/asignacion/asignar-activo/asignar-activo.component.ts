@@ -13,7 +13,6 @@ import Swal from "sweetalert2";
 import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
 import { AsignacionPayload } from "../../models/asignacion.interface";
 import { SelectItem } from "../../models/datos-auxiliares.interface";
-import { getCloudflareImage } from "../../utils/images";
 import { AsignacionService } from "../services/asignacion.service";
 import { AuxiliaresService } from "../services/auxiliares.service";
 
@@ -220,7 +219,7 @@ export class AsignarActivoComponent implements OnInit, OnDestroy {
 
 	getAssetPhoto(fotoUrl: string | null | undefined): string {
 		if (!fotoUrl) return "";
-		return getCloudflareImage(fotoUrl, { width: 150 });
+		return fotoUrl;
 	}
 
 	ngOnDestroy(): void {

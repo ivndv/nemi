@@ -21,7 +21,6 @@ import { CatalogosFacade } from "../../core/catalogos/catalogos.facade";
 import { getHttpErrorMessage } from "../../core/http/http-error";
 import { ActivoPayload, GarantiaItem } from "../../models/activo.interface";
 import { SelectItem } from "../../models/datos-auxiliares.interface";
-import { getCloudflareImage } from "../../utils/images";
 import { ActivosMutacionesFacade } from "../application/activos-mutaciones.facade";
 import { ActivoService } from "../service/activo.service";
 
@@ -425,7 +424,7 @@ export class EditarActivoComponent implements OnInit, OnDestroy {
 
 	getAssetPhoto(fotoUrl: string | null | undefined): string {
 		if (!fotoUrl) return "";
-		return getCloudflareImage(fotoUrl, { width: 300 });
+		return fotoUrl;
 	}
 
 	ngOnDestroy(): void {

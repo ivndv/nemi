@@ -14,7 +14,6 @@ import { Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
 import { AuthService } from "../../login/services/auth.service";
 import { ActivoListItem } from "../../models/activo.interface";
-import { getCloudflareImage } from "../../utils/images";
 import { ActivosFacade } from "../application/activos.facade";
 
 @Component({
@@ -217,7 +216,7 @@ export class ListaActivosComponent implements OnInit, OnDestroy {
 	}
 
 	getAssetPhoto(fotoUrl: string): string {
-		return getCloudflareImage(fotoUrl, { width: 150 });
+		return fotoUrl || "";
 	}
 
 	ngOnDestroy(): void {

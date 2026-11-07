@@ -13,7 +13,6 @@ import { environment } from "../../../environments/environment";
 import { getHttpErrorMessage } from "../../core/http/http-error";
 import { AuthService } from "../../login/services/auth.service";
 import type { UserData } from "../../models/auth.interface";
-import { getCloudflareImage } from "../../utils/images";
 import {
 	AlertaItem,
 	NotificationService,
@@ -102,10 +101,7 @@ export class HeaderComponent implements OnDestroy {
 	getUserPhoto(): string {
 		const fotoUrl = this.usuario?.foto_url || "";
 
-		return (
-			getCloudflareImage(fotoUrl, { width: 50 }) ||
-			"https://assets.liuma.app/nemi/img-perfil.jpg"
-		);
+		return fotoUrl || "https://assets.liuma.app/nemi/img-perfil.jpg";
 	}
 
 	toggleNotifications(): void {

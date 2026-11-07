@@ -9,7 +9,6 @@ import { ActivatedRoute, Router } from "@angular/router";
 import Swal from "sweetalert2";
 import { getHttpErrorMessage } from "../../core/http/http-error";
 import { AuthService } from "../../login/services/auth.service";
-import { getCloudflareImage } from "../../utils/images";
 import { ActivoDetalleFacade } from "../application/activo-detalle.facade";
 
 @Component({
@@ -144,7 +143,7 @@ export class DetalleActivoComponent implements OnInit {
 	}
 
 	getAssetPhoto(fotoUrl: string): string {
-		return getCloudflareImage(fotoUrl, { width: 600 });
+		return fotoUrl || "";
 	}
 
 	trackById(_index: number, item: { id: number }): number {

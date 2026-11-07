@@ -18,7 +18,6 @@ import {
 	AsignacionData,
 	AsignacionPayload,
 } from "../../models/asignacion.interface";
-import { getCloudflareImage } from "../../utils/images";
 import { AsignacionService } from "../services/asignacion.service";
 import { AuxiliaresService } from "../services/auxiliares.service";
 
@@ -328,7 +327,7 @@ export class EditarAsignacionComponent implements OnInit, OnDestroy {
 
 	getAssetPhoto(fotoUrl: string | null | undefined): string {
 		if (!fotoUrl) return "";
-		return getCloudflareImage(fotoUrl, { width: 150 });
+		return fotoUrl;
 	}
 
 	ngOnDestroy(): void {

@@ -60,7 +60,7 @@ src/app/
 │   ├── services/          # ThemeService, NotificationService
 │   └── ui/modal/          # ModalShellComponent
 ├── navigation/            # Navbar lateral, caja-nav y NavigationService
-└── utils/                 # chartTheme.ts (Chart.js), images.ts (transformación R2)
+└── utils/                 # chartTheme.ts (Chart.js)
 ```
 
 ### 4.2 Módulos de funcionalidad (rutas lazy)
@@ -120,7 +120,7 @@ La aplicación usa carga perezosa (**lazy loading**) para optimizar el tiempo de
 | `src/environments/environment.ts`      | `false`      | `http://localhost:3030/api`      |
 | `src/environments/environment.prod.ts` | `true`       | `https://nemi-api.liuma.app/api` |
 
-Los assets públicos (avatares, imágenes) se resuelven con `src/app/utils/images.ts` contra `https://assets.liuma.app/nemi/`; ya no existe `r2PublicUrl` en los environments.
+Los assets públicos (avatares, imágenes) se sirven desde `https://assets.liuma.app/nemi/`; Cloudflare Images los transforma a AVIF/WebP con `format=auto` y `width=auto`.
 
 ## 7. Comandos
 
