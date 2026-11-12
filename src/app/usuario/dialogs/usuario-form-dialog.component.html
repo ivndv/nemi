@@ -64,9 +64,9 @@
       @if (esNuevo) {
         <div class="form-group">
           <label for="contrasena">Contraseña inicial</label>
-          <input id="contrasena" type="password" formControlName="contrasena" placeholder="Mínimo 8 caracteres" />
+          <input id="contrasena" type="password" formControlName="contrasena" placeholder="Mínimo 12 caracteres" />
           @if (form.get("contrasena")?.touched && form.get("contrasena")?.invalid) {
-            <small class="error-text">Mínimo 8 caracteres</small>
+            <small class="error-text">Mínimo 12 caracteres</small>
           }
         </div>
       }

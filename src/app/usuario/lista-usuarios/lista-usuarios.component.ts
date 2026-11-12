@@ -197,7 +197,7 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
 		Swal.fire({
 			title: `Contraseña de ${persona.nombre}`,
 			input: "password",
-			inputPlaceholder: "Nueva contraseña (mínimo 8)",
+			inputPlaceholder: "Nueva contraseña (mínimo 12)",
 			showCancelButton: true,
 			confirmButtonText: "Actualizar",
 			cancelButtonText: "Cancelar",
@@ -210,9 +210,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
 				cancelButton: "premium-swal-cancel",
 			},
 			preConfirm: (valor) => {
-				if (!valor || valor.length < 8) {
+				if (!valor || valor.length < 12) {
 					Swal.showValidationMessage(
-						"La contraseña debe tener al menos 8 caracteres",
+						"La contraseña debe tener al menos 12 caracteres",
 					);
 					return false;
 				}

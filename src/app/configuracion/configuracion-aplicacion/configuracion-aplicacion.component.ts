@@ -206,7 +206,7 @@ export class ConfiguracionAplicacionComponent implements OnInit, OnDestroy {
 		this.passwordForm = this.fb.nonNullable.group(
 			{
 				contrasena_actual: ["", Validators.required],
-				nueva_contrasena: ["", [Validators.required, Validators.minLength(8)]],
+				nueva_contrasena: ["", [Validators.required, Validators.minLength(12)]],
 				confirmar_nueva_contrasena: ["", Validators.required],
 			},
 			{ validators: contrasenasCoinciden },

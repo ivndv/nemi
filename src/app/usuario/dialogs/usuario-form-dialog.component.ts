@@ -47,7 +47,7 @@ export class UsuarioFormDialogComponent {
 		],
 		contrasena: [
 			"",
-			this.esNuevo ? [Validators.required, Validators.minLength(8)] : [],
+			this.esNuevo ? [Validators.required, Validators.minLength(12)] : [],
 		],
 	});
 

@@ -206,9 +206,9 @@
 
                   <div class="form-group">
                     <label for="pass-nueva">Nueva contraseña</label>
-                    <input id="pass-nueva" type="password" formControlName="nueva_contrasena" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+                    <input id="pass-nueva" type="password" formControlName="nueva_contrasena" placeholder="Mínimo 12 caracteres" autocomplete="new-password" />
                     @if (passwordForm.get("nueva_contrasena")?.touched && passwordForm.get("nueva_contrasena")?.invalid) {
-                      <small class="error-text">Debe tener al menos 8 caracteres.</small>
+                      <small class="error-text">Debe tener al menos 12 caracteres.</small>
                     }
                   </div>
 
