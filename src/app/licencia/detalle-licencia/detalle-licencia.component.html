@@ -49,11 +49,13 @@
         <strong>{{ licencia.ocupados }} / {{ licencia.asientos_comprados }}</strong>
         <small>{{ licencia.libres }} libres</small>
       </article>
-      <article>
-        <span>Costo</span>
-        <strong>{{ licencia.costo || "—" }}</strong>
-        <small>{{ licencia.periodicidad_costo_label }}</small>
-      </article>
+      @if (puedeVerCostos()) {
+        <article>
+          <span>Costo</span>
+          <strong>{{ licencia.costo || "—" }}</strong>
+          <small>{{ licencia.periodicidad_costo_label }}</small>
+        </article>
+      }
       <article>
         <span>Renovación</span>
         <strong>{{ licencia.fecha_renovacion || "—" }}</strong>
@@ -120,21 +122,25 @@
           <tr>
             <th>Fecha</th>
             <th>Asientos</th>
-            <th>Costo</th>
+            @if (puedeVerCostos()) {
+              <th>Costo</th>
+            }
             <th>Adjunto</th>
           </tr>
         </thead>
         <tbody>
           @if (licencia.renovaciones.length === 0) {
             <tr>
-              <td colspan="4" class="vacio">Sin renovaciones registradas</td>
+              <td [attr.colspan]="puedeVerCostos() ? 4 : 3" class="vacio">Sin renovaciones registradas</td>
             </tr>
           }
           @for (renovacion of licencia.renovaciones; track renovacion.id) {
             <tr>
               <td>{{ renovacion.fecha }}</td>
               <td>{{ renovacion.asientos }}</td>
-              <td>{{ renovacion.costo || "—" }}</td>
+              @if (puedeVerCostos()) {
+                <td>{{ renovacion.costo || "—" }}</td>
+              }
               <td>{{ renovacion.adjunto || "—" }}</td>
             </tr>
           }

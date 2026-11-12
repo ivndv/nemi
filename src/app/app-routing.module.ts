@@ -31,14 +31,16 @@ const routes: Routes = [
 		title: "Licencias | Gestor de Activos",
 		loadChildren: () =>
 			import("./licencia/licencia.module").then((m) => m.LicenciaModule),
-		canActivate: [AuthGuard],
+		canActivate: [AuthGuard, RoleGuard],
+		data: { expectedRoles: ["Administrador", "Técnico", "Almacén"] },
 	},
 	{
 		path: "asignaciones",
 		title: "Asignaciones | Gestor de Activos",
 		loadChildren: () =>
 			import("./asignacion/asignacion.module").then((m) => m.AsignacionModule),
-		canActivate: [AuthGuard],
+		canActivate: [AuthGuard, RoleGuard],
+		data: { expectedRoles: ["Administrador", "Técnico", "Almacén"] },
 	},
 	{
 		path: "mantenimientos",

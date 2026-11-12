@@ -29,7 +29,7 @@
             {{ activo.estado_label || activo.estado }}
           </span>
           <span class="badge-chip badge-id">ID #{{ activo.id }}</span>
-          @if (activo.dueno?.nombre) {
+          @if (puedeVerDueno() && activo.dueno?.nombre) {
             <span class="badge-chip">
               <iconify-icon icon="ph:user"></iconify-icon>
               {{ activo.dueno.nombre }}
@@ -85,15 +85,17 @@
             <span class="info-label">Software / versión</span>
             <span class="info-value">{{ activo.version_software || '—' }}</span>
           </div>
-          <div class="info-row">
-            <span class="info-label">Tipo de licencia</span>
-            <span class="info-value">{{ activo.tipo_licencia || '—' }}</span>
-          </div>
-          @if (activo.fecha_vencimiento_licencia) {
+          @if (!esEmpleado()) {
             <div class="info-row">
-              <span class="info-label">Vence licencia</span>
-              <span class="info-value">{{ activo.fecha_vencimiento_licencia | fechaApp }}</span>
+              <span class="info-label">Tipo de licencia</span>
+              <span class="info-value">{{ activo.tipo_licencia || '—' }}</span>
             </div>
+            @if (activo.fecha_vencimiento_licencia) {
+              <div class="info-row">
+                <span class="info-label">Vence licencia</span>
+                <span class="info-value">{{ activo.fecha_vencimiento_licencia | fechaApp }}</span>
+              </div>
+            }
           }
         </div>
       </section>
@@ -108,10 +110,12 @@
         </header>
 
         <div class="card-body">
-          <div class="info-row">
-            <span class="info-label">Responsable</span>
-            <span class="info-value">{{ activo.dueno.nombre || 'No asignado' }}</span>
-          </div>
+          @if (puedeVerDueno()) {
+            <div class="info-row">
+              <span class="info-label">Responsable</span>
+              <span class="info-value">{{ activo.dueno.nombre || 'No asignado' }}</span>
+            </div>
+          }
           <div class="info-row">
             <span class="info-label">Ubicación actual</span>
             <span class="info-value">{{ activo.ubicacion.nombre || '—' }}</span>
@@ -135,73 +139,79 @@
         </div>
       </section>
 
-      <section class="detail-card">
-        <header class="card-head">
-          <span class="card-head-icon"><iconify-icon icon="ph:bank"></iconify-icon></span>
-          <div class="card-head-text">
-            <h3>Información financiera</h3>
-            <p>Compra, costos y registro.</p>
-          </div>
-        </header>
+      @if (puedeVerCostos()) {
+        <section class="detail-card">
+          <header class="card-head">
+            <span class="card-head-icon"><iconify-icon icon="ph:bank"></iconify-icon></span>
+            <div class="card-head-text">
+              <h3>Información financiera</h3>
+              <p>Compra, costos y registro.</p>
+            </div>
+          </header>
 
-        <div class="card-body">
-          <div class="info-row">
-            <span class="info-label">Valor de compra</span>
-            <span class="info-value">${{ activo.valor_compra | number:'1.2-2' }}</span>
+          <div class="card-body">
+            <div class="info-row">
+              <span class="info-label">Valor de compra</span>
+              <span class="info-value">${{ activo.valor_compra | number:'1.2-2' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Costo mensual</span>
+              <span class="info-value">${{ activo.costo_mensual | number:'1.2-2' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Fecha de registro</span>
+              <span class="info-value">{{ activo.fecha_registro | fechaApp }}</span>
+            </div>
           </div>
-          <div class="info-row">
-            <span class="info-label">Costo mensual</span>
-            <span class="info-value">${{ activo.costo_mensual | number:'1.2-2' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Fecha de registro</span>
-            <span class="info-value">{{ activo.fecha_registro | fechaApp }}</span>
-          </div>
-        </div>
-      </section>
+        </section>
+      }
 
-      <section class="detail-card" [class.warranty-active]="activo.garantia.length > 0">
-        <header class="card-head">
-          <span class="card-head-icon"><iconify-icon icon="ph:shield-check"></iconify-icon></span>
-          <div class="card-head-text">
-            <h3>Garantía</h3>
-            <p>Pólizas y cobertura.</p>
-          </div>
-        </header>
+      @if (puedeVerGarantias() || esEmpleado()) {
+        <section class="detail-card" [class.warranty-active]="activo.garantia.length > 0">
+          <header class="card-head">
+            <span class="card-head-icon"><iconify-icon icon="ph:shield-check"></iconify-icon></span>
+            <div class="card-head-text">
+              <h3>Garantía</h3>
+              <p>Pólizas y cobertura.</p>
+            </div>
+          </header>
 
-        <div class="card-body">
-          @if (activo.garantia && activo.garantia.length > 0) {
-            @for (g of activo.garantia; track trackById($index, g)) {
-              <div class="warranty-item">
-                <div class="info-row">
-                  <span class="info-label">Póliza</span>
-                  <span class="info-value">{{ g.nombre_garantia }}</span>
+          <div class="card-body">
+            @if (activo.garantia && activo.garantia.length > 0) {
+              @for (g of activo.garantia; track trackById($index, g)) {
+                <div class="warranty-item">
+                  <div class="info-row">
+                    <span class="info-label">Póliza</span>
+                    <span class="info-value">{{ g.nombre_garantia }}</span>
+                  </div>
+                  @if (puedeVerGarantias()) {
+                    <div class="info-row">
+                      <span class="info-label">Proveedor</span>
+                      <span class="info-value">{{ g.proveedor?.nombre || '—' }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Vigencia</span>
+                      <span class="info-value">{{ g.fecha_inicio | fechaApp:'fechaCorta' }} – {{ g.fecha_fin | fechaApp:'fechaCorta' }}</span>
+                    </div>
+                  }
+                  <div class="info-row">
+                    <span class="info-label">Estado</span>
+                    <span class="info-value">{{ g.estado }}</span>
+                  </div>
+                  @if (puedeVerGarantias() && g.condiciones) {
+                    <p class="description-box">{{ g.condiciones }}</p>
+                  }
                 </div>
-                <div class="info-row">
-                  <span class="info-label">Proveedor</span>
-                  <span class="info-value">{{ g.proveedor?.nombre || '—' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Vigencia</span>
-                  <span class="info-value">{{ g.fecha_inicio | fechaApp:'fechaCorta' }} – {{ g.fecha_fin | fechaApp:'fechaCorta' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Estado</span>
-                  <span class="info-value">{{ g.estado }}</span>
-                </div>
-                @if (g.condiciones) {
-                  <p class="description-box">{{ g.condiciones }}</p>
-                }
+              }
+            } @else {
+              <div class="empty-warranty">
+                <iconify-icon icon="ph:shield-slash"></iconify-icon>
+                <p>No hay garantías registradas.</p>
               </div>
             }
-          } @else {
-            <div class="empty-warranty">
-              <iconify-icon icon="ph:shield-slash"></iconify-icon>
-              <p>No hay garantías registradas.</p>
-            </div>
-          }
-        </div>
-      </section>
+          </div>
+        </section>
+      }
     </div>
   }
 </main>

@@ -62,7 +62,7 @@ export class HeaderComponent implements OnDestroy {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe(() => {});
 
-		if (this.authService.isLoggedIn()) {
+		if (this.authService.isLoggedIn() && !this.authService.isEmpleado()) {
 			this.notificationService.load();
 		}
 
@@ -96,6 +96,10 @@ export class HeaderComponent implements OnDestroy {
 
 	isLoggedIn(): boolean {
 		return this.authService.isLoggedIn();
+	}
+
+	isEmpleado(): boolean {
+		return this.authService.isEmpleado();
 	}
 
 	getUserPhoto(): string {

@@ -87,13 +87,15 @@
       ></app-caja-nav>
     }
 
-    <span class="sidebar-section">Análisis</span>
-    <app-caja-nav
-      label="Reportes"
-      route="/reportes"
-      iconify="ph:chart-line"
-      routerLinkActive="active"
-    ></app-caja-nav>
+    @if (puedeOperar()) {
+      <span class="sidebar-section">Análisis</span>
+      <app-caja-nav
+        label="Reportes"
+        route="/reportes"
+        iconify="ph:chart-line"
+        routerLinkActive="active"
+      ></app-caja-nav>
+    }
 
     @if (isAdmin()) {
       <span class="sidebar-section">Administración</span>

@@ -88,6 +88,10 @@ export class DetalleLicenciaComponent implements OnInit, OnDestroy {
 		return this.authService.isAdmin() || this.authService.isTecnico();
 	}
 
+	puedeVerCostos(): boolean {
+		return this.authService.isAdmin() || this.authService.isTecnico();
+	}
+
 	volver(): void {
 		this.router.navigate(["/licencias"]);
 	}

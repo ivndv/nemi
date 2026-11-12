@@ -17,6 +17,7 @@ import {
 import { firstValueFrom, Subject, takeUntil } from "rxjs";
 import Swal from "sweetalert2";
 import { getHttpErrorMessage } from "../../core/http/http-error";
+import { AuthService } from "../../login/services/auth.service";
 import {
 	DatosAuxiliares,
 	SelectItem,
@@ -45,6 +46,7 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 
 	private readonly route = inject(ActivatedRoute);
 	private readonly historialService = inject(HistorialService);
+	private readonly authService = inject(AuthService);
 	private readonly cdr = inject(ChangeDetectorRef);
 	private readonly refresco = signal(0);
 	private readonly destroy$ = new Subject<void>();
@@ -155,7 +157,11 @@ export class HistorialActivoComponent implements OnInit, OnDestroy {
 
 	ngOnInit(): void {
 		this.activoId.set(Number(this.route.snapshot.paramMap.get("id") ?? 0));
-		this.cargarDatosAuxiliares();
+
+		// Los filtros auxiliares solo están disponibles para roles operativos
+		if (!this.authService.isEmpleado()) {
+			this.cargarDatosAuxiliares();
+		}
 	}
 
 	cargarHistorial(): void {

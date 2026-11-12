@@ -142,6 +142,22 @@ export class DetalleActivoComponent implements OnInit {
 		return this.authService.puedeMantenimiento();
 	}
 
+	puedeVerCostos(): boolean {
+		return this.authService.isAdmin() || this.authService.isTecnico();
+	}
+
+	puedeVerDueno(): boolean {
+		return this.puedeVerCostos();
+	}
+
+	puedeVerGarantias(): boolean {
+		return this.puedeVerCostos();
+	}
+
+	esEmpleado(): boolean {
+		return this.authService.isEmpleado();
+	}
+
 	getAssetPhoto(fotoUrl: string): string {
 		return fotoUrl || "";
 	}
